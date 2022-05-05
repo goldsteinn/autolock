@@ -1,0 +1,130 @@
+From bf7a7c56b19e302570aa6bd0a75aa88dbb9fa6d5 Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Fri, 6 May 2022 01:57:49 -0500
+Subject: [PATCH v1 4/5] Fixup failed scheduler cleanup
+
+---
+ kernel/sched/fair.c | 61 +++++++++++++--------------------------------
+ 1 file changed, 18 insertions(+), 43 deletions(-)
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 71de23d20f04..4b202b6808ea 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -4564,8 +4564,6 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+ 	struct sched_entity *left = __pick_first_entity(cfs_rq);
+ 	struct sched_entity *se;
+ 
+-	LPRINTK_VVVV("Picking next entity: (%d, %d)\n", curr == NULL,
+-		     curr == NULL ? -1 : auto_lock_dont_sched_cur);
+ 	/*
+ 	 * If curr is set we have to see if its left of the leftmost entity
+ 	 * still in the tree, provided there was anything in the tree at all.
+@@ -4577,78 +4575,55 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+ 
+ 	/*
+ 	 * Avoid running the skip buddy, if running something else can
+-	 * be done without getting too unfair. If task of se is marked
+-     * dont_sched by autolock try and skip it. We put in mediocre
+-     * effort.
++	 * be done without getting too unfair.
+ 	 */
+ 	if (se && (cfs_rq->skip == se || auto_lock_dont_sched(task_of(se)))) {
+ 		struct sched_entity *second;
+ 
+ 		if (se == curr) {
++			LPRINTK_VVVV("se == curr\n");
+ 			second = __pick_first_entity(cfs_rq);
+-			LPRINTK_VVVV("se == curr\nGrabbing second: (%d, %d)\n",
+-				     second == NULL, second == NULL, -1,
+-				     auto_lock_dont_sched(taskof(second)));
+ 		} else {
++			LPRINTK_VVVV("se != curr\n");
+ 			second = __pick_next_entity(se);
+-			LPRINTK_VVVV("se != curr\nGrabbing second: (%d, %d)\n",
+-				     second == NULL, second == NULL, -1,
+-				     auto_lock_dont_sched(taskof(second)));
+-
+ 			if (!second || (curr && entity_before(curr, second))) {
++				LPRINTK_VVVV("second = curr\n");
+ 				second = curr;
+-				LPRINTK_VVVV("Second set to curr\n");
+-			} else if (auto_lock_dont_sched(task_of(second))) {
+-                struct sched_entity *next_second;
+-				LPRINTK_VVVV(
+-					"Trying to find autolock prefered (%d)\n",
+-					auto_lock_dont_sched(second));
+-				do {
+-					/* Naively try and find another task. Maybe a
+-                     * max_iter count would be good here but expectation
+-                     * is its only a few iterations.
+-                     */
++			} else {
++				struct sched_entity *next_second = second;
++				while (next_second &&
++				       auto_lock_dont_sched(
++					       task_of(next_second))) {
+ 					next_second =
+ 						__pick_next_entity(next_second);
+-
+-					if (!next_second) {
+-						LPRINTK_VVVV(
+-							"Didn't find autolock prefered\n");
+-						goto did_not_find_prefered;
+-					}
+-
+-				} while (auto_lock_dont_sched(
+-					task_of(next_second)));
+-
+-				LPRINTK_VVVV("Found autolock prefered\n");
+-				second = next_second;
+-			did_not_find_prefered:
++				}
++				if (next_second) {
++					second = next_second;
++				}
+ 			}
+ 		}
+ 
+-		/* Noah_Todo: This logic needs to be improved! */
+ 		if (second) {
+ 			if (se && auto_lock_dont_sched(task_of(se))) {
+-				LPRINTK_VVVV(
+-					"Overwritting se with second (A)\n");
++				LPRINTK_VVVV("Setting se = second (A)\n");
+ 				se = second;
+ 			} else if ((!auto_lock_dont_sched(task_of(second))) &&
+ 				   wakeup_preempt_entity(second, left) < 1) {
+-				LPRINTK_VVVV(
+-					"Overwritting se with second (B)\n");
++				LPRINTK_VVVV("Setting se = second (B)\n");
+ 				se = second;
+ 			}
+ 		}
+ 	}
+ 
+-	/* Noah_Todo: Add meaningful logic here. */
+ 	if (cfs_rq->next && wakeup_preempt_entity(cfs_rq->next, left) < 1) {
++		LPRINTK_VVVV("Taking next\n");
+ 		/*
+ 		 * Someone really wants this to run. If it's not unfair, run it.
+ 		 */
+ 		se = cfs_rq->next;
+ 	} else if (cfs_rq->last &&
+ 		   wakeup_preempt_entity(cfs_rq->last, left) < 1) {
++		LPRINTK_VVVV("Taking Last\n");
+ 		/*
+ 		 * Prefer last buddy, try to return the CPU to a preempted task.
+ 		 */
+@@ -4657,7 +4632,7 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+ 
+ 	return se;
+ }
+-
++//clang-format off
+ static bool check_cfs_rq_runtime(struct cfs_rq *cfs_rq);
+ 
+ static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
+-- 
+2.34.1
+

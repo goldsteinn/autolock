@@ -1,0 +1,623 @@
+From 1bab9bcdeed768a5e64e41f4d5ba724cb14bf163 Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Thu, 5 May 2022 23:58:37 -0500
+Subject: [PATCH v1 2/5] Implement autolock
+
+---
+ include/linux/auto-lock-verbose.h |  22 ++
+ include/linux/auto-lock.h         |  21 ++
+ include/uapi/linux/auto-lock.h    |  20 ++
+ kernel/auto-lock.c                | 517 ++++++++++++++++++++++++++++++
+ 4 files changed, 580 insertions(+)
+ create mode 100644 include/linux/auto-lock-verbose.h
+ create mode 100644 include/linux/auto-lock.h
+ create mode 100644 include/uapi/linux/auto-lock.h
+ create mode 100644 kernel/auto-lock.c
+
+diff --git a/include/linux/auto-lock-verbose.h b/include/linux/auto-lock-verbose.h
+new file mode 100644
+index 000000000000..a3fa7868f3bc
+--- /dev/null
++++ b/include/linux/auto-lock-verbose.h
+@@ -0,0 +1,22 @@
++#ifndef __LINUX_AUTO_LOCK_VERBOSE_H
++#define __LINUX_AUTO_LOCK_VERBOSE_H
++
++#include <linux/printk.h>
++#include <linux/kernel.h>
++
++#define I_LPRINTK(msg, ...)                                                    \
++	printk("%-20s:%-6u: " msg, __func__, __LINE__, ##__VA_ARGS__)
++
++#define LPRINTK_V(...)  I_LPRINTK(__VA_ARGS__)
++#define LPRINTK_VV(...)  I_LPRINTK(__VA_ARGS__)
++#define LPRINTK_VVV(...) // I_LPRINTK(__VA_ARGS__)
++#define LPRINTK_VVVV(...) // I_LPRINTK(__VA_ARGS__)
++
++#define I_LTRACE() printk("%-20s:%-6u\n", __func__, __LINE__)
++
++#define LTRACE_V()  I_LTRACE()
++#define LTRACE_VV()  I_LTRACE()
++#define LTRACE_VVV() // I_LTRACE()
++#define LTRACE_VVVV() // I_LTRACE()
++
++#endif
+diff --git a/include/linux/auto-lock.h b/include/linux/auto-lock.h
+new file mode 100644
+index 000000000000..a8ba98c6f3b9
+--- /dev/null
++++ b/include/linux/auto-lock.h
+@@ -0,0 +1,21 @@
++#ifndef __LINUX_AUTO_LOCK_H
++#define __LINUX_AUTO_LOCK_H
++
++/* Noah_TODO: Sort through necessary includes. */
++#include <linux/types.h>
++#include <linux/compiler.h>
++#include <asm/cmpxchg.h>
++#include <asm/barrier.h>
++#include <asm/smp.h>
++#include <linux/sched.h>
++
++/* Called by scheduler to see if it should skip a task. */
++int auto_lock_dont_sched(struct task_struct const *tsk);
++
++/* Called on task exist. */
++void auto_lock_free(struct task_struct *tsk);
++
++/* Called before scheduling a task. */
++void auto_lock_sched(struct task_struct const *tsk);
++
++#endif
+diff --git a/include/uapi/linux/auto-lock.h b/include/uapi/linux/auto-lock.h
+new file mode 100644
+index 000000000000..3a51e90d302b
+--- /dev/null
++++ b/include/uapi/linux/auto-lock.h
+@@ -0,0 +1,20 @@
++#ifndef LINUX_AUTO_LOCK_H
++#define LINUX_AUTO_LOCK_H
++
++#include <linux/types.h>
++
++/* Autolock ABI for userland to use. */
++
++struct auto_lock {
++	/* Memory to watch (userland VM). */
++	u32 *watch_mem;
++	/* Value to watch for (schedule). */
++	u32 watch_for;
++	/* Watch for equal or not-equal. I.e if `watch_neq` is zero, we
++     * won't schedule until `*watch_mem == watch_for`. If `watch_neq` is
++     * non-zero, we won't schedule as long as `*watch_mem ==
++     * watch_for`. */
++	u32 watch_neq;
++};
++
++#endif
+diff --git a/kernel/auto-lock.c b/kernel/auto-lock.c
+new file mode 100644
+index 000000000000..53fe9c27bfa5
+--- /dev/null
++++ b/kernel/auto-lock.c
+@@ -0,0 +1,517 @@
++/* Noah_TODO: Sort through necessary includes. */
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/errno.h>
++#include <linux/syscalls.h>
++#include <linux/compat.h>
++#include <net/compat.h>
++#include <linux/refcount.h>
++#include <linux/uio.h>
++#include <linux/bits.h>
++
++#include <linux/sched/signal.h>
++#include <linux/fs.h>
++#include <linux/file.h>
++#include <linux/fdtable.h>
++#include <linux/mm.h>
++#include <linux/mman.h>
++#include <linux/percpu.h>
++#include <linux/slab.h>
++#include <linux/blk-mq.h>
++#include <linux/bvec.h>
++#include <linux/net.h>
++#include <net/sock.h>
++#include <net/af_unix.h>
++#include <net/scm.h>
++#include <linux/anon_inodes.h>
++#include <linux/sched/mm.h>
++#include <linux/uaccess.h>
++#include <linux/nospec.h>
++#include <linux/sizes.h>
++#include <linux/hugetlb.h>
++#include <linux/highmem.h>
++#include <linux/namei.h>
++#include <linux/fsnotify.h>
++#include <linux/fadvise.h>
++#include <linux/eventpoll.h>
++#include <linux/splice.h>
++#include <linux/task_work.h>
++#include <linux/pagemap.h>
++#include <linux/io_uring.h>
++#include <linux/audit.h>
++#include <linux/security.h>
++#include <linux/xattr.h>
++
++#include <linux/auto-lock.h>
++#include <linux/auto-lock-verbose.h>
++#include <uapi/linux/auto-lock.h>
++
++/* Store seperate context that wraps the autolock. This is ONLY ever
++ * necessary with CONFIG_UNIX. Otherwise we could drop this layer of
++ * indirection. Maybe worth optimizing a version that does that if no
++ * CONFIG_UNIX.
++ */
++struct auto_lock_ctx {
++	struct auto_lock *auto_lock;
++#if defined(CONFIG_UNIX)
++	struct socket *auto_lock_sock;
++#endif
++};
++
++#ifdef WITH_STATS
++static atomic_t print_throttler;
++
++static atomic_t fast_read_success;
++static atomic_t slow_read_success;
++static atomic_t both_failure;
++
++#define stats_inc(x) atomic_inc(x)
++#define stats_print(...)                                                       \
++	if ((atomic_fetch_add(1, &print_throttler) % 256) == 0) {              \
++		printk(__VA_ARGS__);                                           \
++	}
++
++#else
++#define stats_inc(x)
++#define stats_print(...)
++#endif
++
++/* Allocate a page of physical memory. */
++static struct auto_lock *auto_lock_alloc_mem(void)
++{
++	gfp_t gfp = GFP_KERNEL_ACCOUNT | __GFP_ZERO | __GFP_NOWARN | __GFP_COMP;
++	LTRACE_VV();
++
++	return (void *)__get_free_page(gfp);
++}
++
++/* Free an allocated page of physical memory. */
++static void auto_lock_free_mem(void *ptr)
++{
++	struct page *page;
++	LTRACE_VV();
++
++	if (!ptr) {
++		LTRACE_V();
++		return;
++	}
++
++	page = virt_to_head_page(ptr);
++	__free_page(page);
++}
++
++static int __auto_lock_is_armed(struct auto_lock const *auto_lock)
++{
++	LTRACE_VVV();
++	LPRINTK_VVV("(%d, %d)\n", auto_lock == NULL,
++		    READ_ONCE(auto_lock->watch_mem) != NULL);
++	return auto_lock != NULL && READ_ONCE(auto_lock->watch_mem) != NULL;
++}
++
++static void __auto_lock_dearm(struct auto_lock *auto_lock)
++{
++	LTRACE_VVV();
++	if (auto_lock == NULL) {
++		LPRINTK_V("ERROR!\n");
++		/* For later: BUG(). */
++		return;
++	}
++
++	LPRINTK_VVV("Dearmed autolock\n");
++	smp_store_release(&(auto_lock->watch_mem), NULL);
++}
++
++/* Return zero if we should schedule or one if we shouldn't. Returns
++ * zero on error (counter intuitively) to avoid hanging the process.
++ */
++static int __auto_lock_check_mem(struct task_struct const *tsk,
++				 struct auto_lock const *auto_lock)
++{
++	u32 cur_mem;
++	u32 *usr_cur_mem;
++	int ret;
++
++	LTRACE_VVV();
++	usr_cur_mem = READ_ONCE(auto_lock->watch_mem);
++	if (usr_cur_mem == NULL) {
++		LPRINTK_VVV("usr memory is NULL, may schedule\n");
++		return 0;
++	}
++	LPRINTK_VVV("Reading user value\n");
++	/* If get_user fails just resched to avoid hanging process
++     * indefinetly if they pass bad mem.
++     */
++	preempt_disable();
++
++	/* Faster but more error-prone read. */
++	ret = get_user(cur_mem, usr_cur_mem);
++
++	if (unlikely(ret)) {
++		LPRINTK_VVV("Failed first read attempt. Using fallback\n");
++
++		/* Load in user page map. Unlikely. This is an issue as its
++         * called in scheduler code.
++         */
++		if (access_remote_vm(tsk->mm, (unsigned long)usr_cur_mem,
++				     &cur_mem, sizeof(cur_mem),
++				     0) != sizeof(cur_mem)) {
++			LPRINTK_VVV("Failed fallback read\n");
++			preempt_enable();
++			stats_inc(&both_failure);
++
++			/* Return 0 (allow this task to be scheduled). */
++			return 0;
++		}
++		stats_inc(&slow_read_success);
++		LPRINTK_VVV("Fallback ready succeeded\n");
++	} else {
++		LPRINTK_VVV("Fast read succeeded\n");
++		stats_inc(&fast_read_success);
++	}
++	stats_print("fast(%u), slow(%u), fail(%u)\n",
++		    atomic_read(&fast_read_success),
++		    atomic_read(&slow_read_success),
++		    atomic_read(&both_failure));
++
++	preempt_enable();
++
++	ret = READ_ONCE(auto_lock->watch_for) != cur_mem;
++	LPRINTK_VVV("Returning(%d == %d): (%d == %d) ? %d : %d -> %d\n",
++		    READ_ONCE(auto_lock->watch_for), cur_mem,
++		    auto_lock->watch_neq, 0, ret, !ret,
++		    (auto_lock->watch_neq == 0) ? ret : !ret);
++
++	return (auto_lock->watch_neq == 0) ? ret : !ret;
++}
++
++/* Return 1 if we should skip this task (called by auto_lock_dont_sched()). */
++static int __auto_lock_dont_sched(struct task_struct const *tsk,
++				  struct auto_lock const *auto_lock)
++{
++	LTRACE_VVV();
++	LPRINTK_VVV("Is armed: %d\n", __auto_lock_is_armed(auto_lock));
++	return __auto_lock_is_armed(auto_lock) &&
++	       __auto_lock_check_mem(tsk, auto_lock);
++}
++
++/* Ensure mmap request by user meets basic sanity test. */
++static void *auto_lock_validate_mmap_request(struct file *file, loff_t pgoff,
++					     size_t sz)
++{
++	struct auto_lock_ctx *ctx = file->private_data;
++	void *ptr;
++
++	LTRACE_VVV();
++
++	ptr = ctx->auto_lock;
++	if (sz > PAGE_SIZE) {
++		return ERR_PTR(-EINVAL);
++	}
++	return ptr;
++}
++
++#ifdef CONFIG_MMU
++/* Handle user mmap request. */
++static int auto_lock_mmap(struct file *file, struct vm_area_struct *vma)
++{
++	size_t sz = vma->vm_end - vma->vm_start;
++	unsigned long pfn;
++	void *ptr;
++	int ret;
++
++	LTRACE_VV();
++
++	ptr = auto_lock_validate_mmap_request(file, vma->vm_pgoff, sz);
++	if (IS_ERR(ptr)) {
++		LPRINTK_VV("Invalid autolock ptr\n");
++		return PTR_ERR(ptr);
++	}
++
++	LPRINTK_VV("Valid mmap request\n");
++	pfn = virt_to_phys(ptr) >> PAGE_SHIFT;
++	ret = remap_pfn_range(vma, vma->vm_start, pfn, sz, vma->vm_page_prot);
++	LPRINTK_VV("Remapping Done: %d\n", ret);
++	return ret;
++}
++
++#else /* !CONFIG_MMU */
++
++/* This code is hijacked from io_uring. Untested just added it for
++ * completeness (who the fuck runs code without MMU?) */
++static int auto_lock_mmap(struct file *file, struct vm_area_struct *vma)
++{
++	return vma->vm_flags & (VM_SHARED | VM_MAYSHARE) ? 0 : -EINVAL;
++}
++
++static unsigned int auto_lock_nommu_mmap_capabilities(struct file *file)
++{
++	return NOMMU_MAP_DIRECT | NOMMU_MAP_READ | NOMMU_MAP_WRITE;
++}
++
++static unsigned long auto_lock_nommu_get_unmapped_area(struct file *file,
++						       unsigned long addr,
++						       unsigned long len,
++						       unsigned long pgoff,
++						       unsigned long flags)
++{
++	void *ptr;
++
++	ptr = auto_lock_validate_mmap_request(file, pgoff, len);
++	if (IS_ERR(ptr))
++		return PTR_ERR(ptr);
++
++	return (unsigned long)ptr;
++}
++
++#endif /* !CONFIG_MMU */
++
++/* Free autolock. Really only called on task exit. */
++static int __auto_lock_release(struct auto_lock_ctx *ctx)
++{
++	LTRACE_V();
++
++	LPRINTK_V("Releasing memory\n");
++	if (ctx != NULL) {
++		LPRINTK_V("True Release\n");
++		if (ctx->auto_lock != NULL) {
++			LPRINTK_V("Freeing kernel memory\n");
++			auto_lock_free_mem(ctx->auto_lock);
++		}
++
++#if defined(CONFIG_UNIX)
++		LPRINTK_V("Freeing socket memory\n");
++		if (ctx->auto_lock_sock) {
++			ctx->auto_lock_sock->file = NULL;
++			sock_release(ctx->auto_lock_sock);
++		}
++#endif
++		LPRINTK_V("Freeing ctx\n");
++		kfree(ctx);
++	}
++	return 0;
++}
++
++/* To free data assoisated with fd. At the moment this is all handled
++ * on process closure (although it does mean calling close on the user fd
++ * does nothing.
++ */
++static int auto_lock_fd_release(struct inode *inode, struct file *file)
++{
++#if 0
++	struct auto_lock_ctx *ctx = file->private_data;
++    LTRACE_VV();
++	file->private_data = NULL;
++	return __auto_lock_release(ctx);
++#else
++	LTRACE_VV();
++	return 0;
++#endif
++}
++
++/* ... */
++static void auto_lock_show_fdinfo(struct seq_file *m, struct file *f)
++{
++	(void)(m);
++	(void)(f);
++	LTRACE_VV();
++}
++
++/* Don't poll autolock fd. */
++static __poll_t auto_lock_poll(struct file *file, poll_table *wait)
++{
++	struct auto_lock_ctx *ctx = file->private_data;
++	struct auto_lock *auto_lock = ctx->auto_lock;
++	LTRACE_VV();
++	(void)(auto_lock);
++	return EPOLLIN; //__auto_lock_dont_sched(auto_lock) ? 0 : EPOLLIN;
++}
++
++/* fd handlers. mmap is the only one that matters. */
++static const struct file_operations auto_lock_fops = {
++	.release = auto_lock_fd_release,
++	.mmap = auto_lock_mmap,
++#ifndef CONFIG_MMU
++	.get_unmapped_area = auto_lock_nommu_get_unmapped_area,
++	.mmap_capabilities = auto_lock_nommu_mmap_capabilities,
++#endif
++	.poll = auto_lock_poll,
++#ifdef CONFIG_PROC_FS
++	.show_fdinfo = auto_lock_show_fdinfo,
++#endif
++};
++
++/* Hijacked from io_uring. For setup of the file we are going to
++ * attached the shared memory to. */
++static struct file *auto_lock_get_file(struct auto_lock_ctx *ctx)
++{
++	struct file *file;
++#if defined(CONFIG_UNIX)
++	int ret;
++	ret = sock_create_kern(&init_net, PF_UNIX, SOCK_RAW, IPPROTO_IP,
++			       &ctx->auto_lock_sock);
++	if (ret)
++		return ERR_PTR(ret);
++#endif
++	LTRACE_VV();
++	file = anon_inode_getfile_secure("[auto_lock]", &auto_lock_fops, ctx,
++					 O_RDWR | O_CLOEXEC, NULL);
++#if defined(CONFIG_UNIX)
++	if (IS_ERR(file)) {
++		sock_release(ctx->auto_lock_sock);
++		ctx->auto_lock_sock = NULL;
++	} else {
++		ctx->auto_lock_sock->file = file;
++	}
++#endif
++	return file;
++}
++
++/* Handle creation of new autolock. -EEXISTS if the user already
++ * registered one. */
++static int auto_ctx_add_ctx(struct auto_lock_ctx *ctx)
++{
++	LTRACE_VV();
++	if (current->auto_lock != NULL) {
++		return -EEXIST;
++	}
++	current->auto_lock = ctx;
++	return 0;
++}
++
++/* Assosiated the fd we use to back the shared memory with the process. */
++static int auto_lock_install_fd(struct auto_lock_ctx *ctx, struct file *file)
++{
++	int ret, fd;
++
++	LTRACE_VV();
++
++	fd = get_unused_fd_flags(O_RDWR | O_CLOEXEC);
++	if (fd < 0) {
++		LPRINTK_VV("Cant find unused fd\n");
++		return fd;
++	}
++
++	ret = auto_ctx_add_ctx(ctx);
++	if (ret) {
++		LPRINTK_VV("Error adding ctx\n");
++		return ret;
++	}
++
++	fd_install(fd, file);
++	return fd;
++}
++
++/* Create new autolock (handler for the ini syscall). */
++static long __auto_lock_create(void)
++{
++	struct file *file;
++	struct auto_lock_ctx *ctx;
++	int ret;
++
++	LTRACE_VV();
++	LPRINTK_VV("Creating new autolock\n");
++	if (current->auto_lock) {
++		ret = -EEXIST;
++		LPRINTK_VV("Already exists\n");
++		goto done0;
++	}
++
++	LPRINTK_VV("Allocating ctx\n");
++	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
++	if (ctx == NULL) {
++		LPRINTK_VV("No memory for ctx alloc\n");
++		ret = -ENOMEM;
++		goto done0;
++	}
++
++	LPRINTK_VV("Allocating usr mem\n");
++	ctx->auto_lock = auto_lock_alloc_mem();
++	if (ctx->auto_lock == NULL) {
++		ret = -ENOMEM;
++		LPRINTK_VV("No user mem\n");
++		goto done1;
++	}
++
++	LPRINTK_VV("Getting file\n");
++	file = auto_lock_get_file(ctx);
++	if (IS_ERR(file)) {
++		LPRINTK_VV("Error getting autolock file\n");
++		ret = PTR_ERR(file);
++		goto done2;
++	}
++
++	LPRINTK_VV("Installing file\n");
++	ret = auto_lock_install_fd(ctx, file);
++	if (ret < 0) {
++		LPRINTK_VV("Err installing: %d\n", current->auto_lock == NULL);
++		goto done2;
++	}
++	LPRINTK_VV("Done installing: %d\n", current->auto_lock == NULL);
++
++done0:
++	return ret;
++done2:
++	auto_lock_free_mem(ctx->auto_lock);
++done1:
++	kfree(ctx);
++	return ret;
++}
++
++/* Free memory assosiated with autolock. */
++static int __auto_lock_release_tsk(struct task_struct *tsk)
++{
++	struct auto_lock_ctx *ctx = tsk->auto_lock;
++	LTRACE_VV();
++	tsk->auto_lock = NULL;
++	return __auto_lock_release(ctx);
++}
++
++/* Equivilent just for current. */
++static long auto_lock_release(void)
++{
++	LTRACE_VV();
++	return __auto_lock_release_tsk(current);
++}
++
++void auto_lock_free(struct task_struct *tsk)
++{
++	LTRACE_VV();
++	__auto_lock_release_tsk(tsk);
++}
++
++/* The syscalls. */
++SYSCALL_DEFINE0(auto_lock_create)
++{
++	return __auto_lock_create();
++}
++
++SYSCALL_DEFINE0(auto_lock_destroy)
++{
++	return auto_lock_release();
++}
++
++/* API. */
++int auto_lock_dont_sched(struct task_struct const *tsk)
++{
++	int ret;
++	LTRACE_VVVV();
++	if (tsk->auto_lock == NULL) {
++		LPRINTK_VVVV("No autolock\n");
++		return 0;
++	}
++	LPRINTK_VVV("Testing the autolock\n");
++	ret = __auto_lock_dont_sched(tsk, tsk->auto_lock->auto_lock);
++	LPRINTK_VVV("Dont sched result: %d\n", ret);
++	return ret;
++}
++
++void auto_lock_sched(struct task_struct const *tsk)
++{
++	LTRACE_VVV();
++	if (tsk->auto_lock == NULL) {
++		LPRINTK_VVV("No autolock to dearm\n");
++		return;
++	}
++	LPRINTK_VVV("Dearmining autolock\n");
++	return __auto_lock_dearm(tsk->auto_lock->auto_lock);
++}
+-- 
+2.34.1
+

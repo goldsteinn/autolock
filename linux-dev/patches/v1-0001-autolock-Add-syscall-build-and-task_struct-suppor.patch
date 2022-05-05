@@ -1,0 +1,144 @@
+From fb8a16488a3ea209e8e60d0b22757d0c0a004665 Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Fri, 29 Apr 2022 17:54:21 -0500
+Subject: [PATCH v1 1/5] autolock: Add syscall, build, and task_struct support
+
+Note, does not compiler (auto-lock.c still does not exist).
+---
+ arch/x86/entry/syscalls/syscall_64.tbl | 3 ++-
+ include/linux/sched.h                  | 6 +++++-
+ include/linux/syscalls.h               | 3 +++
+ include/uapi/asm-generic/unistd.h      | 8 +++++++-
+ kernel/Makefile                        | 2 +-
+ kernel/fork.c                          | 2 ++
+ kernel/sys_ni.c                        | 2 ++
+ 7 files changed, 22 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+index c84d12608cd2..02bc1124d51b 100644
+--- a/arch/x86/entry/syscalls/syscall_64.tbl
++++ b/arch/x86/entry/syscalls/syscall_64.tbl
+@@ -372,7 +372,8 @@
+ 448	common	process_mrelease	sys_process_mrelease
+ 449	common	futex_waitv		sys_futex_waitv
+ 450	common	set_mempolicy_home_node	sys_set_mempolicy_home_node
+-
++451	common	auto_lock_create		sys_auto_lock_create
++452	common	auto_lock_destroy		sys_auto_lock_destroy
+ #
+ # Due to a historical design error, certain syscalls are numbered differently
+ # in x32 as compared to native x86_64.  These syscalls have numbers 512-547.
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index a8911b1f35aa..77c7e8b9cda4 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -12,6 +12,7 @@
+ #include <asm/current.h>
+ 
+ #include <linux/pid.h>
++#include <linux/auto-lock.h>
+ #include <linux/sem.h>
+ #include <linux/shm.h>
+ #include <linux/mutex.h>
+@@ -49,6 +50,7 @@ struct fs_struct;
+ struct futex_pi_state;
+ struct io_context;
+ struct io_uring_task;
++struct auto_lock_ctx;
+ struct mempolicy;
+ struct nameidata;
+ struct nsproxy;
+@@ -1078,7 +1080,9 @@ struct task_struct {
+ #ifdef CONFIG_IO_URING
+ 	struct io_uring_task		*io_uring;
+ #endif
+-
++#if 1 /* def CONFIG_AUTO_LOCK */
++	struct auto_lock_ctx		*auto_lock;
++#endif
+ 	/* Namespaces: */
+ 	struct nsproxy			*nsproxy;
+ 
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index a34b0f9a9972..feed6e153206 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -345,6 +345,9 @@ asmlinkage long sys_io_uring_enter(unsigned int fd, u32 to_submit,
+ asmlinkage long sys_io_uring_register(unsigned int fd, unsigned int op,
+ 				void __user *arg, unsigned int nr_args);
+ 
++asmlinkage long sys_auto_lock_create();
++asmlinkage long sys_auto_lock_destroy();
++
+ /* fs/xattr.c */
+ asmlinkage long sys_setxattr(const char __user *path, const char __user *name,
+ 			     const void __user *value, size_t size, int flags);
+diff --git a/include/uapi/asm-generic/unistd.h b/include/uapi/asm-generic/unistd.h
+index 1c48b0ae3ba3..5c7d2f463d7f 100644
+--- a/include/uapi/asm-generic/unistd.h
++++ b/include/uapi/asm-generic/unistd.h
+@@ -886,8 +886,14 @@ __SYSCALL(__NR_futex_waitv, sys_futex_waitv)
+ #define __NR_set_mempolicy_home_node 450
+ __SYSCALL(__NR_set_mempolicy_home_node, sys_set_mempolicy_home_node)
+ 
++#define __NR_auto_lock_create 451
++__SYSCALL(__NR_auto_lock_create, sys_auto_lock_create)
++
++#define __NR_auto_lock_create 452
++__SYSCALL(__NR_auto_lock_destroy, sys_auto_lock_destroy)
++
+ #undef __NR_syscalls
+-#define __NR_syscalls 451
++#define __NR_syscalls 453
+ 
+ /*
+  * 32 bit systems traditionally used different
+diff --git a/kernel/Makefile b/kernel/Makefile
+index 847a82bfe0e3..df1eb32f9b3a 100644
+--- a/kernel/Makefile
++++ b/kernel/Makefile
+@@ -10,7 +10,7 @@ obj-y     = fork.o exec_domain.o panic.o \
+ 	    extable.o params.o \
+ 	    kthread.o sys_ni.o nsproxy.o \
+ 	    notifier.o ksysfs.o cred.o reboot.o \
+-	    async.o range.o smpboot.o ucount.o regset.o
++	    async.o range.o smpboot.o ucount.o regset.o auto-lock.o
+ 
+ obj-$(CONFIG_USERMODE_DRIVER) += usermode_driver.o
+ obj-$(CONFIG_MODULES) += kmod.o
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 9796897560ab..823460d2d080 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -96,6 +96,7 @@
+ #include <linux/kasan.h>
+ #include <linux/scs.h>
+ #include <linux/io_uring.h>
++#include <linux/auto-lock.h>
+ #include <linux/bpf.h>
+ #include <linux/sched/mm.h>
+ 
+@@ -837,6 +838,7 @@ void __put_task_struct(struct task_struct *tsk)
+ 	WARN_ON(refcount_read(&tsk->usage));
+ 	WARN_ON(tsk == current);
+ 
++    auto_lock_free(tsk);
+ 	io_uring_free(tsk);
+ 	cgroup_free(tsk);
+ 	task_numa_free(tsk, true);
+diff --git a/kernel/sys_ni.c b/kernel/sys_ni.c
+index a492f159624f..0595fd16361b 100644
+--- a/kernel/sys_ni.c
++++ b/kernel/sys_ni.c
+@@ -51,6 +51,8 @@ COND_SYSCALL_COMPAT(io_pgetevents);
+ COND_SYSCALL(io_uring_setup);
+ COND_SYSCALL(io_uring_enter);
+ COND_SYSCALL(io_uring_register);
++COND_SYSCALL(auto_lock_create);
++COND_SYSCALL(auto_lock_destroy);
+ 
+ /* fs/xattr.c */
+ 
+-- 
+2.34.1
+

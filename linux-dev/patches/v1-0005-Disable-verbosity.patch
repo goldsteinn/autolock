@@ -1,0 +1,36 @@
+From eff61f8fbccfa17fca1130888446813106f33640 Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Fri, 6 May 2022 01:58:01 -0500
+Subject: [PATCH v1 5/5] Disable verbosity
+
+---
+ include/linux/auto-lock-verbose.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/auto-lock-verbose.h b/include/linux/auto-lock-verbose.h
+index a3fa7868f3bc..019a5473b3b0 100644
+--- a/include/linux/auto-lock-verbose.h
++++ b/include/linux/auto-lock-verbose.h
+@@ -7,15 +7,15 @@
+ #define I_LPRINTK(msg, ...)                                                    \
+ 	printk("%-20s:%-6u: " msg, __func__, __LINE__, ##__VA_ARGS__)
+ 
+-#define LPRINTK_V(...)  I_LPRINTK(__VA_ARGS__)
+-#define LPRINTK_VV(...)  I_LPRINTK(__VA_ARGS__)
++#define LPRINTK_V(...)  //I_LPRINTK(__VA_ARGS__)
++#define LPRINTK_VV(...)  //I_LPRINTK(__VA_ARGS__)
+ #define LPRINTK_VVV(...) // I_LPRINTK(__VA_ARGS__)
+ #define LPRINTK_VVVV(...) // I_LPRINTK(__VA_ARGS__)
+ 
+ #define I_LTRACE() printk("%-20s:%-6u\n", __func__, __LINE__)
+ 
+-#define LTRACE_V()  I_LTRACE()
+-#define LTRACE_VV()  I_LTRACE()
++#define LTRACE_V()  //I_LTRACE()
++#define LTRACE_VV() // I_LTRACE()
+ #define LTRACE_VVV() // I_LTRACE()
+ #define LTRACE_VVVV() // I_LTRACE()
+ 
+-- 
+2.34.1
+
