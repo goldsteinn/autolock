@@ -1,7 +1,7 @@
 From 474e1a5fc05a0a5650d536db1b4dbf1eb5658703 Mon Sep 17 00:00:00 2001
 From: Noah Goldstein <goldstein.w.n@gmail.com>
 Date: Fri, 6 May 2022 00:23:06 -0500
-Subject: [PATCH v1 3/5] Scheduler Integration - Start (Needs some edge cases +
+Subject: [PATCH v1 3/6] Scheduler Integration - Start (Needs some edge cases +
  optimization)
 
 ---
