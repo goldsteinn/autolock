@@ -1,0 +1,6 @@
+[submodule "user-dev/third-party/abseil"]
+	path = user-dev/third-party/abseil
+	url = git@github.com:abseil/abseil-cpp.git
+[submodule "user-dev/third-party/folly"]
+	path = user-dev/third-party/folly
+	url = git@github.com:facebook/folly.git
