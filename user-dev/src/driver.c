@@ -17,8 +17,12 @@ static uint32_t outer_iter = 1000 * 1000;
 static uint32_t cs_iter    = 1;
 static uint32_t extra_iter = 0;
 
-static int32_t num_trials  = 1;
-static int32_t num_threads = 1;
+static int32_t      num_trials           = 1;
+static int32_t      num_threads          = 1;
+static char const * cpu_list             = NULL;
+static int32_t      num_cpus             = -1;
+static int32_t      pin_cpus             = 0;
+static int32_t      prefer_hyper_threads = 0;
 
 static int32_t    run_all    = 0;
 static arg_rest_t lock_names = INIT_ARG_REST_T;
@@ -41,6 +45,33 @@ static ArgOption args[] = {
             0,
             &run_all,
             "Run all lock versions"),
+    ADD_ARG(
+        KindOption,
+        String,
+        ("--cpus", "--cpu-set"),
+        0,
+        &cpu_list,
+        "Set of cpus to run on. Either csv or bitmap. If contains comma will interpret as csv"),
+    ADD_ARG(KindOption,
+            Integer,
+            ("--ncpus", "--num-cpus"),
+            0,
+            &num_cpus,
+            "Max number of cpus to use. (-1) to use all."),
+    ADD_ARG(
+        KindOption,
+        Set,
+        ("--prefer-hyper", "--prefer-hyper-threads"),
+        0,
+        &prefer_hyper_threads,
+        "Set to make core pinning prefer hyperthreads (only relevant if max cpus specified is less than number supported by processors"),
+    ADD_ARG(
+        KindOption,
+        Set,
+        ("--pin", "--pin-cpus"),
+        0,
+        &pin_cpus,
+        "Set pin cpus. Will round-robin the threads to available cpus. Available cpus is default all online processors."),
     ADD_ARG(KindOption,
             Integer,
             ("--iter", "--outer-iter"),
@@ -72,7 +103,7 @@ static ArgOption args[] = {
             0,
             &num_trials,
             "Number of trials. -1 will dynamically choose a default."),
-    ADD_ARG(KindHelp, Help, "-h", 0, NULL, ""),
+    ADD_ARG(KindHelp, Help, ("-h", "--help"), 0, NULL, ""),
     ADD_ARG(
         KindRest,
         Rest,
@@ -118,7 +149,8 @@ main(int argc, char * argv[]) {
                                               sizeof(stats_result_t));
     }
     run_params_init(&common_params, outer_iter, cs_iter, extra_iter,
-                    num_trials, num_threads);
+                    num_trials, num_threads, cpu_list, num_cpus,
+                    pin_cpus, prefer_hyper_threads);
 
 
     run_decls(&lock_list, run_all ? NULL : lock_names.ptrs,

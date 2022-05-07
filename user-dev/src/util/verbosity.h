@@ -7,8 +7,6 @@
 
 #include "util/common.h"
 
-#define warn(msg, ...) fprint(stderr, "warning: " msg, ##__VA_ARGS__)
-
 #define print(...)    fprint(stdout, __VA_ARGS__)
 #define vprint(...)   vfprint(stdout, __VA_ARGS__)
 #define vvprint(...)  vvfprint(stdout, __VA_ARGS__)

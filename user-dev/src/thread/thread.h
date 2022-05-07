@@ -19,25 +19,28 @@ typedef pthread_attr_t thread_attr_t;
 
 typedef void * (*I_thread_func)(void *);
 
-#define safe_thread_create(tid, attr, func, arg)                               \
+#define safe_thread_create(tid, attr, func, arg)                       \
     I_safe_thread_create(tid, attr, func, arg, ERR_ARGS)
-#define safe_thread_join(tid, attr) I_safe_thread_join(tid, attr, ERR_ARGS)
+#define safe_thread_join(tid, attr)                                    \
+    I_safe_thread_join(tid, attr, ERR_ARGS)
 
-#define safe_thread_attr_init(attr) I_safe_thread_attr_init(attr, ERR_ARGS)
-#define safe_thread_attr_destroy(attr)                                         \
+#define safe_thread_attr_init(attr)                                    \
+    I_safe_thread_attr_init(attr, ERR_ARGS)
+#define safe_thread_attr_destroy(attr)                                 \
     I_safe_thread_attr_destroy(attr, ERR_ARGS)
-#define safe_thread_attr_set_stacksize(attr, stacksize)                        \
+#define safe_thread_attr_set_stacksize(attr, stacksize)                \
     I_safe_thread_attr_set_stacksize(attr, stacksize, ERR_ARGS)
-#define safe_thread_attr_set_affinity(attr, cpuset)                            \
+#define safe_thread_attr_set_affinity(attr, cpuset)                    \
     I_safe_thread_attr_set_affinity(attr, cpuset, ERR_ARGS)
 
-static NONNULL(1, 3) void I_safe_thread_create(thread_t * restrict tid,
-                                               thread_attr_t * restrict attr,
-                                               I_thread_func thread_func,
-                                               void * restrict arg,
-                                               char const * restrict fn,
-                                               char const * restrict func,
-                                               uint32_t ln) {
+static NONNULL(1, 3) void I_safe_thread_create(
+    thread_t * restrict tid,
+    thread_attr_t * restrict attr,
+    I_thread_func thread_func,
+    void * restrict arg,
+    char const * restrict fn,
+    char const * restrict func,
+    uint32_t ln) {
     if (UNLIKELY(pthread_create(tid, attr, thread_func, arg))) {
         I_errdie(fn, func, ln, errno, NULL);
     }
@@ -54,19 +57,21 @@ I_safe_thread_join(thread_t tid,
     }
 }
 
-static NONNULL(1) void I_safe_thread_attr_init(thread_attr_t * restrict attr,
-                                               char const * restrict fn,
-                                               char const * restrict func,
-                                               uint32_t ln) {
+static NONNULL(1) void I_safe_thread_attr_init(
+    thread_attr_t * restrict attr,
+    char const * restrict fn,
+    char const * restrict func,
+    uint32_t ln) {
     if (UNLIKELY(pthread_attr_init(attr))) {
         I_errdie(fn, func, ln, errno, NULL);
     }
 }
 
-static NONNULL(1) void I_safe_thread_attr_destroy(thread_attr_t * restrict attr,
-                                                  char const * restrict fn,
-                                                  char const * restrict func,
-                                                  uint32_t ln) {
+static NONNULL(1) void I_safe_thread_attr_destroy(
+    thread_attr_t * restrict attr,
+    char const * restrict fn,
+    char const * restrict func,
+    uint32_t ln) {
     if (UNLIKELY(pthread_attr_destroy(attr))) {
         I_errdie(fn, func, ln, errno, NULL);
     }
@@ -91,8 +96,10 @@ static NONNULL(1) void I_safe_thread_attr_set_affinity(
     char const * restrict fn,
     char const * restrict func,
     uint32_t ln) {
-    if (UNLIKELY(
-            pthread_attr_setaffinity_np(attr, sizeof(cpuset_t), cpu_set))) {
+    cpu_set_t pass_cset;
+    if (UNLIKELY(pthread_attr_setaffinity_np(
+            attr, sizeof(cpu_set_t),
+            cset_copy_to_std(cpu_set, &pass_cset)))) {
         I_errdie(fn, func, ln, errno, NULL);
     }
 }

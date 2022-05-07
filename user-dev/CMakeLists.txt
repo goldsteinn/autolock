@@ -92,8 +92,8 @@ else()
   message(FATAL_ERROR "Invalid compiler selection: ${COMPILER}")
 endif()
 
-ProcessorCount(SYS_NUM_CORES)
-list(APPEND compiler_flags_extra "-DI_SYS_NUM_CORES=${SYS_NUM_CORES}")
+ProcessorCount(SYS_NUM_CPUS)
+list(APPEND compiler_flags_extra "-DI_SYS_NUM_CPUS=${SYS_NUM_CPUS}")
 
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)

@@ -2,10 +2,8 @@
 #include <unistd.h>
 
 #include "util/sched-util.h"
+#include "util/cpu-info.h"
 
-#if I_SYS_NUM_CORES == 0
-__thread uint32_t I_sys_num_cores = 0;
-#endif
 
 /* Use syscalls directly to avoid casting mask to 'cpu_set_t *' and possible
  * violating strict-aliasing. */
@@ -47,7 +45,7 @@ I_getcpu_aff(pid_t        pid,
 void
 setcpu_and_wait(pid_t pid, uint32_t cpu) {
     int nattempts;
-    if (cpu >= get_num_cores()) {
+    if (cpu >= get_num_cpus()) {
         return;
     }
     enum { IMM8_MAX_MINUS_ONE = 127 };

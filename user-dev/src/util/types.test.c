@@ -2,6 +2,8 @@
 #include "test/test-common.h"
 #include "util/macro.h"
 
+const_assert(sizeof(ptr_int_t) == sizeof(void *));
+
 #define get_result_safe_T(T)                                                   \
     ((sizeof(T) == sizeof(safe_T(T))) &&                                       \
      (GET_IS_INT_BASE(T) == GET_IS_INT_BASE(safe_T(T))) &&                     \

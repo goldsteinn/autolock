@@ -27,28 +27,6 @@
 #define safe_get_cpu() I_safe_get_cpu(ERR_ARGS)
 #define safe_yield()   I_safe_yield(ERR_ARGS)
 
-#ifndef I_SYS_NUM_CORES
-#define I_SYS_NUM_CORES 0
-#endif
-
-#if I_SYS_NUM_CORES == 0
-extern __thread uint32_t I_sys_num_cores;
-static uint32_t
-get_num_cores() {
-    uint32_t sys_num_cores = I_sys_num_cores;
-    if (UNLIKELY(sys_num_cores == 0)) {
-        sys_num_cores   = get_nprocs();
-        I_sys_num_cores = sys_num_cores;
-    }
-    return sys_num_cores;
-}
-#else
-static CONST_FUNC uint32_t
-get_num_cores() {
-    return I_SYS_NUM_CORES;
-}
-#endif
-
 
 static uint32_t
 get_cpu() {

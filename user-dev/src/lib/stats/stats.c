@@ -263,8 +263,8 @@ stats_prints_cmp_arr(char *                 buf,
                      uint32_t               npercentiles) {
 
 #define STATS_DESC_FMT_STR       "%-16s: %16s vs %16s\n"
-#define STATS_FIELD_FMT_STR      "%-16s: %16.3lf vs %16.3lf -> %6.3lf\n"
-#define STATS_PERCENTILE_FMT_STR "%-11s(%3d): %16.3lf vs %16.3lf -> %6.3lf\n"
+#define STATS_FIELD_FMT_STR      "%-16s: %16.3E vs %16.3E -> %6.3lf\n"
+#define STATS_PERCENTILE_FMT_STR "%-11s(%3d): %16.3E vs %16.3E -> %6.3lf\n"
 
 
 #define STATS_DO_PRINT(field, fmt)                                             \
@@ -335,8 +335,8 @@ stats_prints_arr(char *                 buf,
                  uint32_t               npercentiles) {
 
 #define STATS_DESC_FMT_STR       "%-16s: %10s\n"
-#define STATS_FIELD_FMT_STR      "%-16s: %10.3lf\n"
-#define STATS_PERCENTILE_FMT_STR "%-11s(%3d): %10.3lf\n"
+#define STATS_FIELD_FMT_STR      "%-16s: %10.3E\n"
+#define STATS_PERCENTILE_FMT_STR "%-11s(%3d): %10.3E\n"
 
 #define STATS_DO_PRINT(field, fmt)                                             \
     nbytes_req += snprintf(buf + nbytes_req, buflen - nbytes_req, fmt,         \
@@ -411,7 +411,7 @@ stats_prints_csv_arr(char *                 buf,
             STATS_DO_PRINT("%s", V_TO_STR(field));                             \
         }                                                                      \
         else if (i) {                                                          \
-            STATS_DO_PRINT("%lf", CAT(stats_get_, field)(stats));              \
+            STATS_DO_PRINT("%E", CAT(stats_get_, field)(stats));              \
         }                                                                      \
     }
 
@@ -445,7 +445,7 @@ stats_prints_csv_arr(char *                 buf,
                     STATS_DO_PRINT("%s(%d)", "percentile", percentile);
                 }
                 else if (i) {
-                    STATS_DO_PRINT("%lf",
+                    STATS_DO_PRINT("%E",
                                    stats_get_percentile(stats, percentile));
                 }
             }

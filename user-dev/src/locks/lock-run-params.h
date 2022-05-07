@@ -19,6 +19,12 @@ typedef struct run_params {
     /* Bookkeeping. */
     uint32_t num_trials;
     uint32_t num_threads;
+
+    char const * cpu_list;
+    int32_t     num_cpus;
+    uint32_t     pin_cpus;
+    uint32_t     prefer_hyper_threads;
+
 } run_params_t;
 
 
@@ -37,8 +43,13 @@ run_params_init(run_params_t * params,
                 uint32_t       outer_iter,
                 uint32_t       cs_iter,
                 uint32_t       extra_iter,
-                uint32_t       num_trials,
-                uint32_t       num_threads) {
+                /* Bookkeeping. */
+                uint32_t     num_trials,
+                uint32_t     num_threads,
+                char const * cpu_list,
+                int32_t     num_cpus,
+                uint32_t     pin_cpus,
+                uint32_t     prefer_hyper_threads) {
     void * p;
     die_assert(params);
 
@@ -54,8 +65,12 @@ run_params_init(run_params_t * params,
 
     safe_thread_barrier_init(&(params->barrier), NULL, num_threads);
 
-    params->num_trials  = num_trials;
-    params->num_threads = num_threads;
+    params->num_trials           = num_trials;
+    params->num_threads          = num_threads;
+    params->cpu_list             = cpu_list;
+    params->num_cpus             = num_cpus;
+    params->pin_cpus             = pin_cpus;
+    params->prefer_hyper_threads = prefer_hyper_threads;
 }
 
 
