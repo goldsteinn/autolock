@@ -1,9 +1,15 @@
+/* Third part. */
+#include "absl/synchronization/mutex.h"
+#include "folly/MicroLock.h"
+
+/* Internal. */
 #include "locks/lock-base.h"
 #include "locks/lock-bench.h"
 
 #include "autolock-impls/autolock-export.h"
 
 #include "util/func-decl-generator.h"
+
 
 #define gen_lock(name, max_raw_iter, max_yield_iter, with_backoff,     \
                  with_yield, with_futex)                               \
@@ -119,11 +125,73 @@ class pthread_spinlock {
 } __attribute__((may_alias));
 
 
+class abseil_mutex {
+    absl::Mutex m;
+
+   public:
+    static abseil_mutex *
+    init(void * init_mem) {
+        abseil_mutex * lock = new (init_mem) abseil_mutex;
+        return lock;
+    }
+
+    int32_t
+    try_lock() {
+        return m.TryLock();
+    }
+    void
+    lock() {
+        m.Lock();
+    }
+
+    void
+    unlock() {
+        m.Unlock();
+    }
+
+    void
+    destroy() {
+        m.~Mutex();
+    }
+} __attribute__((may_alias));
+
+
+class folly_mutex {
+    folly::MicroLock m;
+
+   public:
+    static folly_mutex *
+    init(void * init_mem) {
+        folly_mutex * lock = new (init_mem) folly_mutex;
+        return lock;
+    }
+
+    int32_t
+    try_lock() {
+        return m.try_lock();
+    }
+    void
+    lock() {
+        m.lock();
+    }
+
+    void
+    unlock() {
+        m.unlock();
+    }
+
+    void
+    destroy() {
+        /* nop. */
+    }
+} __attribute__((may_alias));
+
 #define LOCK_IMPLS                                                     \
     pthread_mutex, pthread_spinlock, spinlock, backoff_spinlock,       \
         yield_spinlock, yield_backoff_spinlock, futex_spinlock,        \
         futex_backoff_spinlock, futex_yield_spinlock,                  \
-        futex_yield_backoff_spinlock, AUTOLOCK_IMPLS
+        futex_yield_backoff_spinlock, folly_mutex, abseil_mutex,       \
+        AUTOLOCK_IMPLS
 
 
 #define make_lock_info(class_name)                                     \

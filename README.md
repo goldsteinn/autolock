@@ -6,12 +6,22 @@
 **Note: All commands are written under the expectation they are done
 from the toplevel directory (where this `README` is)**
 
+### Linux Install Dependencies
+
+```
+sudo apt install build-essentialfakeroot libncurses5-dev libssl-dev ccache flex bison libelf-dev
+```
+
 ### Qemu Install Dependencies
 
 ```
-$> sudo apt install dwarves
-$> sudo apt install busybox
-$> sudo apt install qemu-system-x86
+$> sudo apt install dwarves busybox qemu-system-x86
+```
+
+### User-dev Install Dependencies
+
+```
+$> sudo apt install libdouble-conversion-dev libfmt-dev libglog-dev libunwind-dev libboost-all-dev
 ```
 
 **After this point NOTHING should require `sudo`.**
@@ -62,12 +72,12 @@ $> sudo apt install qemu-system-x86
     ```
     # Note: At the moment there are no submodules but we may want to
     # test against `abseil`/`folly` implementations.
-    # $> git submodule --init --recursive
+    $> git submodule --init --recursive
     ```
 
 2. **Config userland support**
     ```
-    $> cmake -DLANG=CXX -DCOMPILER=g++ -DWITH_MATH=1 -DWITH_THREAD=1 -DWITH_VDSO=1 -S user-dev/ -B user-dev/build
+    $> cmake -DBUILD_TESTING=OFF -DLANG=CXX -DCOMPILER=g++ -DWITH_MATH=1 -DWITH_THREAD=1 -DWITH_VDSO=1 -S user-dev/ -B user-dev/build
     ```
 
 3. **Build userland support**

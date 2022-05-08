@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 3.1.3)
 project(Project_Template C CXX ASM)
 include(ProcessorCount)
 
+set(third_party_libs abseil folly)
+
+foreach(third_party_lib ${third_party_libs})
+  add_subdirectory("third-party/${third_party_lib}")
+endforeach()
+foreach(third_party_lib ${third_party_libs})
+  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/third-party/${third_party_lib}")
+endforeach()
+
+
+
 set(WITH_MATH 1 CACHE BOOL "Set to load math (enables some stats stuff)")
 set_property(CACHE WITH_MATH
   PROPERTY STRINGS "1" "0")
@@ -129,6 +140,10 @@ set(EXE_SRC ${SRC_DIR}/driver.c)
 set(EXE "driver")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SRC_DIR}")
+# Include abseil/folly
+
+
+
 file(GLOB_RECURSE C_SOURCES "${CMAKE_SOURCE_DIR}/${SRC_DIR}/*.c")
 set_source_files_properties(${C_SOURCES} PROPERTIES LANGUAGE ${LANG})
 
@@ -176,7 +191,7 @@ add_custom_target(
 
 add_executable(driver ${EXE_SRC} ${C_SOURCES} ${ASM_SOURCES})
 target_compile_options(driver PRIVATE ${driver_compiler_flags})
-target_link_libraries(driver ${link_libraries})
+target_link_libraries(driver ${link_libraries} absl::synchronization folly)
 set_target_properties(driver PROPERTIES LINKER_LANGUAGE ${LANG})
 message("Install at: ${INSTALL_DIR}")
 install(TARGETS driver DESTINATION "${INSTALL_DIR}")
