@@ -198,6 +198,7 @@ The two directories that have interesting stuff are [`src/autolock-impls`](https
 
 
 #### Exported API
+
     - All locks are exported as a **C++ `class`** with the same API. An example can be seen with with [`pthread_mutex`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/locks/lock-decls.c#L57).
     - The API includes:
         1. `static __typeof__(this) init(void *) /* __typeof__(this) is a pointer to the class type. */ `
