@@ -9,7 +9,8 @@
 I_vdso_placeholder_f vdso_funcs[] = {
     CAST(I_vdso_placeholder_f, &direct_clock_gettime),
     CAST(I_vdso_placeholder_f, &gettimeofday),
-    CAST(I_vdso_placeholder_f, &getcpu), CAST(I_vdso_placeholder_f, &time)
+    CAST(I_vdso_placeholder_f, &getcpu_p),
+    CAST(I_vdso_placeholder_f, &time)
 };
 
 
@@ -49,18 +50,19 @@ vdso_init() {
     uint32_t ret = 0;
 #ifdef WITH_VDSO
     void * vdso_lib;
-    vdso_lib = CAST(void *, dlopen("linux-vdso.so.1",
-                                   RTLD_LAZY | RTLD_LOCAL | RTLD_NOLOAD));
+    vdso_lib =
+        CAST(void *, dlopen("linux-vdso.so.1",
+                            RTLD_LAZY | RTLD_LOCAL | RTLD_NOLOAD));
     if (vdso_lib == NULL) {
         return -1U;
     }
 
-    ret |= set_vdso_func(
-        CAST(I_vdso_placeholder_f, dlsym(vdso_lib, "__vdso_clock_gettime")),
-        vdso_clock_gettime_offset);
-    ret |= set_vdso_func(
-        CAST(I_vdso_placeholder_f, dlsym(vdso_lib, "__vdso_gettimeofday")),
-        vdso_gettimeofday_offset);
+    ret |= set_vdso_func(CAST(I_vdso_placeholder_f,
+                              dlsym(vdso_lib, "__vdso_clock_gettime")),
+                         vdso_clock_gettime_offset);
+    ret |= set_vdso_func(CAST(I_vdso_placeholder_f,
+                              dlsym(vdso_lib, "__vdso_gettimeofday")),
+                         vdso_gettimeofday_offset);
     ret |= set_vdso_func(
         CAST(I_vdso_placeholder_f, dlsym(vdso_lib, "__vdso_getcpu")),
         vdso_getcpu_offset);

@@ -4,7 +4,7 @@
 #include "thread/cpuset.h"
 
 #if I_SYS_NUM_CPUS == 0
-uint32_t I_sys_num_cores = 0;
+uint32_t I_sys_num_cpus = 0;
 #endif
 
 cpu_id_t I_sys_logical_to_physical_map[I_SYS_CORE_MAP_SIZE] = { 0 };

@@ -22,7 +22,7 @@
     ({                                                                 \
         static bool I_tmp_warned_;                                     \
         if (I_tmp_warned_ == 0) {                                      \
-            I_tmp_warned_ = 1;                                          \
+            I_tmp_warned_ = 1;                                         \
             warn(msg, ##__VA_ARGS__);                                  \
         }                                                              \
     })
@@ -65,7 +65,7 @@
 #define die(msg, args...)    I_die(ERR_ARGS, msg, ##args);
 #define errdie(msg, args...) I_errdie(ERR_ARGS, errno, msg, ##args);
 
-// #define WITH_DBG_PRINT
+//#define WITH_DBG_PRINT
 #ifdef WITH_DBG_PRINT
 #define dbg_assert(...) die_assert(__VA_ARGS__)
 #define dbg_print(...)  fprintf(stderr, __VA_ARGS__)

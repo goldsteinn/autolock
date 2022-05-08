@@ -25,7 +25,7 @@ cpu_list_to_cpuset(char const * cpu_list, cpuset_t * cset) {
         }
         else {
             warn_once("Specified cpu [%u] out of range [0 - %u]\n", cpu,
-                 nprocs - 1);
+                      nprocs - 1);
         }
 
 
@@ -52,11 +52,14 @@ set_allowable_cset(cpuset_t *   cset,
                    int32_t      num_cpus,
                    uint32_t     pin_cpus,
                    uint32_t     prefer_hyper_threads) {
+    PRINTFFL;
     if (!should_pin_cpus(cpu_list, num_cpus, pin_cpus)) {
+        PRINTFFL;
         cset_zero(cset);
         return 0;
     }
     else if (cpu_list != NULL) {
+        PRINTFFL;
         warn_once_assert(
             num_cpus <= 0,
             "Overriding --num-cpus preference with explicit cpu list\n");
@@ -67,16 +70,20 @@ set_allowable_cset(cpuset_t *   cset,
         cpu_list_to_cpuset(cpu_list, cset);
     }
     else if (num_cpus <= 0) {
+        PRINTFFL;
         cset_all(cset);
     }
     else {
         int32_t nprocs = get_num_cpus();
+        PRINTFFL;
         if (num_cpus >= nprocs) {
-            warn_once("--num-cpus (%d) greater than number of procs (%d)\n",
-                 num_cpus, nprocs);
+            warn_once(
+                "--num-cpus (%d) greater than number of procs (%d)\n",
+                num_cpus, nprocs);
             cset_all(cset);
         }
         else {
+            PRINTFFL;
             cset_zero(cset);
             if (prefer_hyper_threads) {
                 /* Set sibling groups at a time. This is relatively
@@ -88,7 +95,7 @@ set_allowable_cset(cpuset_t *   cset,
                 cpuset_t cset_siblings;
                 int32_t  i, num_set = num_cpus;
                 cset_zero(&cset_siblings);
-
+                PRINTFFL;
                 for (i = 0; i < nprocs; ++i) {
                     if (cset_isset(i, cset)) {
                         continue;
@@ -104,7 +111,7 @@ set_allowable_cset(cpuset_t *   cset,
                      * the siblings. */
                     die_assert(cset_test(&cset_siblings, cset) == 0);
 
-                    cset_or(cset, &cset_siblings);
+                    cset_or_eq(cset, &cset_siblings);
                 }
                 die_assert(cset_test(&cset_siblings, cset) == 0);
 
@@ -116,11 +123,13 @@ set_allowable_cset(cpuset_t *   cset,
                         --num_set;
                     }
                 }
-                cset_or(cset, &cset_siblings);
+                PRINTFFL;
+                cset_or_eq(cset, &cset_siblings);
             }
             else {
                 /* Avoiding grouping by hyper thread. */
                 int32_t i, phys_id, iter_cnt = 0;
+                PRINTFFL;
                 for (;;) {
                     for (i = 0; i < nprocs; ++i) {
                         if (cset_isset(i, cset)) {
@@ -142,6 +151,7 @@ set_allowable_cset(cpuset_t *   cset,
             }
         }
     }
+    PRINTFFL;
     return 1;
 }
 
@@ -197,16 +207,18 @@ I_run(func_decl_t const * to_run,
     expec = get_expected_count(num_threads, params->outer_iter,
                                params->cs_iter);
 
-
+    PRINTFFL;
     with_cpu_pinning = set_allowable_cset(
         &allowable_cset, params->cpu_list, params->num_cpus,
         params->pin_cpus, params->prefer_hyper_threads);
+    PRINTFFL;
     die_assert(cset_empty(&allowable_cset) == (!with_cpu_pinning));
+    PRINTFFL;
     cset_zero(&cur_cset);
-
+    PRINTFFL;
     safe_thread_attr_init(&attr);
     safe_thread_attr_set_stacksize(&attr, 32768);
-
+    PRINTFFL;
 
     for (i = 0; i < num_trials; ++i) {
         run_params_reset(params);
@@ -215,12 +227,14 @@ I_run(func_decl_t const * to_run,
         for (j = 0; j < num_threads; ++j) {
             if (with_cpu_pinning) {
                 cpuset_t cset;
+                PRINTFFL;
                 if (cset_empty(&cur_cset)) {
                     cset_copy(&cur_cset, &allowable_cset);
                 }
                 cset_copy_first(&cset, &cur_cset);
                 die_assert(!cset_empty(&cset));
                 cset_clr_first(&cur_cset);
+                PRINTFFL;
 
                 safe_thread_attr_set_affinity(&attr, &cset);
             }

@@ -19,6 +19,13 @@ NONNULL(1, 2) cset_copy(cpuset_t * lhs, cpuset_t const * rhs) {
     __builtin_memcpy(lhs, rhs, sizeof(*rhs));
 }
 
+static cpuset_t
+new_cpuset_zero() {
+    cpuset_t cset;
+    cset_zero(&cset);
+    return cset;
+}
+
 
 #ifdef I_CPU_SET_OPTIMIZED
 
@@ -79,9 +86,16 @@ NONNULL(1, 2) cset_equal(cpuset_t const * lhs, cpuset_t const * rhs) {
     return *lhs == *rhs;
 }
 
-static uint32_t
-NONNULL(1, 2) cset_or(cpuset_t * dst, cpuset_t const * src) {
-    return *dst |= *src;
+static void
+NONNULL(1, 2) cset_or(cpuset_t *       dst,
+                      cpuset_t const * src0,
+                      cpuset_t const * src1) {
+    *dst = (*src0) | (*src1);
+}
+
+static void
+NONNULL(1, 2) cset_or_eq(cpuset_t * dst, cpuset_t const * src) {
+    *dst |= *src;
 }
 
 static uint32_t
@@ -109,8 +123,12 @@ NONNULL(1, 2)
 #define cset_clr   CPU_CLR
 #define cset_and   CPU_AND
 
+static void
+NONNULL(1, 2) cset_or_eq(cpuset_t * dst, cpuset_t const * src) {
+    cset_or(dst, dst, src);
+}
 
-static uint32_t
+static int32_t
 NONNULL(1) cset_empty(cpuset_t const * cset) {
     cpuset_t zero_set;
     cset_zero(&zero_set);
@@ -120,15 +138,15 @@ NONNULL(1) cset_empty(cpuset_t const * cset) {
 static uint32_t
 NONNULL(1, 2) cset_test(cpuset_t const * lhs, cpuset_t const * rhs) {
     cpuset_t tmp;
-    __builtin_memcpy(&tmp, lhs, sizeof(tmp));
-    cset_and(&tmp, rhs);
+    cset_and(&tmp, lhs, rhs);
     return !cset_empty(&tmp);
 }
 
-static int32_t
+static uint32_t
 NONNULL(1) cset_first(cpuset_t const * cset) {
-    uint32_t i;
-    uint32_t ncpus = get_num_cpus();
+    int32_t i;
+    int32_t ncpus = get_num_cpus();
+    die_assert(!cset_empty(cset));
     for (i = 0; i < ncpus; ++i) {
         if (cset_isset(i, cset)) {
             return i;
@@ -137,18 +155,18 @@ NONNULL(1) cset_first(cpuset_t const * cset) {
     return -1;
 }
 
-static int32_t
+static void
 NONNULL(1, 2) cset_copy_first(cpuset_t * lhs, cpuset_t const * rhs) {
+    int32_t cpu = cset_first(rhs);
     cset_zero(lhs);
-    uint32_t cpu = cset_first(rhs);
-    die_assert(cpu != -1);
+    die_assert(cpu != (-1));
     cset_set(cpu, lhs);
 }
 
-static int32_t
+static void
 NONNULL(1) cset_clr_first(cpuset_t * cset) {
     uint32_t cpu = cset_first(cset);
-    die_assert(cpu != -1);
+    die_assert(cpu != -1U);
     cset_set(cpu, cset);
 }
 
@@ -167,6 +185,7 @@ NONNULL(1) cset_all(cpuset_t * cset) {
 static ALWAYS_INLINE CONST_FUNC cpu_set_t const *
 NONNULL(1, 2)
     cset_copy_to_std(cpuset_t const * orig, cpu_set_t * other) {
+    (void)(other);
     return orig;
 }
 

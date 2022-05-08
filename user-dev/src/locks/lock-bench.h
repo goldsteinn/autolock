@@ -32,7 +32,6 @@ I_bench_runner_kernel(lock_T *           lock,
     for (; outer_iter; --outer_iter) {
         lock->lock();
         assert(cs_iter);
-        GURANTEED(cs_iter);
         for (i = cs_iter; i; --i) {
             compiler_do_not_optimize_out(I_cs_work(global_state));
         }

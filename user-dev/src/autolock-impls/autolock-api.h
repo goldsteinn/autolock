@@ -27,24 +27,19 @@ autolock_init_kernel_state() {
     int32_t fd;
     void *  p;
 
-    PRINTFFL;
     if (LIKELY(kernel_autolock != NULL)) {
         return 0;
     }
-    PRINTFFL;
 
     /* Get fd back for shared memory mapping. */
     fd = ll_syscall_cc(
         _NR_AUTOLOCK_CREATE, /* None */, /* None */, /* None */,
         /* None */);
-    PRINTFFL;
     /* Return non-zero value on failure. */
     if (UNLIKELY(fd < 0)) {
-        PRINTFFL;
         return fd;
     }
 
-    PRINTFFL;
     /* Map a page (wasteful, looking into to putting this on the stack
      * similiar to rseq). */
     p = CAST(void *,
@@ -53,15 +48,12 @@ autolock_init_kernel_state() {
                             MAP_SHARED | MAP_POPULATE, fd, 0),
                            /* None */, /* None */,
                            /* None */));
-    PRINTFFL;
     /* Return non-zero value on failure. */
     if (UNLIKELY(p == MAP_FAILED)) {
-        PRINTFFL;
         return CAST(int32_t,
                     CAST(uint32_t, CAST(uint64_t, MAP_FAILED)));
     }
 
-    PRINTFFL;
     /* Success, set thread's autolock and return zero. */
     kernel_autolock = (struct kernel_autolock_abi *)p;
 

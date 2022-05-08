@@ -78,6 +78,8 @@ if(${WITH_VDSO})
   list(APPEND compiler_flags_extra "-DWITH_VDSO")
 endif()
 
+# Add third party stuff
+list(APPEND link_libraries "absl::synchronization" "folly")
 
 get_filename_component(INSTALL_DIR "${INSTALL_DIR}" ABSOLUTE)
 
@@ -103,8 +105,6 @@ else()
   message(FATAL_ERROR "Invalid compiler selection: ${COMPILER}")
 endif()
 
-ProcessorCount(SYS_NUM_CPUS)
-list(APPEND compiler_flags_extra "-DI_SYS_NUM_CPUS=${SYS_NUM_CPUS}")
 
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
@@ -124,7 +124,8 @@ foreach(attr ${attrs})
   list(APPEND wattrs "-Wsuggest-attribute=${attr}")
 endforeach()
 
-set(default_compiler_flags "-D_GNU_SOURCE" "-O2" "-Wwrite-strings" "-Wcast-qual" "-Wdangling-else" "-Woverlength-strings" "-Wdisabled-optimization" "-Wstrict-aliasing" "-Wstrict-overflow" "-Werror" "-Wall" "-Wextra" "-Wno-unused-function" "-Wno-variadic-macros" "-march=native" "-mtune=native" "-std=${STD}" "${LANG_FLAGS}" "${file_name_flag}")
+ProcessorCount(SYS_NUM_CPUS)
+set(default_compiler_flags "-D_GNU_SOURCE" "-O2" "-Wwrite-strings" "-Wcast-qual" "-Wdangling-else" "-Woverlength-strings" "-Wdisabled-optimization" "-Wstrict-aliasing" "-Wstrict-overflow" "-Werror" "-Wall" "-Wextra" "-Wno-unused-function" "-Wno-variadic-macros" "-march=native" "-mtune=native" "-std=${STD}" "${LANG_FLAGS}" "${file_name_flag}" "-DI_SYS_NUM_CPUS=${SYS_NUM_CPUS}")
 
 
 set(driver_compiler_flags ${default_compiler_flags})
@@ -191,9 +192,10 @@ add_custom_target(
 
 add_executable(driver ${EXE_SRC} ${C_SOURCES} ${ASM_SOURCES})
 target_compile_options(driver PRIVATE ${driver_compiler_flags})
-target_link_libraries(driver ${link_libraries} absl::synchronization folly)
+target_link_libraries(driver ${link_libraries})
 set_target_properties(driver PROPERTIES LINKER_LANGUAGE ${LANG})
-message("Install at: ${INSTALL_DIR}")
+
+set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}")
 install(TARGETS driver DESTINATION "${INSTALL_DIR}")
 
 add_executable(tests ${TEST_EXE_SRC} ${TEST_C_SOURCES} ${C_SOURCES} ${ASM_SOURCES})
