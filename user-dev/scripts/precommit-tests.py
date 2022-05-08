@@ -53,7 +53,7 @@ def run_process(cmd):
 
         ret = sproc.returncode
         return ret, stdout_data, stderr_data
-    except:
+    except Exception:
         return -1, None, None
 
 
