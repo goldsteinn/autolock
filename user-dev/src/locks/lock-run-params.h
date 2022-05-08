@@ -6,28 +6,40 @@
 
 #include "thread/barrier.h"
 
+
+/* All parameters we can set for the benchmarks. */
 typedef uint64_t global_counter_t;
 typedef struct run_params {
     /* Used in benchmark. */
-    void *             shared_memory;
-    global_counter_t * global_state;
-    uint32_t           outer_iter;
-    uint32_t           cs_iter;
-    uint32_t           extra_iter;
-    thread_barrier_t   barrier;
+    void * shared_memory; /* memory used for the lock. */
+    global_counter_t *
+             global_state;    /* Global state to modify while locked. */
+    uint32_t outer_iter;      /* iterations of cs + extra loops. */
+    uint32_t cs_iter;         /* critical section iterations. */
+    uint32_t extra_iter;      /* non-critical section iterations. */
+    thread_barrier_t barrier; /* barrier for synchronizing benchmark. */
 
     /* Bookkeeping. */
-    uint32_t num_trials;
-    uint32_t num_threads;
+    uint32_t num_trials;  /* times to repeat benchmark. */
+    uint32_t num_threads; /* Number of threads to use. */
 
-    char const * cpu_list;
-    int32_t     num_cpus;
-    uint32_t     pin_cpus;
-    uint32_t     prefer_hyper_threads;
+
+    /* various ways to specify cpu selection. Note that if multiple are
+     * set only one will be used in the following priority order:
+     * cpu_list > num_cpus > pin_cpus. `prefer_hyper_threads` is only
+     * relevant if `num_cpus` is set. */
+    char const * cpu_list; /* csv of cpus to use. */
+    int32_t      num_cpus; /* maximum number of cpus to use. */
+    uint32_t     pin_cpus; /* whether we could pin. */
+    uint32_t
+        prefer_hyper_threads; /* default is to pin to physical cores.
+                                 This overrides that and prefers pinning
+                                 to hyperthreads. */
 
 } run_params_t;
 
 
+/* Reset between running benchmarks. */
 static void
 run_params_reset(run_params_t * params) {
     die_assert(params);
@@ -38,6 +50,8 @@ run_params_reset(run_params_t * params) {
     memset_c(params->global_state, 0, sizeof(*(params->global_state)));
 }
 
+
+/* Initialize params with all componenents. */
 static void
 run_params_init(run_params_t * params,
                 uint32_t       outer_iter,
@@ -47,7 +61,7 @@ run_params_init(run_params_t * params,
                 uint32_t     num_trials,
                 uint32_t     num_threads,
                 char const * cpu_list,
-                int32_t     num_cpus,
+                int32_t      num_cpus,
                 uint32_t     pin_cpus,
                 uint32_t     prefer_hyper_threads) {
     void * p;
@@ -73,7 +87,7 @@ run_params_init(run_params_t * params,
     params->prefer_hyper_threads = prefer_hyper_threads;
 }
 
-
+/* Free param. */
 static void
 run_params_destroy(run_params_t * params) {
     die_assert(params);

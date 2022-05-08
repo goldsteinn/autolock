@@ -142,6 +142,7 @@ main(int argc, char * argv[]) {
     die_assert(num_threads > 0,
                "Must have positive number of threads\n");
     die_assert(num_trials > 0, "Must have positive number of trials\n");
+    die_assert(outer_iter > 0, "Must have non-zero outer-iter count\n");
 
 
     if (do_list || (!run_all && lock_names.n == 0)) {

@@ -3,6 +3,7 @@
 
 #include "util/func-decl-generator.h"
 
+/* Just export the decl_list made in "lock-decls.c". */
 extern const decl_list_t lock_list;
 
 #endif
