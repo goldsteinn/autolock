@@ -45,7 +45,7 @@ class lock_ops {
     backoff_init() {
         if constexpr (kwith_backoff) {
             /* Fast and pseudo random. Never want zero. */
-            return (get_ll_time() & 31) + 1;
+            return get_ll_time() & 31;
         }
         else {
             return 0;
@@ -57,7 +57,7 @@ class lock_ops {
         if constexpr (kwith_backoff) {
             /* We just need to stagger the threads really. Too many
              * iters will start to negatively impact latency. */
-            return (backoff + backoff) & 511;
+            return (backoff + backoff + 1) & 511;
         }
         else {
             return 0;

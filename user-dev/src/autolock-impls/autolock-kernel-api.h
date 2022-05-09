@@ -1,8 +1,9 @@
-#ifndef _SRC__AUTLOCK_IMPLS__AUTOLOCK_COMMON_H_
-#define _SRC__AUTLOCK_IMPLS__AUTOLOCK_COMMON_H_
+#ifndef _SRC__AUTOLOCK_IMPLS__AUTOLOCK_KERNEL_API_H_
+#define _SRC__AUTOLOCK_IMPLS__AUTOLOCK_KERNEL_API_H_
+
 
 #include "arch/ll-syscall.h"
-#include "autolock-impls/autolock-abi.h"
+#include "autolock-impls/autolock-kernel-abi.h"
 
 /********************************************************************/
 /* Syscall numbers. */

@@ -3,9 +3,9 @@
 
 
 #include "arch/ll-pause.h"
-#include "autolock-impls/autolock-api.h"
-
+#include "autolock-impls/autolock-kernel-api.h"
 /********************************************************************/
+
 /* Lock structure. */
 typedef struct simple_autolock {
     uint32_t
