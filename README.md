@@ -197,18 +197,23 @@ Finally, note that the the two targets [`test-driver`] and
 functionality of the suite and are **entirely unrelated to the
 `autolock` project.**
 
-The two directories that have interesting stuff are [`src/autolock-impls`](https://github.com/goldsteinn/autolock/tree/master/user-dev/src/autolock-impls) and [`src/locks`](https://github.com/goldsteinn/autolock/tree/master/user-dev/src/locks).
+The two directories that have interesting stuff are
+[`src/autolock-impls`](https://github.com/goldsteinn/autolock/tree/master/user-dev/src/autolock-impls)
+and
+[`src/locks`](https://github.com/goldsteinn/autolock/tree/master/user-dev/src/locks).
 
 
 #### Exported API
-    - All locks are exported as a **C++ `class`** with the same API. An example can be seen with with [`pthread_mutex`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/locks/lock-decls.c#L57).
-    - The API includes:
-        1. `static __typeof__(this) init(void *) /* __typeof__(this) is a pointer to the class type. */ `
-        2. `void destroy()`
-        3. `int try_lock()`
-        4. `void lock()`
-        5. `void unlock()`
-    - The API is used by the templated benchmark code in [`src/locks/lock-bench.h`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/locks/lock-bench.h).
+- All locks are exported as a C++ `class` with the same
+      API. An example can be seen with with
+      [`pthread_mutex`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/locks/lock-decls.c#L57).
+- The API includes:
+    - `static __typeof__(this) init(void *) /* __typeof__(this) is a pointer to the class type. */ `
+    - `void destroy()`
+    - `int try_lock()`
+    - `void lock()`
+    - `void unlock()`
+- The API is used by the templated benchmark code in [`src/locks/lock-bench.h`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/locks/lock-bench.h).
 
 
 #### Autolock Implementations
@@ -217,12 +222,12 @@ Found in directory: [`src/autolock-impls/`](https://github.com/goldsteinn/autolo
 
 
 1. **Autolock ABI for interacting with kernel shared memory**
-    - [`src/autolock-impls/autolock-abi.h`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/autolock-impls/autolock-abi.h) defines the memory layout.
+    - [`src/autolock-impls/autolock-kernel-abi.h`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/autolock-impls/autolock-kernel-abi.h) defines the memory layout.
     - [`src/autolock-impls/kernel-autolock.c`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/autolock-impls/kernel-autolock.c) defines the TLS storage for the userland pointer to the shared mapping.
     - Neither of these should be included directly.
 
 2. **Autolock API for interacting with the kernel**
-    - [`src/autolock-impls/autolock-api.h`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/autolock-impls/autolock-api.h) This includes setup/teardown and the `extern` def for the TLS storage.
+    - [`src/autolock-impls/autolock-kernel-api.h`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/autolock-impls/autolock-kernel-api.h) This includes setup/teardown and the `extern` def for the TLS storage.
     - This is included by all autolock implementations.
 
 3. **Autolock exported API**
@@ -231,6 +236,20 @@ Found in directory: [`src/autolock-impls/`](https://github.com/goldsteinn/autolo
     - The exact list of exported implementations is set at [`#define AUTOLOCK_IMPLS`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/autolock-impls/autolock-export.h#L41)
 
 4. **Actual user-level autolocks**
+    - There is a baseline implementation that defines all the glue in
+      [`src/autlock-impls/internal/autolock-common-user-api.h`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/autolock-impls/internal/autolock-common-user-api.h). This
+      defines the API and implementation for:
+        - `typedef user_autolock_t`
+        - `void autolock_init(user_autolock_t * lock)`
+        - `void autolock_destroy(user_autolock_t * lock)`
+        - `int autolock_trylock(user_autolock_t * lock)`
+        - `void autolock_unlock(user_autolock_t * lock)`
+
+    All user-level locks built on the kernel autolock functionality
+    can alias `<lock_name>_{init|destroy|trylock|unlock}` to the
+    respective `user_{init|destroy|trylock|unlock}` functions. As well
+    they can just `typedef user_autolock_t <lock_name>_autolock_t`.
+
     - [`src/autolock-impls/simple-autolock.h`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/autolock-impls/simple-autolock.h) Just a simple spinlock.
 
 
