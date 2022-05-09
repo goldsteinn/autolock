@@ -11,6 +11,19 @@
 #include "util/func-decl-generator.h"
 
 
+/* All lock declarations must be included here and appended below to
+ * LOCK_IMPLS. All locks must adhere to the following API:
+ *      1. static __typeof__(this) init(void *)
+ *      2. void destroy()
+ *      3. int try_lock()
+ *      4. void lock()
+ *      5. void unlock()
+ */
+
+
+/* Macro for generating lock implementing as config of `class lock_ops`
+ * (see lock-base.h). */
+
 #define gen_lock(name, max_raw_iter, max_yield_iter, with_backoff,     \
                  with_yield, with_futex)                               \
     class name {                                                       \
@@ -47,6 +60,7 @@
     } __attribute__((may_alias));
 
 
+/* Common configs worth testing. */
 gen_lock(spinlock, 0, 0, 0, 0, 0);
 gen_lock(backoff_spinlock, 0, 0, 1, 0, 0);
 
@@ -60,6 +74,7 @@ gen_lock(futex_yield_spinlock, 16, 4, 0, 1, 1);
 gen_lock(futex_yield_backoff_spinlock, 16, 4, 1, 1, 1);
 
 
+/* Lock API build on pthread_mutex. */
 class pthread_mutex {
     pthread_mutex_t m;
 
@@ -93,6 +108,7 @@ class pthread_mutex {
 } __attribute__((may_alias));
 
 
+/* Lock API build on pthread_spinlock. */
 class pthread_spinlock {
     pthread_spinlock_t m;
 
@@ -124,7 +140,7 @@ class pthread_spinlock {
     }
 } __attribute__((may_alias));
 
-
+/* Lock API build on google abseil's mutex. */
 class abseil_mutex {
     absl::Mutex m;
 
@@ -155,7 +171,7 @@ class abseil_mutex {
     }
 } __attribute__((may_alias));
 
-
+/* Lock API build on facebook folly's mutex. */
 class folly_mutex {
     folly::MicroLock m;
 
@@ -186,6 +202,10 @@ class folly_mutex {
     }
 } __attribute__((may_alias));
 
+
+/* All implementations (AUTOLOCK_IMPLS defined in
+ * autolock-impls/autolock-export.h. */
+
 #define LOCK_IMPLS                                                     \
     pthread_mutex, pthread_spinlock, spinlock, backoff_spinlock,       \
         yield_spinlock, yield_backoff_spinlock, futex_spinlock,        \
@@ -201,8 +221,13 @@ class folly_mutex {
         }                                                              \
     }
 
-custom_make_decls(decl_list_t,
-                  lock_list,
-                  make_lock_info,
-                  EAT,
-                  LOCK_IMPLS);
+/* Declare all locks in LOCK_IMPLS use the above `make_lock_info` macro.
+ * This gets us a pointer to each of their templated bench_runner
+ * functions. */
+custom_make_decls(
+    decl_list_t,    /* Type (list with func pointers + name. */
+    lock_list,      /* Variable name for the list. */
+    make_lock_info, /* Initialization macro. */
+    EAT,            /* Just eat args (we don't need fwd declare). */
+    LOCK_IMPLS      /* All lock impls. */
+);

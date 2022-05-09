@@ -1,10 +1,12 @@
 #ifndef _SRC__UTIL__CPU_INFO_H_
 #define _SRC__UTIL__CPU_INFO_H_
 
+#include <sched.h>
+#include <sys/sysinfo.h>
+
 #include "util/attrs.h"
 #include "util/error-util.h"
 #include "util/types.h"
-
 
 #ifndef I_SYS_NUM_CPUS
 #define I_SYS_NUM_CPUS 0

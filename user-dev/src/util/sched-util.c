@@ -1,12 +1,12 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-#include "util/sched-util.h"
 #include "util/cpu-info.h"
+#include "util/sched-util.h"
 
 
-/* Use syscalls directly to avoid casting mask to 'cpu_set_t *' and possible
- * violating strict-aliasing. */
+/* Use syscalls directly to avoid casting mask to 'cpu_set_t *' and
+ * possible violating strict-aliasing. */
 static int64_t
 I_sched_setaffinity(pid_t pid, size_t cpusetsize, cpuset_t * mask) {
     return syscall(SYS_sched_setaffinity, pid, cpusetsize, mask);

@@ -11,6 +11,7 @@
 
 #include "util/vdso-arch-masks.h"
 #include "util/vdso-func-enum.h"
+#include "util/getcpu-portable.h"
 
 typedef void (*I_vdso_placeholder_f)(void);
 
@@ -50,7 +51,7 @@ NONNULL(1) vdso_gettimeofday(struct timeval * restrict tv,
 
 static int32_t
 NONNULL(1) vdso_getcpu(uint32_t * restrict cpu, uint32_t * restrict node) {
-    return CAST_TO_FUNC(getcpu, vdso_funcs[vdso_getcpu_offset])(cpu, node);
+    return CAST_TO_FUNC(getcpu_p, vdso_funcs[vdso_getcpu_offset])(cpu, node);
 }
 
 static time_t

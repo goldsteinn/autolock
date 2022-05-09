@@ -21,7 +21,10 @@ $> sudo apt install dwarves busybox qemu-system-x86
 ### User-dev Install Dependencies
 
 ```
+# Ubuntu 22+
 $> sudo apt install libdouble-conversion-dev libfmt-dev libglog-dev libunwind-dev libboost-all-dev
+# Ubuntu 18
+$> sudo apt install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libunwind-dev libboost-all-dev
 ```
 
 **After this point NOTHING should require `sudo`.**
@@ -72,7 +75,7 @@ $> sudo apt install libdouble-conversion-dev libfmt-dev libglog-dev libunwind-de
     ```
     # Note: At the moment there are no submodules but we may want to
     # test against `abseil`/`folly` implementations.
-    $> git submodule --init --recursive
+    $> git submodule update --init --recursive
     ```
 
 2. **Config userland support**

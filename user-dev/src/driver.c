@@ -130,15 +130,20 @@ run_lock_test(func_decl_t const * lock) {
         stats_set_desc(stats + (stats_idx++), lock->name);
     }
 }
-
 int
 main(int argc, char * argv[]) {
     die_assert(!doParse(&argp, argc, argv),
                "Error parsing arguments\n");
     set_verbosity(verbosity);
 
+    /* Check arguments are valid. */
     die_assert(do_bench + do_test + do_list == 1,
                "Must specify list, test, or bench (exclusively)\n");
+    die_assert(num_threads > 0,
+               "Must have positive number of threads\n");
+    die_assert(num_trials > 0, "Must have positive number of trials\n");
+    die_assert(outer_iter > 0, "Must have non-zero outer-iter count\n");
+
 
     if (do_list || (!run_all && lock_names.n == 0)) {
         list_decls(&lock_list);
