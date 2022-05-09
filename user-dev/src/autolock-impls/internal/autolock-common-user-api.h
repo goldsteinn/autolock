@@ -6,7 +6,6 @@
  * Never include this file directly! */
 
 #include "arch/ll-pause.h"
-#include "arch/ll-timing.h"
 #include "autolock-impls/autolock-kernel-api.h"
 /********************************************************************/
 

@@ -251,6 +251,7 @@ Found in directory: [`src/autolock-impls/`](https://github.com/goldsteinn/autolo
     they can just `typedef user_autolock_t <lock_name>_autolock_t`.
 
     - [`src/autolock-impls/simple-autolock.h`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/autolock-impls/simple-autolock.h) Just a simple spinlock.
+    - [`src/autolock-impls/backoff-autolock.h`](https://github.com/goldsteinn/autolock/blob/master/user-dev/src/autolock-impls/simple-autolock.h) spinlock with backoff.
 
 
 #### Other reference locks

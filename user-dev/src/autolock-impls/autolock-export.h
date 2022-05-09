@@ -2,6 +2,7 @@
 #define _SRC__AUTLOCK_IMPLS__AUTOLOCK_EXPORT_H_
 
 #include "autolock-impls/simple-autolock.h"
+#include "autolock-impls/backoff-autolock.h"
 
 #define I_gen_autolock(name, autolock_name)                            \
     class name {                                                       \
@@ -36,8 +37,9 @@
 
 
 I_gen_autolock(auto_spinlock, simple_autolock);
+I_gen_autolock(auto_backoff_lock, backoff_autolock);
 
 
-#define AUTOLOCK_IMPLS auto_spinlock
+#define AUTOLOCK_IMPLS auto_spinlock, auto_backoff_lock
 
 #endif
