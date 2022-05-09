@@ -9,7 +9,7 @@ from the toplevel directory (where this `README` is)**
 ### Linux Install Dependencies
 
 ```
-sudo apt install build-essentialfakeroot libncurses5-dev libssl-dev ccache flex bison libelf-dev
+sudo apt install build-essential fakeroot libncurses5-dev libssl-dev ccache flex bison libelf-dev
 ```
 
 ### Qemu Install Dependencies
