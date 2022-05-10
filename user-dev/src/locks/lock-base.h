@@ -100,7 +100,10 @@ class lock_ops {
     static void
     lock(lock_base_t * lock) {
         uint32_t iter_count, i, backoff;
-
+	(void)iter_count;
+	(void)i;
+	(void)backoff;
+	
         for (;;) {
             /* Always try lock unconditionally first. */
             if (try_lock(lock) == kUNLOCKED) {
