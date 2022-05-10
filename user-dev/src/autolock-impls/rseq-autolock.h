@@ -16,6 +16,8 @@ static typedef_func(rseq_autolock_trylock, I_user_autolock_trylock);
 static typedef_func(rseq_autolock_unlock, I_user_autolock_unlock);
 
 static NONNULL(1) void rseq_autolock_lock(rseq_autolock_t * lock) {
+  (void)lock;
+#if 0
     /* Hot path before entering assembly (we path a bit just to setup
      * rseq section and its hard to provide a hot path in inline
      * assembly. */
@@ -116,6 +118,7 @@ static NONNULL(1) void rseq_autolock_lock(rseq_autolock_t * lock) {
         : acquired);
 acquired:
     return;
+#endif
 }
 
 
