@@ -4,7 +4,8 @@
 
 #include <stdint.h>
 
-static ll_tls_start() {
+static void *
+ll_tls_start() {
     void * p;
     __asm__("mov %%fs:0, %[p]" : [p] "=r"(p) : :);
     return p;
