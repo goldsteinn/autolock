@@ -1,6 +1,8 @@
 #ifndef _SRC__AUTLOCK_IMPLS__AUTOLOCK_EXPORT_H_
 #define _SRC__AUTLOCK_IMPLS__AUTOLOCK_EXPORT_H_
 
+#include "autolock-impls/backoff-autolock.h"
+#include "autolock-impls/rseq-autolock.h"
 #include "autolock-impls/simple-autolock.h"
 
 #define I_gen_autolock(name, autolock_name)                            \
@@ -36,8 +38,9 @@
 
 
 I_gen_autolock(auto_spinlock, simple_autolock);
+I_gen_autolock(auto_backoff_lock, backoff_autolock);
+I_gen_autolock(auto_rseq_lock, rseq_autolock);
 
-
-#define AUTOLOCK_IMPLS auto_spinlock
+#define AUTOLOCK_IMPLS auto_spinlock, auto_backoff_lock, auto_rseq_lock
 
 #endif

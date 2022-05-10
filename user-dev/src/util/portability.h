@@ -24,17 +24,29 @@
 // clang-format on
 
 
-#if defined(__GNUC__) && !defined(__llvm__) && !defined(__INTEL_COMPILER)
+#if defined(__GNUC__) && !defined(__llvm__) &&                         \
+    !defined(__INTEL_COMPILER)
+#ifdef __has_include
+#define I_has_include __has_include
+#endif
+
 /* Keep noclone */
 #if __GNUC__ >= 7
 #define fall_through __attribute__((fallthrough))
 #endif
 
 #elif defined __clang__
+#ifdef __has_include
+#define I_has_include __has_include
+#endif
 #define noclone
 #else
 #define noclone
 #warning "Untested and likely unsupported compiler"
+#endif
+
+#ifndef I_has_include
+#define I_has_include(...) 0
 #endif
 
 #ifdef __cplusplus
@@ -47,8 +59,9 @@
 #define I_choose_const_expr(cond, e0, e1) ((cond) ? (e0) : (e1))
 #else
 #define constexpr
-#define I_static_assert_base              _Static_assert
-#define I_choose_const_expr(cond, e0, e1) __builtin_choose_expr(cond, e0, e1)
+#define I_static_assert_base _Static_assert
+#define I_choose_const_expr(cond, e0, e1)                              \
+    __builtin_choose_expr(cond, e0, e1)
 
 #if STDC_VERSION >= 2011
 #define Generic(...) _Generic(__VA_ARGS__)
@@ -62,5 +75,6 @@
 #ifndef fall_through
 #define fall_through /* fall through */
 #endif
+
 
 #endif

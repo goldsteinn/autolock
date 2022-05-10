@@ -459,4 +459,10 @@ static const bool true  = !false;
 
 
 #define FLOAT_TO_INT_T(x) GET_SIGNED_T(INT_OF_SIZE_T(sizeof(x)))
+
+
+#define typedef_func(new_name, existing_name)                          \
+    get_type(existing_name) new_name __attribute__((                   \
+        alias(V_TO_STR(existing_name)), __copy__(existing_name)))
+
 #endif

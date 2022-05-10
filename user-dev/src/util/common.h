@@ -20,20 +20,20 @@
 #define LIKELY(x)   __builtin_expect(!!(x), 1)
 #define UNLIKELY(x) __builtin_expect((x), 0)
 
-#define IMPOSSIBLE(x)                                                          \
-    if (x) {                                                                   \
-        __builtin_unreachable();                                               \
+#define IMPOSSIBLE(x)                                                  \
+    if (x) {                                                           \
+        __builtin_unreachable();                                       \
     }
 
 #define GURANTEED(x) IMPOSSIBLE(!(x))
 
 
-#define const_assert(...)                                                      \
+#define const_assert(...)                                              \
     CAT(I_const_assert_, NOT_ONE_NARG(__VA_ARGS__))(__VA_ARGS__)
 #define I_const_assert_ONE(x)       I_static_assert_base(x, "")
 #define I_const_assert_MANY(x, ...) I_static_assert_base(x, __VA_ARGS__)
 
 #define choose_const_expr I_choose_const_expr
 
-
+#define check_has_include I_has_include
 #endif

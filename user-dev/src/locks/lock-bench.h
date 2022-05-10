@@ -9,6 +9,8 @@
 
 #include "thread/barrier.h"
 
+#include "thread/rseq/rseq.h"
+
 
 #define I_cs_work(state)    (++(*(state)))
 #define I_extra_work(state) (++(state))
@@ -25,6 +27,11 @@ I_bench_runner_kernel(lock_T *           lock,
                       thread_barrier_t * barrier) {
     uint32_t  i, local_state = 0;
     ll_time_t start, end;
+
+    /* Initialize rseq. Used for some locks. This is done during TLS on
+     * newer GLIBC distros but we may need to do manually. */
+    die_assert(rseq_init() == 0);
+    
     /* Wait for all threads to be ready before starting. Note this is
      * implemented with a futex. We may get more precision with a second
      * spinlock barrier so more threads are likely to be context
