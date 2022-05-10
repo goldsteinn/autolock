@@ -9,7 +9,7 @@
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 18, 0)
 #define I_HAS_RSEQ
 #else
-#error "restartable sequences not supported before linux 4.18."
+//#error "restartable sequences not supported before linux 4.18."
 #endif
 #else
 /* Need to check at runtime. */
