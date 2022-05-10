@@ -27,8 +27,8 @@ static NONNULL(1) void simple_autolock_lock(simple_autolock_t * lock) {
 
 
     /* Initialize kernel for this simple_autolock. */
-    kernel_autolock->watch_for = I_UNLOCKED; /* What for unlocked. */
-    kernel_autolock->watch_neq = 0;          /* Schedule when equals. */
+    autolock_set_kernel_watch_for(I_UNLOCKED); /* What for unlocked. */
+    autolock_set_kernel_watch_neq(0); /* Schedule when equals. */
     for (;;) {
         /* I_simple_autolock_trylock_maybe_sched will manage enabling /
          * disabling autolock in a safe manner. */

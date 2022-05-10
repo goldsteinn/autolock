@@ -10,7 +10,7 @@
 enum { _NR_AUTOLOCK_CREATE = 451, _NR_AUTOLOCK_RELEASE = 452 };
 
 /* Ideally this is initialized at TLS startup. */
-extern __thread struct kernel_autolock_abi * kernel_autolock;
+extern __thread struct kernel_autolock_abi * I_kernel_autolock;
 
 /********************************************************************/
 /* API for intializing / releasing a autolock registered with the
@@ -20,6 +20,10 @@ extern __thread struct kernel_autolock_abi * kernel_autolock;
 static int32_t autolock_init_kernel_state();
 static int32_t autolock_release_kernel_state();
 
+static void autolock_set_kernel_watch_mem(uint32_t * p);
+static void autolock_set_kernel_watch_for(uint32_t v);
+static void autolock_set_kernel_watch_neq(uint32_t v);
+
 
 /********************************************************************/
 /* Start API implementation. */
@@ -28,7 +32,7 @@ autolock_init_kernel_state() {
     int32_t fd;
     void *  p;
 
-    if (LIKELY(kernel_autolock != NULL)) {
+    if (LIKELY(I_kernel_autolock != NULL)) {
         return 0;
     }
 
@@ -56,7 +60,7 @@ autolock_init_kernel_state() {
     }
 
     /* Success, set thread's autolock and return zero. */
-    kernel_autolock = (struct kernel_autolock_abi *)p;
+    I_kernel_autolock = (struct kernel_autolock_abi *)p;
 
     return 0;
 }
@@ -65,6 +69,19 @@ static int32_t
 autolock_release_kernel_state() {
     /* Nop, automatically done on process end. */
     return 0;
+}
+
+static void
+autolock_set_kernel_watch_mem(uint32_t * p) {
+    I_kernel_autolock->watch_mem = p;
+}
+static void
+autolock_set_kernel_watch_for(uint32_t v) {
+    I_kernel_autolock->watch_for = v;
+}
+static void
+autolock_set_kernel_watch_neq(uint32_t v) {
+    I_kernel_autolock->watch_neq = v;
 }
 
 #endif

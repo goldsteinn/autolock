@@ -104,7 +104,7 @@ static NONNULL(1) int32_t I_internal_user_autolock_trylock_maybe_sched(
          * 5. Thread that holds the lock is now never scheduled so lock
          *    is never unlocked so we hit a deadlock.
          */
-        kernel_autolock->watch_mem = NULL;
+        autolock_set_kernel_watch_mem(NULL);
         if ((ret = __atomic_exchange_n(&(lock->mem), I_LOCKED,
                                        __ATOMIC_RELAXED)) ==
             I_UNLOCKED) {
@@ -117,7 +117,7 @@ static NONNULL(1) int32_t I_internal_user_autolock_trylock_maybe_sched(
      * another thread) so re-enable autolock by setting `watch_mem =
      * &(lock->mem)`. NB: kernel_lock is thread local. There is no
      * contention writing to it. */
-    kernel_autolock->watch_mem = &(lock->mem);
+    autolock_set_kernel_watch_mem(&(lock->mem));
 
     /* Just a hint to the compiler so if it inlines this function is can
      * merge this patch with loop-continue. */

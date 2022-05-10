@@ -3,8 +3,9 @@
 
 /* Where the common user-level autolock features are implemented. This
  * includes the lock type, and init/destroy/unlock/trylock functions. */
-#include "arch/ll-timing.h"
 #include "internal/autolock-common-user-api.h"
+
+#include "arch/ll-timing.h"
 
 /* The user-level lock type and functions {init|destroy|trylock|unlock}
  * are all essentially unchanging so just use alias them to common
@@ -32,8 +33,8 @@ static NONNULL(1) void backoff_autolock_lock(
 
 
     /* Initialize kernel for this backoff_autolock. */
-    kernel_autolock->watch_for = I_UNLOCKED; /* What for unlocked. */
-    kernel_autolock->watch_neq = 0;          /* Schedule when equals. */
+    autolock_set_kernel_watch_for(I_UNLOCKED); /* What for unlocked. */
+    autolock_set_kernel_watch_neq(0); /* Schedule when equals. */
 
     backoff_iter = get_ll_time() & BACKOFF_INIT_MASK;
     for (;;) {
