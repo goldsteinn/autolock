@@ -2,50 +2,32 @@
 #define _SRC__THREAD__RSEQ__RSEQ_LINUX_SUPPORT_H_
 
 
-#include "thread/rseq/rseq-defs.h"
-#include "thread/tls.h"
-
-#include "util/common.h"
-#include "util/types.h"
-
-#include "arch/ll-syscall.h"
-
-#if check_has_include("sys/rseq.h")
-#define I_HAS_GLIBC_RSEQ
-#include <sys/rseq.h>
-#elif __GLIBC_PREREQ(2, 35) && defined(_GNU_SOURCE)
-#define I_HAS_GLIBC_RSEQ
-/* As of GLIBC 2.35 rseq is supported and pre-initialized at TLS
- * startup. We are going to disable it for now so we can just use
- * I_rseq_area as a shared resource. */
-extern const ptrdiff_t    __rseq_offset;
-extern const unsigned int __rseq_size;
+#if check_has_include("linux/rseq.h")
+#define I_HAS_RSEQ
+#elif check_has_include("linux/version.h")
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 18, 0)
+#define I_HAS_RSEQ
+#else
+//#error "restartable sequences not supported before linux 4.18."
+#endif
+#else
+/* Need to check at runtime. */
 #endif
 
-
-#ifdef I_HAS_GLIBC_RSEQ
-static struct rseq *
-I_get_glibc_rseq_area() {
-    return CAST(struct rseq *, get_tls_start() + __rseq_offset);
-}
-static uint32_t
-I_get_glibc_rseq_size() {
-    return __rseq_size;
-}
-static uint32_t
-rseq_glibc_prepare() {
-    return ll_syscall_cc(
-        I_NR_rseq,
-        (I_get_glibc_rseq_area(), I_get_glibc_rseq_size(),
-         RSEQ_FLAG_UNREGISTER, I_RSEQ_SIG),
-        /* no +m */, /* no m */,
-        /* no =m */);
+#ifdef I_HAS_RSEQ
+static void
+rseq_is_supported(int32_t syscall_ret) {
+    (void)(syscall_ret);
 }
 #else
+#include "util/error-util.h"
+
 static uint32_t
-rseq_glibc_prepare() {
-    return 0;
+rseq_is_supported(int32_t syscall_ret) {
+    die_assert(syscall_ret != -ENOSYS, "rseq not supported\n");
 }
 #endif
+
 
 #endif

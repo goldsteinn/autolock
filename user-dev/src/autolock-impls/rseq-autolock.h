@@ -6,6 +6,13 @@
 #include "internal/autolock-common-user-api.h"
 #include "thread/rseq/rseq.h"
 
+
+#ifndef I_HAS_RSEQ
+#define RSEQ_AUTOLOCK_EXPORT
+#define RSEQ_GEN_LOCK(...) 
+#else
+#define RSEQ_AUTOLOCK_EXPORT , auto_rseq_lock
+#define RSEQ_GEN_LOCK(gen_macro) gen_macro(auto_rseq_lock, rseq_autolock)
 /* The user-level lock type and functions {init|destroy|trylock|unlock}
  * are all essentially unchanging so just use alias them to common
  * defintions. */
@@ -32,7 +39,7 @@ static NONNULL(1) void rseq_autolock_lock(rseq_autolock_t * lock) {
     /* These values are assumed by the assembly. */
     const_assert(I_UNLOCKED == 0);
     const_assert(I_LOCKED == 1);
-    __asm__ volatile goto(
+    asm volatile(
         RSEQ_INIT_NEW_CS(%%rax)
 
         /* Setup kernel autolock. We are merging the zero write for
@@ -75,7 +82,7 @@ static NONNULL(1) void rseq_autolock_lock(rseq_autolock_t * lock) {
         "testl  %%eax, %%eax\n\t"
         /* Failed to acquire the lock. */
         "jnz    1b\n\t"
-
+        "8:\n\t"
         /* In the context of autolock we go to the abort handler when we
            get rescheduled. This means there is a high likelyhood of the
            lock being available. */
@@ -104,19 +111,18 @@ static NONNULL(1) void rseq_autolock_lock(rseq_autolock_t * lock) {
         "jnz    1b\n\t"
 
         /* We can't fall through here because of the stack protection. */
-        "jmp %l[acquired]\n\t"
+        "jmp    8b\n\t"
+
         RSEQ_END_ABORT_DEF()
-        "\n\t"
-        : "+m"(*(uint32_t(*)[1])(&(lock->mem))),
-          "=m"(*(uint32_t * (*)[1])(&(I_kernel_autolock->watch_mem))),
-          "=m"(*(uint32_t(*)[1])(&(I_kernel_autolock->watch_for))),
-          "=m"(*(uint32_t(*)[1])(&(I_kernel_autolock->watch_neq)))
+        : "+m"(*((uint32_t(*)[1])(&(lock->mem)))),
+          "=m"(*((uint32_t * (*)[1])(&(I_kernel_autolock->watch_mem)))),
+          "=m"(*((uint32_t(*)[1])(&(I_kernel_autolock->watch_for)))),
+          "=m"(*((uint32_t(*)[1])(&(I_kernel_autolock->watch_neq))))
         : [lock_mem] "r"(lock)
         : "eax", "edx", "cc"
-        : acquired);
-acquired:
+      );
     return;
 }
 
-
+#endif
 #endif
