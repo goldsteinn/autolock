@@ -101,6 +101,12 @@ class lock_ops {
     lock(lock_base_t * lock) {
         uint32_t iter_count, i, backoff;
 
+        /* Allow these to be unused as some of them are config
+         * dependendent. */
+        (void)(iter_count);
+        (void)(i);
+        (void)(backoff);
+
         for (;;) {
             /* Always try lock unconditionally first. */
             if (try_lock(lock) == kUNLOCKED) {
