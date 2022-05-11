@@ -48,6 +48,10 @@ string(TOLOWER ${COMPILER} COMPILER_LOWER)
 
 list(FIND cxx_lang ${LANG_LOWER} cxx_lang)
 list(FIND c_lang ${LANG_LOWER} c_lang)
+
+set(c_std 11)
+set(cxx_std 17)
+
 if(${cxx_lang} GREATER -1)
   set(LANG "CXX")
   set(STD "c++17") # we want if constexpr
@@ -193,7 +197,9 @@ add_custom_target(
 add_executable(driver ${EXE_SRC} ${C_SOURCES} ${ASM_SOURCES})
 target_compile_options(driver PRIVATE ${driver_compiler_flags})
 target_link_libraries(driver ${link_libraries})
-set_target_properties(driver PROPERTIES LINKER_LANGUAGE ${LANG})
+set_target_properties(driver PROPERTIES LINKER_LANGUAGE ${LANG} CXX_STANDARD_REQUIRED ${cxx_std} CXX_STANDARD ${cxx_std} C_STANDARD_REQUIRED ${c_std} C_STANDARD ${c_std})
+
+
 
 set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}")
 install(TARGETS driver DESTINATION "${INSTALL_DIR}")
@@ -201,14 +207,13 @@ install(TARGETS driver DESTINATION "${INSTALL_DIR}")
 add_executable(tests ${TEST_EXE_SRC} ${TEST_C_SOURCES} ${C_SOURCES} ${ASM_SOURCES})
 target_compile_options(tests PRIVATE ${test_and_bench_compiler_flags})
 target_link_libraries(tests ${test_and_bench_libraries})
-set_target_properties(tests PROPERTIES EXCLUDE_FROM_ALL TRUE)
-set_target_properties(tests PROPERTIES LINKER_LANGUAGE ${LANG})
+set_target_properties(tests PROPERTIES EXCLUDE_FROM_ALL TRUE LINKER_LANGUAGE ${LANG} CXX_STANDARD_REQUIRED ${cxx_std} CXX_STANDARD ${cxx_std} C_STANDARD_REQUIRED ${c_std} C_STANDARD ${c_std})
+
 
 add_executable(bench ${BENCH_EXE_SRC} ${BENCH_C_SOURCES} ${C_SOURCES} ${ASM_SOURCES})
 target_compile_options(bench PRIVATE ${test_and_bench_compiler_flags})
 target_link_libraries(bench ${test_and_bench_libraries})
-set_target_properties(bench PROPERTIES EXCLUDE_FROM_ALL TRUE)
-set_target_properties(bench PROPERTIES LINKER_LANGUAGE ${LANG})
+set_target_properties(bench PROPERTIES EXCLUDE_FROM_ALL TRUE LINKER_LANGUAGE ${LANG} CXX_STANDARD_REQUIRED ${cxx_std} CXX_STANDARD ${cxx_std} C_STANDARD_REQUIRED ${c_std} C_STANDARD ${c_std})
 
 add_custom_target(full)
 add_dependencies(full driver tests bench)
