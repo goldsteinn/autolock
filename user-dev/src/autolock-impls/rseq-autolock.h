@@ -9,10 +9,11 @@
 
 #ifndef I_HAS_RSEQ
 #define RSEQ_AUTOLOCK_EXPORT
-#define RSEQ_GEN_LOCK(...) 
+#define RSEQ_GEN_LOCK(...)
 #else
 #define RSEQ_AUTOLOCK_EXPORT , auto_rseq_lock
-#define RSEQ_GEN_LOCK(gen_macro) gen_macro(auto_rseq_lock, rseq_autolock)
+#define RSEQ_GEN_LOCK(gen_macro)                                       \
+    gen_macro(auto_rseq_lock, rseq_autolock)
 /* The user-level lock type and functions {init|destroy|trylock|unlock}
  * are all essentially unchanging so just use alias them to common
  * defintions. */
@@ -46,7 +47,6 @@ static NONNULL(1) void rseq_autolock_lock(rseq_autolock_t * lock) {
            watch_for and watch_neq. */
         "movq   $0, %%fs:I_kernel_autolock@tpoff+8\n\t"
 
-
         /* Sets `eax` with low bits which is all we need. */
         "rdtsc\n\t"
 
@@ -58,8 +58,6 @@ static NONNULL(1) void rseq_autolock_lock(rseq_autolock_t * lock) {
 
         /* Get next backoff iter. */
         "leal   1(%%rax, %%rax), %%eax\n\t"
-        /* Use edx as second temporary because its clobbered anyways
-           by rdtsc. */
         "movzbl %%al, %%edx\n\t"
         "7:\n\t"
         "pause\n\t"
@@ -70,16 +68,20 @@ static NONNULL(1) void rseq_autolock_lock(rseq_autolock_t * lock) {
         "2:\n\t"
 
         /* Test the lock. No need for this to be in the critical section. */
-        "movl   (%[lock_mem]), %%eax\n\t"
-        "testl  %%eax, %%eax\n\t"
+        "movl   (%[lock_mem]), %%edx\n\t"
+        "testl  %%edx, %%edx\n\t"
         /* If lock_mem is non-zero (not I_UNLOCKED) then go to backoff
            loop. */
         "jnz    1b\n\t"
         /* Disarm lock. */
         "movq   $0, %%fs:I_kernel_autolock@tpoff+0\n"
+
+        /* 1 == I_LOCKED. */
+        "movl   $1, %%edx\n\t"
+
         /* Implied `lock` for x86_64 xchg. */
-        "xchg   %%eax, (%[lock_mem])\n\t"
-        "testl  %%eax, %%eax\n\t"
+        "xchg   %%edx, (%[lock_mem])\n\t"
+        "testl  %%edx, %%edx\n\t"
         /* Failed to acquire the lock. */
         "jnz    1b\n\t"
         "8:\n\t"
@@ -87,8 +89,8 @@ static NONNULL(1) void rseq_autolock_lock(rseq_autolock_t * lock) {
            get rescheduled. This means there is a high likelyhood of the
            lock being available. */
         RSEQ_START_ABORT_DEF()
-        "movl   (%[lock_mem]), %%eax\n\t"
-        "testl  %%eax, %%eax\n\t"
+        "movl   (%[lock_mem]), %%edx\n\t"
+        "testl  %%edx, %%edx\n\t"
         /* If lock_mem is non-zero (not I_UNLOCKED) then go to backoff
            loop. */
         "jnz    1b\n\t"
@@ -101,12 +103,12 @@ static NONNULL(1) void rseq_autolock_lock(rseq_autolock_t * lock) {
         /* For now disarm autolock before potentially grabbing the lock. */
         "movq   $0, %%fs:I_kernel_autolock@tpoff+0\n"
 
-        /* Disarm lock. */
-        "movq   $0, %%fs:I_kernel_autolock@tpoff+0\n"
+        /* 1 == I_LOCKED. */
+        "movl   $1, %%edx\n\t"
         /* Implied `lock` for x86_64 xchg. */
-        "xchg   %%eax, (%[lock_mem])\n\t"
+        "xchg   %%edx, (%[lock_mem])\n\t"
 
-        "testl  %%eax, %%eax\n\t"
+        "testl  %%edx, %%edx\n\t"
         /* Failed to acquire the lock. */
         "jnz    1b\n\t"
 
