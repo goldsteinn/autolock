@@ -79,7 +79,7 @@
 #define fall_through /* fall through */
 #endif
 
-#ifndef ATTR_copy(...)
+#ifndef ATTR_copy
 #define ATTR_copy(...)
 #endif
 
