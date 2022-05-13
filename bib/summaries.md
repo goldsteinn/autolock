@@ -103,6 +103,11 @@
         1. Atomic counter (easy enough)
         2. Hash table with 1-access lock (implemented in the kernel but we can steal the idea)
 
+- [Contention-Aware Lock Scheduling for Transactional Databases](https://www.vldb.org/pvldb/vol11/p648-tian.pdf)
+    - Really about when to schedule critical sections. Not about messing with general process scheduler.
+
+
+
 
 ### OS
 - [Fast Mutual Exclusion for Uniprocessors](https://dl.acm.org/doi/pdf/10.1145/143371.143523)
@@ -145,6 +150,12 @@
       task is ready, and skip de-schedule with short timeslice iff
       nothing important is waiting.
 
+- [Design and Implementation of a Locking-Aware Scheduler for Multiprocessor Environments](https://link.springer.com/chapter/10.1007/978-3-642-24082-9_47)
+    - See `papers/design-and-implementation-of-a-locking-aware-scheduler-for-multiprocessor-environments.pdf`
+    - Somewhat similiar but not quite. It proposed a shared memory
+      interface between VMs and host machine whereby the host machine
+      can write scheduling info and the VM can make decisions about
+      whether to take locks or not.
 
 
 ### Lock Design
@@ -191,6 +202,9 @@
 - [Building FIFO and Priority-Queuing Spin Locks from Atomic Swap](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.38.7889&rep=rep1&type=pdf)
     - Just lock-free queue
     - Related heavily to first Queue lock (known as CLH) from [Algorithms for Scalable Synchronization on Shared Memory Multiprocessor](http://web.mit.edu/6.173/www/currentsemester/readings/R06-scalable-synchronization-1991.pdf)
+
+
+
 
 ## Irrelivant
 - [Automatic Mutual Exclusion](https://www.usenix.org/legacy/event/hotos07/tech/full_papers/isard/isard_html/)
