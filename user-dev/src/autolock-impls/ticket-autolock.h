@@ -4,6 +4,7 @@
 /* Need to implement autolock base custom. */
 #include "arch/ll-pause.h"
 #include "autolock-impls/autolock-kernel-api.h"
+#include "autolock-impls/internal/autolock-common-returns.h"
 
 
 typedef struct ticket_autolock {
@@ -16,16 +17,19 @@ typedef struct ticket_autolock {
 
 
 /* Zero relevant fields and init kernel state. */
-static NONNULL(1) void ticket_autolock_init(ticket_autolock_t * lock) {
+static NONNULL(1) int32_t
+    ticket_autolock_init(ticket_autolock_t * lock) {
     die_assert(autolock_init_kernel_state() == 0);
     lock->next_count = 0;
     lock->cur_count  = 0;
+    return 0;
 }
 
 /* Nothing to do for destroy. */
-static NONNULL(1) void ticket_autolock_destroy(
-    ticket_autolock_t * lock) {
+static NONNULL(1) int32_t
+    ticket_autolock_destroy(ticket_autolock_t * lock) {
     (void)(lock);
+    return 0;
 }
 
 
@@ -46,13 +50,15 @@ static NONNULL(1) int32_t
     }
     return 1;
 }
-static NONNULL(1) void ticket_autolock_unlock(
-    ticket_autolock_t * lock) {
+static NONNULL(1) int32_t
+    ticket_autolock_unlock(ticket_autolock_t * lock) {
     lock->cur_count += 1;
+    return 0;
 }
 
 
-static NONNULL(1) void ticket_autolock_lock(ticket_autolock_t * lock) {
+static NONNULL(1) int32_t
+    ticket_autolock_lock(ticket_autolock_t * lock) {
 
     /* Get count we need. Note we use fetch add here so we are getting
      * `next_count` BEFORE the incr. */
@@ -66,7 +72,7 @@ static NONNULL(1) void ticket_autolock_lock(ticket_autolock_t * lock) {
 
     /* If we are at `cur_count` then done. */
     if (LIKELY(ticket_num == cur_num)) {
-        return;
+        return 0;
     }
 
 
@@ -92,7 +98,7 @@ static NONNULL(1) void ticket_autolock_lock(ticket_autolock_t * lock) {
         if (cur_num == 0) {
             /* Disarm autolock before returning. */
             autolock_set_kernel_watch_mem(NULL);
-            return;
+            return 0;
         }
 
         /* Always pause to prohibit runaway speculation. */

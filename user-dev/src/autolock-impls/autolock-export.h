@@ -45,8 +45,8 @@ RSEQ_GEN_LOCK(I_gen_autolock);
 
 
 #define AUTOLOCK_IMPLS                                                 \
-    auto_spinlock, auto_backoff_lock,                                  \
-        auto_ticket_lock RSEQ_AUTOLOCK_EXPORT
+    auto_spinlock, auto_backoff_lock                                   \
+                       RSEQ_AUTOLOCK_EXPORT /* , auto_ticket_lock */
 
 
 #endif

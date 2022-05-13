@@ -7,6 +7,7 @@
 
 #include "arch/ll-pause.h"
 #include "autolock-impls/autolock-kernel-api.h"
+#include "autolock-impls/internal/autolock-common-returns.h"
 /********************************************************************/
 
 /* Lock structure. */
@@ -15,21 +16,26 @@ typedef struct I_user_autolock {
         mem; /* All we need is something to lock on. Must be u32. */
 } I_user_autolock_t;
 
-enum { I_UNLOCKED = 0, I_LOCKED = 1 };
+enum { I_UNLOCKED = 1, I_LOCKED = 0 };
 
 /* For aliasing functions easily. */
 extern "C" {
 
 /* All functions expect autolock_init() to have been called first. */
 /********************************************************************/
-/* API for trylock, lock, and unlock respectively. */
-static NONNULL(1) void I_user_autolock_init(I_user_autolock_t * lock);
-static NONNULL(1) void I_user_autolock_destroy(
-    I_user_autolock_t * lock);
+/* API for trylock, lock, and unlock respectively.  All functions return
+ * zero on success and non-zero on error. */
+static NONNULL(1) int32_t
+    I_user_autolock_init(I_user_autolock_t * lock);
+static NONNULL(1) int32_t
+    I_user_autolock_destroy(I_user_autolock_t * lock);
 
+/* Returns zero if lock was successfully acquired and non-zero
+ * otherwise. */
 static NONNULL(1) int32_t
     I_user_autolock_trylock(I_user_autolock_t * lock);
-static NONNULL(1) void I_user_autolock_unlock(I_user_autolock_t * lock);
+static NONNULL(1) int32_t
+    I_user_autolock_unlock(I_user_autolock_t * lock);
 
 /* The _lock() function varies. The rest are essentially fixed. */
 
@@ -42,40 +48,42 @@ static NONNULL(1) int32_t I_internal_user_autolock_trylock_maybe_sched(
 
 /********************************************************************/
 /* Start API Implementation. */
-static NONNULL(1) void I_user_autolock_init(I_user_autolock_t * lock) {
+static NONNULL(1) int32_t
+    I_user_autolock_init(I_user_autolock_t * lock) {
     die_assert(autolock_init_kernel_state() == 0);
     lock->mem = I_UNLOCKED;
+    return I_SUCCESS;
 }
 
-static NONNULL(1) void I_user_autolock_destroy(
-    I_user_autolock_t * lock) {
+static NONNULL(1) int32_t
+    I_user_autolock_destroy(I_user_autolock_t * lock) {
     autolock_release_kernel_state();
     (void)(lock);
+
+    return I_SUCCESS;
 }
 
 
 static NONNULL(1) int32_t
     I_user_autolock_trylock(I_user_autolock_t * lock) {
-    int32_t ret;
     /* Only do atomic write if we have a chance. */
-    if ((ret = __atomic_load_n(&(lock->mem), __ATOMIC_RELAXED)) ==
-        I_UNLOCKED) {
-        if ((ret = __atomic_exchange_n(&(lock->mem), I_LOCKED,
-                                       __ATOMIC_RELAXED)) ==
-            I_UNLOCKED) {
-            return I_UNLOCKED;
+    if ((__atomic_load_n(&(lock->mem), __ATOMIC_RELAXED)) !=
+        I_LOCKED) {
+        if ((__atomic_exchange_n(&(lock->mem), I_LOCKED,
+                                       __ATOMIC_RELAXED)) != I_LOCKED) {
+            return I_SUCCESS;
         }
     }
-    GURANTEED(ret != I_UNLOCKED);
-    return ret;
+    return I_FAILURE;
 }
 
 
 /* Just update state. That will allow potentially de-scheduled threads
  * to start again. */
-static NONNULL(1) void I_user_autolock_unlock(
-    I_user_autolock_t * lock) {
+static NONNULL(1) int32_t
+    I_user_autolock_unlock(I_user_autolock_t * lock) {
     __atomic_store_n(&(lock->mem), I_UNLOCKED, __ATOMIC_RELAXED);
+    return I_SUCCESS;
 }
 
 
@@ -85,10 +93,8 @@ static NONNULL(1) void I_user_autolock_unlock(
 /* Trylock for autolock after we are watching the lock memory. */
 static NONNULL(1) int32_t I_internal_user_autolock_trylock_maybe_sched(
     I_user_autolock_t * lock) {
-    int32_t ret;
     /* Only do atomic write if we have a chance. */
-    if ((ret = __atomic_load_n(&(lock->mem), __ATOMIC_RELAXED)) ==
-        I_UNLOCKED) {
+    if ((__atomic_load_n(&(lock->mem), __ATOMIC_RELAXED)) != I_LOCKED) {
         /*
          * Enable scheduling by setting `watch_mem = NULL`. This
          * disables autolock for the kernel. This is necessary to
@@ -105,11 +111,10 @@ static NONNULL(1) int32_t I_internal_user_autolock_trylock_maybe_sched(
          *    is never unlocked so we hit a deadlock.
          */
         autolock_set_kernel_watch_mem(NULL);
-        if ((ret = __atomic_exchange_n(&(lock->mem), I_LOCKED,
-                                       __ATOMIC_RELAXED)) ==
-            I_UNLOCKED) {
+        if ((__atomic_exchange_n(&(lock->mem), I_LOCKED,
+                                 __ATOMIC_RELAXED)) != I_LOCKED) {
             /* We successfully acquired the lock. */
-            return I_UNLOCKED;
+            return I_SUCCESS;
         }
     }
 
@@ -119,10 +124,7 @@ static NONNULL(1) int32_t I_internal_user_autolock_trylock_maybe_sched(
      * contention writing to it. */
     autolock_set_kernel_watch_mem(&(lock->mem));
 
-    /* Just a hint to the compiler so if it inlines this function is can
-     * merge this patch with loop-continue. */
-    GURANTEED(ret != I_UNLOCKED);
-    return ret;
+    return I_FAILURE;
 }
 }
 #endif

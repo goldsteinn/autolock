@@ -17,8 +17,8 @@ static typedef_func(backoff_autolock_trylock, I_user_autolock_trylock);
 static typedef_func(backoff_autolock_unlock, I_user_autolock_unlock);
 
 
-static NONNULL(1) void backoff_autolock_lock(
-    backoff_autolock_t * lock) {
+static NONNULL(1) int32_t
+    backoff_autolock_lock(backoff_autolock_t * lock) {
     uint32_t backoff_iter;
     enum {
         BACKOFF_MAX_MASK  = 255 /* 255 so we can just use movzbl. */,
@@ -26,8 +26,8 @@ static NONNULL(1) void backoff_autolock_lock(
     };
 
     /* Uncontended just grab the lock. No intialization is needed. */
-    if (backoff_autolock_trylock(lock) == I_UNLOCKED) {
-        return;
+    if (backoff_autolock_trylock(lock) == I_SUCCESS) {
+        return I_SUCCESS;
     }
     autolock_init_kernel_state();
 
@@ -42,9 +42,9 @@ static NONNULL(1) void backoff_autolock_lock(
         /* I_backoff_autolock_trylock_maybe_sched will manage enabling /
          * disabling autolock in a safe manner. */
         if (I_internal_user_autolock_trylock_maybe_sched(lock) ==
-            I_UNLOCKED) {
+            I_SUCCESS) {
             /* watch_mem will be NULL. */
-            return;
+            return I_SUCCESS;
         }
 
 
