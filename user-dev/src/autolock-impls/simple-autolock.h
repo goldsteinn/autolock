@@ -18,10 +18,10 @@ static typedef_func(simple_autolock_unlock, I_user_autolock_unlock);
  * readability value of seeing the API defined explicitly here
  * outweights. */
 
-static NONNULL(1) void simple_autolock_lock(simple_autolock_t * lock) {
+static NONNULL(1) int32_t simple_autolock_lock(simple_autolock_t * lock) {
     /* Uncontended just grab the lock. No intialization is needed. */
-    if (simple_autolock_trylock(lock) == I_UNLOCKED) {
-        return;
+    if (simple_autolock_trylock(lock) == I_SUCCESS) {
+        return I_SUCCESS;
     }
     autolock_init_kernel_state();
 
@@ -32,10 +32,9 @@ static NONNULL(1) void simple_autolock_lock(simple_autolock_t * lock) {
     for (;;) {
         /* I_simple_autolock_trylock_maybe_sched will manage enabling /
          * disabling autolock in a safe manner. */
-        if (I_internal_user_autolock_trylock_maybe_sched(lock) ==
-            I_UNLOCKED) {
+        if (I_internal_user_autolock_trylock_maybe_sched(lock) == 0) {
             /* watch_mem will be NULL. */
-            return;
+            return I_SUCCESS;
         }
         /* pause to avoid runaway speculation. Note backoff could be
          * added VERY efficiently if we paired this with rseq. */

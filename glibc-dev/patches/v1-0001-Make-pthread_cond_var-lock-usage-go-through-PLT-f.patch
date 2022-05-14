@@ -1,0 +1,107 @@
+From 6b63d57cd66c224d80ca9a131fbc0a7e3f9dbd37 Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Thu, 12 May 2022 23:27:35 -0500
+Subject: [PATCH v1] Make pthread_cond_var lock usage go through PLT for
+ interposition
+
+---
+ nptl/Makefile                  |  1 -
+ nptl/pthread_cond_wait.c       |  6 +++---
+ nptl/pthread_mutex_cond_lock.c | 23 -----------------------
+ nptl/pthread_mutex_lock.c      |  7 ++++++-
+ 4 files changed, 9 insertions(+), 28 deletions(-)
+ delete mode 100644 nptl/pthread_mutex_cond_lock.c
+
+diff --git a/nptl/Makefile b/nptl/Makefile
+index b585663974..5c779e77eb 100644
+--- a/nptl/Makefile
++++ b/nptl/Makefile
+@@ -132,7 +132,6 @@ routines = \
+   pthread_keys \
+   pthread_kill \
+   pthread_kill_other_threads \
+-  pthread_mutex_cond_lock \
+   pthread_mutex_conf \
+   pthread_mutex_consistent \
+   pthread_mutex_destroy \
+diff --git a/nptl/pthread_cond_wait.c b/nptl/pthread_cond_wait.c
+index 20c348a503..9c1aa9e1d0 100644
+--- a/nptl/pthread_cond_wait.c
++++ b/nptl/pthread_cond_wait.c
+@@ -186,7 +186,7 @@ __condvar_cleanup_waiting (void *arg)
+ 
+   /* XXX If locking the mutex fails, should we just stop execution?  This
+      might be better than silently ignoring the error.  */
+-  __pthread_mutex_cond_lock (cbuffer->mutex);
++  pthread_mutex_lock (cbuffer->mutex);
+ }
+ 
+ /* This condvar implementation guarantees that all calls to signal and
+@@ -416,7 +416,7 @@ __pthread_cond_wait_common (pthread_cond_t *cond, pthread_mutex_t *mutex,
+      mutex after registering as waiter.
+      If releasing the mutex fails, we just cancel our registration as a
+      waiter and confirm that we have woken up.  */
+-  err = __pthread_mutex_unlock_usercnt (mutex, 0);
++  err = pthread_mutex_unlock (mutex);
+   if (__glibc_unlikely (err != 0))
+     {
+       __condvar_cancel_waiting (cond, seq, g, private);
+@@ -604,7 +604,7 @@ __pthread_cond_wait_common (pthread_cond_t *cond, pthread_mutex_t *mutex,
+ 
+   /* Woken up; now re-acquire the mutex.  If this doesn't fail, return RESULT,
+      which is set to ETIMEDOUT if a timeout occured, or zero otherwise.  */
+-  err = __pthread_mutex_cond_lock (mutex);
++  err = pthread_mutex_lock (mutex);
+   /* XXX Abort on errors that are disallowed by POSIX?  */
+   return (err != 0) ? err : result;
+ }
+diff --git a/nptl/pthread_mutex_cond_lock.c b/nptl/pthread_mutex_cond_lock.c
+deleted file mode 100644
+index f3af514305..0000000000
+--- a/nptl/pthread_mutex_cond_lock.c
++++ /dev/null
+@@ -1,23 +0,0 @@
+-#include <pthreadP.h>
+-
+-#define LLL_MUTEX_LOCK(mutex) \
+-  lll_cond_lock ((mutex)->__data.__lock, PTHREAD_MUTEX_PSHARED (mutex))
+-#define LLL_MUTEX_LOCK_OPTIMIZED(mutex) LLL_MUTEX_LOCK (mutex)
+-
+-/* Not actually elided so far. Needed? */
+-#define LLL_MUTEX_LOCK_ELISION(mutex)  \
+-  ({ lll_cond_lock ((mutex)->__data.__lock, PTHREAD_MUTEX_PSHARED (mutex)); 0; })
+-
+-#define LLL_MUTEX_TRYLOCK(mutex) \
+-  lll_cond_trylock ((mutex)->__data.__lock)
+-#define LLL_MUTEX_TRYLOCK_ELISION(mutex) LLL_MUTEX_TRYLOCK(mutex)
+-
+-/* We need to assume that there are other threads blocked on the futex.
+-   See __pthread_mutex_lock_full for further details.  */
+-#define LLL_ROBUST_MUTEX_LOCK_MODIFIER FUTEX_WAITERS
+-#define PTHREAD_MUTEX_LOCK  __pthread_mutex_cond_lock
+-#define __pthread_mutex_lock_full __pthread_mutex_cond_lock_full
+-#define NO_INCR
+-#define PTHREAD_MUTEX_VERSIONS 0
+-
+-#include <nptl/pthread_mutex_lock.c>
+diff --git a/nptl/pthread_mutex_lock.c b/nptl/pthread_mutex_lock.c
+index d2e652d151..b4adfa2937 100644
+--- a/nptl/pthread_mutex_lock.c
++++ b/nptl/pthread_mutex_lock.c
+@@ -625,7 +625,12 @@ versioned_symbol (libpthread, ___pthread_mutex_lock, pthread_mutex_lock,
+ compat_symbol (libpthread, ___pthread_mutex_lock, __pthread_mutex_lock,
+ 	       GLIBC_2_0);
+ # endif
+-#endif /* PTHREAD_MUTEX_VERSIONS */
++#else
++libc_hidden_ver (PTHREAD_MUTEX_LOCK, __pthread_mutex_lock)
++# ifndef SHARED
++strong_alias (___pthread_mutex_lock, __pthread_mutex_lock)
++# endif
++#endif
+ 
+ 
+ #ifdef NO_INCR
+-- 
+2.34.1
+

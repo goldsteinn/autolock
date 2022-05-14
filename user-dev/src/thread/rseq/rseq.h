@@ -1,6 +1,7 @@
 #ifndef _SRC__THREAD__RSEQ__RSEQ_H_
 #define _SRC__THREAD__RSEQ__RSEQ_H_
 
+
 #include "thread/rseq/rseq-defs.h"
 #include "thread/rseq/rseq-portable.h"
 
@@ -9,6 +10,8 @@
 #include "util/common.h"
 #include "util/error-util.h"
 #include "util/types.h"
+
+#ifdef I_HAS_RSEQ
 
 extern __thread struct rseq I_rseq_area;
 extern __thread uint32_t    I_rseq_is_init;
@@ -50,6 +53,32 @@ rseq_init() {
 
     return rseq_init_first();
 }
+
+#else
+
+
+static uint32_t
+rseq_is_init() {
+    return 0;
+}
+
+static void
+I_rseq_set_is_init() {
+    /* nop. */
+}
+
+static int32_t
+rseq_init_first() {
+    return 0;
+}
+
+static int32_t
+rseq_init() {
+    return 0;
+}
+
+
+#endif
 
 
 #endif

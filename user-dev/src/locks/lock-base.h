@@ -28,8 +28,11 @@ template<
     uint32_t with_futex /* Use futex if we fail for long enough. */>
 class lock_ops {
 
-    static constexpr uint32_t kUNLOCKED = 0;
-    static constexpr uint32_t kLOCKED   = 1;
+    static constexpr uint32_t kUNLOCKED = 1;
+    static constexpr uint32_t kLOCKED   = 0;
+
+    static constexpr uint32_t kSUCCESS = 0;
+    static constexpr uint32_t kFAILURE = 1;
 
 
     static constexpr uint32_t kmax_raw_iter   = max_raw_iter;
@@ -74,37 +77,43 @@ class lock_ops {
 
    public:
     /* Init lock memory. */
-    static void
-    init(lock_base_t * lock) {
-        lock->state.mem = kUNLOCKED;
+    static NONNULL(1) int32_t init(lock_base_t * lock) {
         __builtin_memset(lock, 0, sizeof(*lock));
+        lock->state.mem = kUNLOCKED;
+        return kSUCCESS;
+    }
+
+    static NONNULL(1) int32_t destroy(lock_base_t * lock) {
+        (void)(lock);
+        return kSUCCESS;
     }
 
     /* Standard try lock. */
-    static uint32_t
-    try_lock(lock_base_t * lock) {
-        uint32_t ret;
-        if (LIKELY((ret = __atomic_load_n(&(lock->state.mem),
-                                          __ATOMIC_RELAXED)) ==
-                   kUNLOCKED)) {
-            if (LIKELY((ret = __atomic_exchange_n(
-                            &(lock->state.mem), kLOCKED,
-                            __ATOMIC_RELAXED)) == kUNLOCKED)) {
-                return kUNLOCKED;
+    static NONNULL(1) uint32_t try_lock(lock_base_t * lock) {
+        if (LIKELY((__atomic_load_n(&(lock->state.mem),
+                                    __ATOMIC_RELAXED)) != kLOCKED)) {
+            if (LIKELY((__atomic_exchange_n(&(lock->state.mem), kLOCKED,
+                                            __ATOMIC_RELAXED)) !=
+                       kLOCKED)) {
+                return kSUCCESS;
             }
         }
-        die_assert(ret != kUNLOCKED);
-        return ret;
+        return kFAILURE;
     }
 
-    static void
-    lock(lock_base_t * lock) {
+    static NONNULL(1) int32_t lock(lock_base_t * lock) {
         uint32_t iter_count, i, backoff;
+
+        /* Allow these to be unused as some of them are config
+         * dependendent. */
+        (void)(iter_count);
+        (void)(i);
+        (void)(backoff);
 
         for (;;) {
             /* Always try lock unconditionally first. */
-            if (try_lock(lock) == kUNLOCKED) {
-                return;
+            if (try_lock(lock) == kSUCCESS) {
+                return kSUCCESS;
             }
 
             /* If we have max raw iters start a counter. */
@@ -119,8 +128,8 @@ class lock_ops {
             }
 
             for (;;) {
-                if (LIKELY(try_lock(lock) == kUNLOCKED)) {
-                    return;
+                if (LIKELY(try_lock(lock) == kSUCCESS)) {
+                    return kSUCCESS;
                 }
 
                 /* Check if we reach max iter count. */
@@ -152,8 +161,8 @@ class lock_ops {
                     iter_count = 0;
                 }
                 for (;;) {
-                    if (LIKELY(try_lock(lock) == kUNLOCKED)) {
-                        return;
+                    if (LIKELY(try_lock(lock) == kSUCCESS)) {
+                        return kSUCCESS;
                     }
                     if constexpr (kmax_yield_iter) {
                         if (++iter_count >= kmax_yield_iter) {
@@ -172,6 +181,9 @@ class lock_ops {
                  */
                 __atomic_fetch_add(&(lock->state.waiters), 1,
                                    __ATOMIC_RELAXED);
+
+                /* We can silently ignore futex errors and still be
+                 * correct. */
                 futex_wait(&(lock->state.mem), kLOCKED);
 
                 /* dec counter. Its safe to call futex_unlock with no
@@ -183,8 +195,7 @@ class lock_ops {
         }
     }
 
-    static void
-    unlock(lock_base_t * lock) {
+    static NONNULL(1) int32_t unlock(lock_base_t * lock) {
         /* Set lock unlocked. */
         __atomic_store_n(&(lock->state.mem), kUNLOCKED,
                          __ATOMIC_RELAXED);
@@ -197,9 +208,15 @@ class lock_ops {
              * barrier. */
             if (__atomic_load_n(&(lock->state.waiters),
                                 __ATOMIC_RELAXED)) {
-                futex_wake(&(lock->state.mem), 1);
+                /* Futex error here could lead to deadlock so don't
+                 * silently ignore. */
+                if (UNLIKELY(futex_wake(&(lock->state.mem),
+                                        1 /* wake one. */))) {
+                    return kFAILURE;
+                }
             }
         }
+        return kSUCCESS;
     }
 };
 

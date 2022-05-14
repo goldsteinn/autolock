@@ -27,6 +27,10 @@ $> sudo apt install libdouble-conversion-dev libfmt-dev libglog-dev libunwind-de
 $> sudo apt install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libunwind-dev libboost-all-dev
 ```
 
+### Glibc-dev Install Dependencies
+
+None (assuming all other dependencies have been installed)
+
 **After this point NOTHING should require `sudo`.**
 
 
@@ -43,7 +47,7 @@ $> sudo apt install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libun
 
 3. **Apply autolock patches**
     ```
-    $> (cd linux-dev/src; git am ../../patches/*)
+    $> (cd linux-dev/src; git am ../patches/*)
     ```
 
 4. **Config Linux**
@@ -69,7 +73,7 @@ $> sudo apt install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libun
     This is annoying but the script must be run from the linux source tree
 
 
-### Userland Setup
+### User-dev Setup
 
 1. **Init all submodules**
     ```
@@ -96,6 +100,32 @@ $> sudo apt install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libun
     # need to change directories after entering the virtual
     # machine. This installs to `linux-dev/src/user-bin`
     $> (cd user-dev/build; make install)
+    ```
+
+### Glibc-dev Setup
+
+1. **Get glibc**
+    ```
+    $> git clone https://sourceware.org/git/glibc.git glibc-dev/src
+    ```
+    
+2. **Checkout 2.35**
+    ```
+    $> (cd glibc-dev/src; git checkout git checkout glibc-2.35)
+    ```
+    
+3. **Apply cond var patches**
+    ```
+    $> (cd glibc-dev/src; git am ../patches/*
+    ```
+
+4. **Configure**
+    ```
+    $> mkdir -p glibc-dev/build/glibc; (cd glibc-dev/build/glibc; unset LD_LIBRARY_PATH; ../src/configure --prefix=$(realpath ../../../linux-dev/src/glibc-install))
+    ```
+5. **Build Glibc**
+    ```
+    $> (cd glibc-dev/build/glibc; unset LD_LIBRARY_PATH; make && make install)
     ```
 
 ## Running

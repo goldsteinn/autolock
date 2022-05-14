@@ -4,6 +4,7 @@
 
 #include "arch/ll-syscall.h"
 #include "autolock-impls/autolock-kernel-abi.h"
+#include "autolock-impls/internal/autolock-common-returns.h"
 
 /********************************************************************/
 /* Syscall numbers. */
@@ -33,7 +34,7 @@ autolock_init_kernel_state() {
     void *  p;
 
     if (LIKELY(I_kernel_autolock != NULL)) {
-        return 0;
+        return I_SUCCESS;
     }
 
     /* Get fd back for shared memory mapping. */
@@ -62,13 +63,13 @@ autolock_init_kernel_state() {
     /* Success, set thread's autolock and return zero. */
     I_kernel_autolock = (struct kernel_autolock_abi *)p;
 
-    return 0;
+    return I_SUCCESS;
 }
 
 static int32_t
 autolock_release_kernel_state() {
     /* Nop, automatically done on process end. */
-    return 0;
+    return I_SUCCESS;
 }
 
 static void

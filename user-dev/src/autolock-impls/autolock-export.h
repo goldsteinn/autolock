@@ -4,6 +4,7 @@
 #include "autolock-impls/backoff-autolock.h"
 #include "autolock-impls/rseq-autolock.h"
 #include "autolock-impls/simple-autolock.h"
+#include "autolock-impls/ticket-autolock.h"
 
 #define I_gen_autolock(name, autolock_name)                            \
     class name {                                                       \
@@ -39,8 +40,13 @@
 
 I_gen_autolock(auto_spinlock, simple_autolock);
 I_gen_autolock(auto_backoff_lock, backoff_autolock);
-I_gen_autolock(auto_rseq_lock, rseq_autolock);
+I_gen_autolock(auto_ticket_lock, ticket_autolock);
+RSEQ_GEN_LOCK(I_gen_autolock);
 
-#define AUTOLOCK_IMPLS auto_spinlock, auto_backoff_lock, auto_rseq_lock
+
+#define AUTOLOCK_IMPLS                                                 \
+    auto_spinlock, auto_backoff_lock                                   \
+                       RSEQ_AUTOLOCK_EXPORT /* , auto_ticket_lock */
+
 
 #endif

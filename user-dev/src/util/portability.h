@@ -34,6 +34,9 @@
 #if __GNUC__ >= 7
 #define fall_through __attribute__((fallthrough))
 #endif
+#if __GNUC__ >= 9
+#define ATTR_copy(...) __copy__(__VA_ARGS__)
+#endif
 
 #elif defined __clang__
 #ifdef __has_include
@@ -76,5 +79,8 @@
 #define fall_through /* fall through */
 #endif
 
+#ifndef ATTR_copy
+#define ATTR_copy(...)
+#endif
 
 #endif
