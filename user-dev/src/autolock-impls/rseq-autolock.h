@@ -11,9 +11,8 @@
 #define RSEQ_AUTOLOCK_EXPORT
 #define RSEQ_GEN_LOCK(...)
 #else
-#define RSEQ_AUTOLOCK_EXPORT , auto_rseq_lock
-#define RSEQ_GEN_LOCK(gen_macro)                                       \
-    gen_macro(auto_rseq_lock, rseq_autolock)
+#define RSEQ_AUTOLOCK_EXPORT     , rseq_autolock
+#define RSEQ_GEN_LOCK(gen_macro) gen_macro(rseq_autolock)
 /* The user-level lock type and functions {init|destroy|trylock|unlock}
  * are all essentially unchanging so just use alias them to common
  * defintions. */

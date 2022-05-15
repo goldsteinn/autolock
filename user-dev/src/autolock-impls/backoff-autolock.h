@@ -29,7 +29,7 @@ static NONNULL(1) int32_t
     if (backoff_autolock_trylock(lock) == I_SUCCESS) {
         return I_SUCCESS;
     }
-    autolock_init_kernel_state();
+    assert(autolock_init_kernel_state() == 0);
 
 
     /* Initialize kernel for this backoff_autolock. */

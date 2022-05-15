@@ -5,10 +5,12 @@
 /* Common functionality for all user level autolock implementations.
  * Never include this file directly! */
 
+#include "util/common.h"
 #include "arch/ll-pause.h"
 #include "autolock-impls/autolock-kernel-api.h"
 #include "autolock-impls/internal/autolock-common-returns.h"
 /********************************************************************/
+
 
 /* Lock structure. */
 typedef struct I_user_autolock {
@@ -16,10 +18,13 @@ typedef struct I_user_autolock {
         mem; /* All we need is something to lock on. Must be u32. */
 } I_user_autolock_t;
 
-enum { I_UNLOCKED = 1, I_LOCKED = 0 };
+/* For compatibility with PTHREAD_MUTEX_INITIALIZER must be I_UNLOCKED =
+ * 0, I_LOCKED = 1. This is not ideal (from efficiency point of view)
+ * but is necessary for benchmarking. */
+enum { I_UNLOCKED = 0, I_LOCKED = 1 };
 
 /* For aliasing functions easily. */
-extern "C" {
+extern_C_start();
 
 /* All functions expect autolock_init() to have been called first. */
 /********************************************************************/
@@ -50,7 +55,8 @@ static NONNULL(1) int32_t I_internal_user_autolock_trylock_maybe_sched(
 /* Start API Implementation. */
 static NONNULL(1) int32_t
     I_user_autolock_init(I_user_autolock_t * lock) {
-    die_assert(autolock_init_kernel_state() == 0);
+    //    die_assert(autolock_init_kernel_state() == 0);
+    autolock_init_kernel_state();
     lock->mem = I_UNLOCKED;
     return I_SUCCESS;
 }
@@ -67,10 +73,9 @@ static NONNULL(1) int32_t
 static NONNULL(1) int32_t
     I_user_autolock_trylock(I_user_autolock_t * lock) {
     /* Only do atomic write if we have a chance. */
-    if ((__atomic_load_n(&(lock->mem), __ATOMIC_RELAXED)) !=
-        I_LOCKED) {
+    if ((__atomic_load_n(&(lock->mem), __ATOMIC_RELAXED)) != I_LOCKED) {
         if ((__atomic_exchange_n(&(lock->mem), I_LOCKED,
-                                       __ATOMIC_RELAXED)) != I_LOCKED) {
+                                 __ATOMIC_RELAXED)) != I_LOCKED) {
             return I_SUCCESS;
         }
     }
@@ -126,5 +131,5 @@ static NONNULL(1) int32_t I_internal_user_autolock_trylock_maybe_sched(
 
     return I_FAILURE;
 }
-}
+extern_C_end();
 #endif
