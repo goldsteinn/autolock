@@ -1,7 +1,7 @@
 From fb8a16488a3ea209e8e60d0b22757d0c0a004665 Mon Sep 17 00:00:00 2001
 From: Noah Goldstein <goldstein.w.n@gmail.com>
 Date: Fri, 29 Apr 2022 17:54:21 -0500
-Subject: [PATCH v1 1/6] autolock: Add syscall, build, and task_struct support
+Subject: [PATCH v1 1/9] autolock: Add syscall, build, and task_struct support
 
 Note, does not compiler (auto-lock.c still does not exist).
 ---

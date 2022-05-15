@@ -1,0 +1,28 @@
+From e57213b2ef772bc347cceb9532cb02f1724c98ba Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Sat, 14 May 2022 12:46:09 -0500
+Subject: [PATCH v1 8/9] Fix bug where clone on thread with initialized
+ autolock wouldn't reset for new process
+
+---
+ kernel/fork.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 823460d2d080..f08552bf9854 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -2140,7 +2140,9 @@ static __latent_entropy struct task_struct *copy_process(
+ #ifdef CONFIG_IO_URING
+ 	p->io_uring = NULL;
+ #endif
+-
++#if 1 /* def CONFIG_AUTO_LOCK */
++	p->auto_lock = NULL;
++#endif
+ #if defined(SPLIT_RSS_COUNTING)
+ 	memset(&p->rss_stat, 0, sizeof(p->rss_stat));
+ #endif
+-- 
+2.34.1
+

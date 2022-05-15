@@ -1,7 +1,7 @@
 From bf7a7c56b19e302570aa6bd0a75aa88dbb9fa6d5 Mon Sep 17 00:00:00 2001
 From: Noah Goldstein <goldstein.w.n@gmail.com>
 Date: Fri, 6 May 2022 01:57:49 -0500
-Subject: [PATCH v1 4/6] Fixup failed scheduler cleanup
+Subject: [PATCH v1 4/9] Fixup failed scheduler cleanup
 
 ---
  kernel/sched/fair.c | 61 +++++++++++++--------------------------------

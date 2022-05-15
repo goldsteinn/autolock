@@ -1,0 +1,128 @@
+From 68835e52026fe5f04bbabeef95e7f67406634e7b Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Sat, 14 May 2022 12:45:38 -0500
+Subject: [PATCH v1 7/9] Make autolock printouts more useful for debugging
+
+---
+ kernel/auto-lock.c | 41 ++++++++++++++++++++++++-----------------
+ 1 file changed, 24 insertions(+), 17 deletions(-)
+
+diff --git a/kernel/auto-lock.c b/kernel/auto-lock.c
+index 503c08837497..3056d51ced9c 100644
+--- a/kernel/auto-lock.c
++++ b/kernel/auto-lock.c
+@@ -252,22 +252,22 @@ static int __auto_lock_release(struct auto_lock_ctx *ctx)
+ {
+ 	LTRACE_V();
+ 
+-	LPRINTK_V("Releasing memory\n");
++	LPRINTK_VV("Releasing memory\n");
+ 	if (ctx != NULL) {
+-		LPRINTK_V("True Release\n");
++		LPRINTK_VV("True Release\n");
+ 		if (ctx->auto_lock != NULL) {
+-			LPRINTK_V("Freeing kernel memory\n");
++			LPRINTK_VV("Freeing kernel memory\n");
+ 			auto_lock_free_mem(ctx->auto_lock);
+ 		}
+ 
+ #if defined(CONFIG_UNIX)
+-		LPRINTK_V("Freeing socket memory\n");
++		LPRINTK_VV("Freeing socket memory\n");
+ 		if (ctx->auto_lock_sock) {
+ 			ctx->auto_lock_sock->file = NULL;
+ 			sock_release(ctx->auto_lock_sock);
+ 		}
+ #endif
+-		LPRINTK_V("Freeing ctx\n");
++		LPRINTK_VV("Freeing ctx\n");
+ 		kfree(ctx);
+ 	}
+ 	return 0;
+@@ -391,51 +391,56 @@ static long __auto_lock_create(void)
+ 	int ret;
+ 
+ 	LTRACE_VV();
+-	LPRINTK_VV("Creating new autolock\n");
++	LPRINTK_V("(%d): Creating new autolock\n", current->pid);
+ 	if (current->auto_lock) {
+ 		ret = -EEXIST;
+-		LPRINTK_VV("Already exists\n");
++		LPRINTK_V("(%d): Already exists -> %d\n", current->pid, ret);
+ 		goto done0;
+ 	}
+ 
+-	LPRINTK_VV("Allocating ctx\n");
++	LPRINTK_VV("(%d): Allocating ctx\n", current->pid);
+ 	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
+ 	if (ctx == NULL) {
+-		LPRINTK_VV("No memory for ctx alloc\n");
++		LPRINTK_VV("(%d): No memory for ctx alloc\n", current->pid);
+ 		ret = -ENOMEM;
+ 		goto done0;
+ 	}
+ 
+-	LPRINTK_VV("Allocating usr mem\n");
++	LPRINTK_VV("(%d): Allocating usr mem\n", current->pid);
+ 	ctx->auto_lock = auto_lock_alloc_mem();
+ 	if (ctx->auto_lock == NULL) {
+ 		ret = -ENOMEM;
+-		LPRINTK_VV("No user mem\n");
++		LPRINTK_VV("(%d): No user mem -> %d\n", current->pid, ret);
+ 		goto done1;
+ 	}
+ 
+-	LPRINTK_VV("Getting file\n");
++	LPRINTK_VV("(%d): Getting file\n", current->pid);
+ 	file = auto_lock_get_file(ctx);
+ 	if (IS_ERR(file)) {
+-		LPRINTK_VV("Error getting autolock file\n");
+-		ret = PTR_ERR(file);
++        ret = PTR_ERR(file);
++		LPRINTK_VV("(%d): Error getting autolock file -> %d\n", current->pid, ret);
++
+ 		goto done2;
+ 	}
+ 
+-	LPRINTK_VV("Installing file\n");
++	LPRINTK_VV("(%d): Installing file\n", current->pid);
+ 	ret = auto_lock_install_fd(ctx, file);
+ 	if (ret < 0) {
+-		LPRINTK_VV("Err installing: %d\n", current->auto_lock == NULL);
++		LPRINTK_VV("(%d): Err installing -> %d\n", current->pid, ret);
+ 		goto done2;
+ 	}
+-	LPRINTK_VV("Done installing: %d\n", current->auto_lock == NULL);
++	LPRINTK_VV("(%d): Done installing: %d\n", current->pid, current->auto_lock == NULL);
++
+ 
++    
+ done0:
++    LPRINTK_VV("(%d): Returning -> %d\n", current->pid, ret);
+ 	return ret;
+ done2:
+ 	auto_lock_free_mem(ctx->auto_lock);
+ done1:
+ 	kfree(ctx);
++    LPRINTK_VV("(%d): Returning2 -> %d\n", current->pid, ret);
+ 	return ret;
+ }
+ 
+@@ -458,12 +463,14 @@ static long auto_lock_release(void)
+ void auto_lock_free(struct task_struct *tsk)
+ {
+ 	LTRACE_VV();
++    LPRINTK_V("(%d): Freeing Autolock\n", tsk ? tsk->pid : -1);
+ 	__auto_lock_release_tsk(tsk);
+ }
+ 
+ /* The syscalls. */
+ SYSCALL_DEFINE0(auto_lock_create)
+ {
++    LPRINTK_V("(%d): Creating Autolock\n", current->pid);
+ 	return __auto_lock_create();
+ }
+ 
+-- 
+2.34.1
+
