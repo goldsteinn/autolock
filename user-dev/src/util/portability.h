@@ -35,7 +35,7 @@
 #define fall_through __attribute__((fallthrough))
 #endif
 #if __GNUC__ >= 9
-#define ATTR_copy(...) __copy__(__VA_ARGS__)
+#define I_attribute_copy(...) __copy__(__VA_ARGS__)
 #endif
 
 #elif defined __clang__
@@ -53,6 +53,8 @@
 #endif
 
 #ifdef __cplusplus
+#define extern_C_start() extern "C" {
+#define extern_C_end()   }
 #if (!defined fall_through) && (__cplusplus >= 201703L)
 #define fall_through [[fallthrough]]
 #endif
@@ -61,6 +63,9 @@
 #define I_static_assert_base              static_assert
 #define I_choose_const_expr(cond, e0, e1) ((cond) ? (e0) : (e1))
 #else
+#define extern_C_start()
+#define extern_C_end()
+
 #define constexpr
 #define I_static_assert_base _Static_assert
 #define I_choose_const_expr(cond, e0, e1)                              \
@@ -79,8 +84,8 @@
 #define fall_through /* fall through */
 #endif
 
-#ifndef ATTR_copy
-#define ATTR_copy(...)
+#ifndef I_attribute_copy
+#define I_attribute_copy(...)
 #endif
 
 #endif
