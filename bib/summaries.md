@@ -105,7 +105,7 @@
 
 - [Contention-Aware Lock Scheduling for Transactional Databases](https://www.vldb.org/pvldb/vol11/p648-tian.pdf)
     - Really about when to schedule critical sections. Not about messing with general process scheduler.
-
+    
 
 
 
