@@ -1,7 +1,7 @@
 From 1bab9bcdeed768a5e64e41f4d5ba724cb14bf163 Mon Sep 17 00:00:00 2001
 From: Noah Goldstein <goldstein.w.n@gmail.com>
 Date: Thu, 5 May 2022 23:58:37 -0500
-Subject: [PATCH v1 2/6] Implement autolock
+Subject: [PATCH v1 2/9] Implement autolock
 
 ---
  include/linux/auto-lock-verbose.h |  22 ++
