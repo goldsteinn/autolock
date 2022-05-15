@@ -1,6 +1,8 @@
 #ifndef _SRC__AUTOLOCK_IMPLS__AUTOLOCK_KERNEL_API_H_
 #define _SRC__AUTOLOCK_IMPLS__AUTOLOCK_KERNEL_API_H_
 
+#include "util/common.h"
+#include "util/memory-util.h"
 
 #include "arch/ll-syscall.h"
 #include "autolock-impls/autolock-kernel-abi.h"
@@ -10,6 +12,7 @@
 /* Syscall numbers. */
 enum { _NR_AUTOLOCK_CREATE = 451, _NR_AUTOLOCK_RELEASE = 452 };
 
+extern_C_start();
 /* Ideally this is initialized at TLS startup. */
 extern __thread struct kernel_autolock_abi * I_kernel_autolock;
 
@@ -84,5 +87,5 @@ static void
 autolock_set_kernel_watch_neq(uint32_t v) {
     I_kernel_autolock->watch_neq = v;
 }
-
+extern_C_end();
 #endif

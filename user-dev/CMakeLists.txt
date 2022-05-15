@@ -35,7 +35,7 @@ set_property(CACHE COMPILER
   PROPERTY STRINGS "clang" "gcc")
 
 
-set(INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../linux-dev/src/user-bin" CACHE STRING "Set install path")
+set(LINUX_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../linux-dev/src" CACHE STRING "Set path to linux")
 
 set(cxx_lang "cxx" "c++" "cpp" "cxx")
 set(c_lang "c")
@@ -85,16 +85,15 @@ endif()
 # Add third party stuff
 list(APPEND link_libraries "absl::synchronization" "folly")
 
-get_filename_component(INSTALL_DIR "${INSTALL_DIR}" ABSOLUTE)
+get_filename_component(LINUX_DIR "${LINUX_DIR}" ABSOLUTE)
 
 
-if(NOT IS_DIRECTORY "${INSTALL_DIR}")
-  get_filename_component(INSTALL_DIR2 "${INSTALL_DIR}/.." ABSOLUTE)
-  # We can build the directory at install
-  if(NOT IS_DIRECTORY "${INSTALL_DIR2}")
-    message(FATAL_ERROR "Unabled to find install directory: ${INSTALL_DIR}")
-  endif()
+if(NOT IS_DIRECTORY "${LINUX_DIR}")
+  message(FATAL_ERROR "Unabled to find linux directory: ${LINUX_DIR}")
 endif()
+set(BIN_INSTALL_DIR "${LINUX_DIR}/user-bin")
+set(LIB_INSTALL_DIR "${LINUX_DIR}/interpose-libs")
+
 
 
 list(FIND llvm_compilers ${COMPILER_LOWER} llvm_compilers)
@@ -183,6 +182,15 @@ set(BENCH_C_SOURCES ${BENCH_SOURCES} ${BENCH_UTIL_SOURCES})
 list(REMOVE_ITEM BENCH_C_SOURCES ${BENCH_EXE_SRC})
 
 
+# Setup interpose executable
+list(FILTER C_SOURCES EXCLUDE REGEX ".*/interpose/.*$")
+list(FILTER C_SOURCES EXCLUDE REGEX ".*\.interpose\.c$")
+
+
+file(GLOB_RECURSE INTERPOSE_SOURCES "${CMAKE_SOURCE_DIR}/${SRC_DIR}/*.interpose.c")
+file(GLOB_RECURSE INTERPOSE_UTIL_SOURCES "${CMAKE_SOURCE_DIR}/${SRC_DIR}/interpose/*.c")
+file(GLOB_RECURSE AUTOLOCK_SOURCES "${CMAKE_SOURCE_DIR}/${SRC_DIR}/autolock-impls/*.c")
+#set(INTERPOSE_C_SOURCES ${INTERPOSE_UTIL_SOURCES})
 
 find_program(CLANG_TIDY_EXE clang-tidy NAMES clang-tidy-13 clang-tidy-12 clang-tidy-10 clang-tidy-9 clang-tidy-8)
 # We don't get cache with this method which slows down check.
@@ -191,7 +199,6 @@ add_custom_target(
   COMMAND ${CLANG_TIDY_EXE}
   ${ALL_C_SOURCES}
   -p=${CMAKE_CURRENT_BINARY_DIR}
-  #  -checks=*,-*insecureAPI.strcpy,-*insecureAPI.DeprecatedOrUnsafeBufferHandling
 )
 
 add_executable(driver ${EXE_SRC} ${C_SOURCES} ${ASM_SOURCES})
@@ -201,8 +208,8 @@ set_target_properties(driver PROPERTIES LINKER_LANGUAGE ${LANG} CXX_STANDARD_REQ
 
 
 
-set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}")
-install(TARGETS driver DESTINATION "${INSTALL_DIR}")
+set(CMAKE_INSTALL_PREFIX "${BIN_INSTALL_DIR}")
+install(TARGETS driver DESTINATION "${BIN_INSTALL_DIR}")
 
 add_executable(tests ${TEST_EXE_SRC} ${TEST_C_SOURCES} ${C_SOURCES} ${ASM_SOURCES})
 target_compile_options(tests PRIVATE ${test_and_bench_compiler_flags})
@@ -214,6 +221,28 @@ add_executable(bench ${BENCH_EXE_SRC} ${BENCH_C_SOURCES} ${C_SOURCES} ${ASM_SOUR
 target_compile_options(bench PRIVATE ${test_and_bench_compiler_flags})
 target_link_libraries(bench ${test_and_bench_libraries})
 set_target_properties(bench PROPERTIES EXCLUDE_FROM_ALL TRUE LINKER_LANGUAGE ${LANG} CXX_STANDARD_REQUIRED ${cxx_std} CXX_STANDARD ${cxx_std} C_STANDARD_REQUIRED ${c_std} C_STANDARD ${c_std})
+
+
+set(interpose_lib_compiler_flags ${driver_compiler_flags})
+list(APPEND interpose_lib_profile_compiler_flags "-DI_WITH_TIMING")
+
+
+foreach(INTERPOSE_SOURCE ${INTERPOSE_SOURCES})
+  get_filename_component(INTERPOSE_LIB "${INTERPOSE_SOURCE}" NAME_WE)
+  add_library(${INTERPOSE_LIB} SHARED ${INTERPOSE_SOURCE} ${INTERPOSE_C_SOURCES})
+  target_compile_options(${INTERPOSE_LIB} PRIVATE ${interpose_lib_compiler_flags})
+  set_target_properties(${INTERPOSE_LIB} PROPERTIES LINKER_LANGUAGE C C_STANDARD_REQUIRED ${c_std} C_STANDARD ${c_std})
+  target_link_libraries(${INTERPOSE_LIB} "-ldl")
+  install(TARGETS ${INTERPOSE_LIB} DESTINATION "${LIB_INSTALL_DIR}")
+  
+  set(INTERPOSE_LIB_PROFILE "${INTERPOSE_LIB}-profile")
+  add_library(${INTERPOSE_LIB_PROFILE} SHARED ${INTERPOSE_SOURCE} ${INTERPOSE_C_SOURCES})
+  target_compile_options(${INTERPOSE_LIB_PROFILE} PRIVATE ${interpose_lib_profile_compiler_flags})
+  set_target_properties(${INTERPOSE_LIB_PROFILE} PROPERTIES LINKER_LANGUAGE C C_STANDARD_REQUIRED ${c_std} C_STANDARD ${c_std})
+  target_link_libraries(${INTERPOSE_LIB_PROFILE} "-ldl")
+  install(TARGETS ${INTERPOSE_LIB_PROFILE} DESTINATION "${LIB_INSTALL_DIR}")
+endforeach()
+
 
 add_custom_target(full)
 add_dependencies(full driver tests bench)

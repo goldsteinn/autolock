@@ -7,7 +7,7 @@
 #include "autolock-impls/internal/autolock-common-returns.h"
 
 
-typedef struct ticket_autolock {
+typedef struct I_ticket_autolock {
     uint32_t cur_count;
     /* Padd to cache line to `cur_count` line is not being ping-ponged
      * as threads busy-wait on it. */
