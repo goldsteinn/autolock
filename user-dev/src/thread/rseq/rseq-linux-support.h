@@ -14,7 +14,7 @@
 #else
 /* Need to check at runtime. */
 #endif
-#undef I_HAS_RSEQ
+
 #ifdef I_HAS_RSEQ
 static void
 rseq_is_supported(int32_t syscall_ret) {

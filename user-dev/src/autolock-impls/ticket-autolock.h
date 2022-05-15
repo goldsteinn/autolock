@@ -4,7 +4,7 @@
 /* Need to implement autolock base custom. */
 #include "arch/ll-pause.h"
 #include "autolock-impls/autolock-kernel-api.h"
-#include "autolock-impls/internal/autolock-common-returns.h"
+#include "autolock-impls/internal/autolock-common-consts.h"
 
 
 typedef struct I_ticket_autolock {
@@ -19,17 +19,24 @@ typedef struct I_ticket_autolock {
 /* Zero relevant fields and init kernel state. */
 static NONNULL(1) int32_t
     ticket_autolock_init(ticket_autolock_t * lock) {
-    die_assert(autolock_init_kernel_state() == 0);
     lock->next_count = 0;
     lock->cur_count  = 0;
-    return 0;
+
+
+    if (UNLIKELY(autolock_init_kernel_state() == NULL)) {
+        return I_FAILURE;
+    }
+
+    /* Don't let compiler implement this with cmov. */
+    asm volatile("" : : :);
+    return I_SUCCESS;
 }
 
 /* Nothing to do for destroy. */
 static NONNULL(1) int32_t
     ticket_autolock_destroy(ticket_autolock_t * lock) {
     (void)(lock);
-    return 0;
+    return autolock_release_kernel_state();
 }
 
 
@@ -59,6 +66,7 @@ static NONNULL(1) int32_t
 
 static NONNULL(1) int32_t
     ticket_autolock_lock(ticket_autolock_t * lock) {
+    struct kernel_autolock_abi * k_autolock_mem;
 
     /* Get count we need. Note we use fetch add here so we are getting
      * `next_count` BEFORE the incr. */
@@ -77,15 +85,15 @@ static NONNULL(1) int32_t
 
 
     /* Initialize kernel state. */
-    autolock_init_kernel_state();
+    k_autolock_mem = autolock_init_kernel_state();
 
     /* For ticket lock we don't need to go back and forth between
      * arming/disarming the autolock as once the thread acquires the
      * lock lock->cur_count will equal ticket_num so the thread will
      * still be schedulable. */
-    autolock_set_kernel_watch_mem(&(lock->cur_count));
-    autolock_set_kernel_watch_for(ticket_num);
-    autolock_set_kernel_watch_neq(0);
+    autolock_set_kernel_watch_mem(&(lock->cur_count), k_autolock_mem);
+    autolock_set_kernel_watch_for(ticket_num, k_autolock_mem);
+    autolock_set_kernel_watch_neq(0, k_autolock_mem);
 
     for (;;) {
         uint32_t backoff;
@@ -97,7 +105,7 @@ static NONNULL(1) int32_t
         cur_num -= ticket_num;
         if (cur_num == 0) {
             /* Disarm autolock before returning. */
-            autolock_set_kernel_watch_mem(NULL);
+            autolock_set_kernel_watch_mem(NULL, k_autolock_mem);
             return 0;
         }
 

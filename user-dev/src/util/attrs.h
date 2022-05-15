@@ -16,4 +16,8 @@
 #define FORMATF(...) __attribute__((format(printf, ##__VA_ARGS__)))
 
 #define ATTR_COPY(...) I_attribute_copy(__VA_ARGS__)
+
+#define ATTR_TLS(...) __attribute__((tls_model(__VA_ARGS__)))
+
+#define ATTR_TLS_INIT_EXEC ATTR_TLS("initial-exec")
 #endif

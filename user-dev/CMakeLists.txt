@@ -224,6 +224,10 @@ set_target_properties(bench PROPERTIES EXCLUDE_FROM_ALL TRUE LINKER_LANGUAGE ${L
 
 
 set(interpose_lib_compiler_flags ${driver_compiler_flags})
+list(APPEND interpose_lib_compiler_flags "-ftls-model=initial-exec")
+list(APPEND interpose_lib_compiler_flags "-DI_USE_FOR_SHARED_LIBRARY_INTERPOSE")
+
+set(interpose_lib_profile_compiler_flags ${interpose_lib_compiler_flags})
 list(APPEND interpose_lib_profile_compiler_flags "-DI_WITH_TIMING")
 
 
@@ -234,7 +238,7 @@ foreach(INTERPOSE_SOURCE ${INTERPOSE_SOURCES})
   set_target_properties(${INTERPOSE_LIB} PROPERTIES LINKER_LANGUAGE C C_STANDARD_REQUIRED ${c_std} C_STANDARD ${c_std})
   target_link_libraries(${INTERPOSE_LIB} "-ldl")
   install(TARGETS ${INTERPOSE_LIB} DESTINATION "${LIB_INSTALL_DIR}")
-  
+
   set(INTERPOSE_LIB_PROFILE "${INTERPOSE_LIB}-profile")
   add_library(${INTERPOSE_LIB_PROFILE} SHARED ${INTERPOSE_SOURCE} ${INTERPOSE_C_SOURCES})
   target_compile_options(${INTERPOSE_LIB_PROFILE} PRIVATE ${interpose_lib_profile_compiler_flags})
