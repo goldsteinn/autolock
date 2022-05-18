@@ -62,7 +62,7 @@ None (assuming all other dependencies have been installed)
     # info but any config difference related to virtualization, serial ports,
     # or scheduling will be an issue.
     # see: https://ops.tips/notes/booting-linux-on-qemu/ and https://www.linux-kvm.org/page/Virtio if any issues.
-    $> (cd linux-dev/src; make x86_64defconfig)
+    $> (cd linux-dev/src; make x86_64_defconfig)
     ```
 
 5. **Build linux**
