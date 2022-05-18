@@ -23,7 +23,7 @@ $> sudo apt install dwarves busybox qemu-system-x86
 ```
 # Ubuntu 22+
 $> sudo apt install libdouble-conversion-dev libfmt-dev libglog-dev libunwind-dev libboost-all-dev
-# Ubuntu 18
+# Ubuntu 18 & Ubuntu 20
 $> sudo apt install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libunwind-dev libboost-all-dev
 ```
 
@@ -89,7 +89,7 @@ None (assuming all other dependencies have been installed)
 
 2. **Config userland support**
     ```
-    $> cmake -DLINUX_DIR=linux-dev/src -DBUILD_TESTING=OFF -DLANG=CXX -DCOMPILER=g++ -DWITH_MATH=1 -DWITH_THREAD=1 -DWITH_VDSO=1 -S user-dev/ -B user-dev/build
+    $> cmake -DLINUX_DIR=../linux-dev/src -DBUILD_TESTING=OFF -DLANG=CXX -DCOMPILER=g++ -DWITH_MATH=1 -DWITH_THREAD=1 -DWITH_VDSO=1 -S user-dev/ -B user-dev/build
     ```
 
 3. **Build userland support**
