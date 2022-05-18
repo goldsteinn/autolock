@@ -3,10 +3,27 @@
 import os
 import sys
 import subprocess
+import argparse
 
-linux_src = "../linux-dev/src"
-if len(sys.argv) > 1:
-    linux_src = sys.argv[1]
+################################################################
+# setup arguments
+parser = argparse.ArgumentParser(description='download and setup benchmarks')
+parser.add_argument("-v", "--verbosity", action="store_true", default=False, help="increase output verbosity")
+parser.add_argument("-l", "--listbenchs", action="store_true", default=False, help="list bench names")
+parser.add_argument("-d", "--linuxdir", default="../linux-dev/src", help="directory where to find linux source")
+parser.add_argument("bench", nargs="?", help="the bench to install (or all if none listed)")
+flags = parser.parse_args()
+
+verbose = flags.verbosity
+listonly = flags.listbenchs
+linux_src = flags.linuxdir
+benchsToInstall={}
+doall = False
+if flags.bench is None:
+    doall = True
+else:    
+    benchsToInstall[flags.bench] = 1
+
 
 linux_src = os.path.realpath(linux_src)
 assert os.path.isdir(linux_src)
@@ -46,7 +63,6 @@ def find_new_file():
 
 
 class Benchmark():
-
     def __init__(self, url, outname, configure, make):
         self.url = url
         self.outname = outname
@@ -54,6 +70,9 @@ class Benchmark():
         self.configure = configure
         self.make = make
 
+    def getName(self):
+        return self.outname
+    
     def tar_path(self):
         return "{}.tar.gz".format(self.outname)
 
@@ -64,11 +83,19 @@ class Benchmark():
         return "patches/{}".format(self.outname)
 
     def download(self):
+        if verbose:
+            print("Checking {} and {}".format(self.src_dir_name(), self.tar_path()))
         if os.path.isdir(self.src_dir_name()) or os.path.isfile(
                 self.tar_path()):
             return
-        assert os.system("wget {} -O {}".format(self.url,
-                                                self.tar_path())) == 0
+        wget = os.system("wget {} -O {}".format(self.url,
+                                                self.tar_path()))
+        if wget == 0:
+            return
+        # should delete the file/directory if we get here
+        print("Failed to download {} into {}, so you should delete".format(self.src_dir_name(), self.tar_path()))
+        assert wget == 0
+
 
     def unpack(self):
         if os.path.isdir(self.src_dir_name()):
@@ -134,9 +161,15 @@ benchmarks = [
               "make && make install")
 ]
 
+prompt = "" if listonly else "Setting up " 
 for benchmark in benchmarks:
-    benchmark.get()
-    benchmark.build()
+    print("{}{}".format(prompt, benchmark.getName()))
+    if listonly:
+        continue
+    print("{} {}".format(benchmark.getName(), benchsToInstall))
+    if doall or benchmark.getName() in benchsToInstall:
+        benchmark.get()
+        benchmark.build()
 
 if len(init_files) == 0:
     os.system("rm -rf {}".format(tmp_path))
