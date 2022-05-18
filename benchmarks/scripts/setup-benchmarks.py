@@ -5,11 +5,33 @@ import sys
 import subprocess
 import argparse
 
+def setgcc(version):
+    global gcc_v
+    global gxx_v
+    rc = subprocess.call(["which", "gcc-{}".format(version)])
+    if rc == 0:
+        gcc_v = "gcc-{}".format(version)
+        gxx_v = "g++-{}".format(version)
+        return
+    raise ValueError("No version of gcc matches: {}".format(version))
+    
+
+# libmemcached needs 7 <= gcc <= 9. Try to find it. Otherwise just system gcc
+gcc_v = "gcc"
+gxx_v = "g++"
+for i in range(9, 6, -1):
+    try:
+        setgcc(i)
+        break
+    except ValueError as e:
+        continue
+
 ################################################################
 # setup arguments
 parser = argparse.ArgumentParser(description='download and setup benchmarks')
 parser.add_argument("-v", "--verbosity", action="store_true", default=False, help="increase output verbosity")
 parser.add_argument("-l", "--listbenchs", action="store_true", default=False, help="list bench names")
+parser.add_argument("-g", "--forcegcc", default=0, type=int, help="force using this gcc version")
 parser.add_argument("-d", "--linuxdir", default="../linux-dev/src", help="directory where to find linux source")
 parser.add_argument("bench", nargs="?", help="the bench to install (or all if none listed)")
 flags = parser.parse_args()
@@ -23,7 +45,8 @@ if flags.bench is None:
     doall = True
 else:    
     benchsToInstall[flags.bench] = 1
-
+if flags.forcegcc > 0:
+    setgcc(flags.forcegcc)
 
 linux_src = os.path.realpath(linux_src)
 assert os.path.isdir(linux_src)
@@ -37,21 +60,6 @@ init_files = set()
 os.system("mkdir -p {}".format(tmp_path))
 for f in os.listdir(tmp_path):
     init_files.add(f)
-
-# libmemcached needs 7 <= gcc <= 9. Try to find it. Otherwise just system gcc
-v = None
-for i in range(9, 6, -1):
-    rc = subprocess.call(["which", "gcc-{}".format(i)])
-    if rc == 0:
-        v = i
-        break
-gcc_v = "gcc"
-gxx_v = "g++"
-
-if v is not None:
-    gcc_v += "-{}".format(i)
-    gxx_v += "-{}".format(i)
-
 
 def find_new_file():
     new_files = []
@@ -161,13 +169,12 @@ benchmarks = [
               "make && make install")
 ]
 
-prompt = "" if listonly else "Setting up " 
 for benchmark in benchmarks:
-    print("{}{}".format(prompt, benchmark.getName()))
     if listonly:
+        print(benchmark.getName())
         continue
-    print("{} {}".format(benchmark.getName(), benchsToInstall))
     if doall or benchmark.getName() in benchsToInstall:
+        print("Setting up {}".format(benchmark.getName()))
         benchmark.get()
         benchmark.build()
 
