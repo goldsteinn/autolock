@@ -1,9 +1,9 @@
 #! /usr/bin/env python3
 
 import os
-import sys
 import subprocess
 import argparse
+
 
 def setgcc(version):
     global gcc_v
@@ -14,7 +14,7 @@ def setgcc(version):
         gxx_v = "g++-{}".format(version)
         return
     raise ValueError("No version of gcc matches: {}".format(version))
-    
+
 
 # libmemcached needs 7 <= gcc <= 9. Try to find it. Otherwise just system gcc
 gcc_v = "gcc"
@@ -24,26 +24,44 @@ for i in range(9, 6, -1):
         setgcc(i)
         break
     except ValueError as e:
+        print(e)
         continue
 
 ################################################################
 # setup arguments
 parser = argparse.ArgumentParser(description='download and setup benchmarks')
-parser.add_argument("-v", "--verbosity", action="store_true", default=False, help="increase output verbosity")
-parser.add_argument("-l", "--listbenchs", action="store_true", default=False, help="list bench names")
-parser.add_argument("-g", "--forcegcc", default=0, type=int, help="force using this gcc version")
-parser.add_argument("-d", "--linuxdir", default="../linux-dev/src", help="directory where to find linux source")
-parser.add_argument("bench", nargs="?", help="the bench to install (or all if none listed)")
+parser.add_argument("-v",
+                    "--verbosity",
+                    action="store_true",
+                    default=False,
+                    help="increase output verbosity")
+parser.add_argument("-l",
+                    "--listbenchs",
+                    action="store_true",
+                    default=False,
+                    help="list bench names")
+parser.add_argument("-g",
+                    "--forcegcc",
+                    default=0,
+                    type=int,
+                    help="force using this gcc version")
+parser.add_argument("-d",
+                    "--linuxdir",
+                    default="../linux-dev/src",
+                    help="directory where to find linux source")
+parser.add_argument("bench",
+                    nargs="?",
+                    help="the bench to install (or all if none listed)")
 flags = parser.parse_args()
 
 verbose = flags.verbosity
 listonly = flags.listbenchs
 linux_src = flags.linuxdir
-benchsToInstall={}
+benchsToInstall = {}
 doall = False
 if flags.bench is None:
     doall = True
-else:    
+else:
     benchsToInstall[flags.bench] = 1
 if flags.forcegcc > 0:
     setgcc(flags.forcegcc)
@@ -61,6 +79,7 @@ os.system("mkdir -p {}".format(tmp_path))
 for f in os.listdir(tmp_path):
     init_files.add(f)
 
+
 def find_new_file():
     new_files = []
     for f in os.listdir(tmp_path):
@@ -71,6 +90,7 @@ def find_new_file():
 
 
 class Benchmark():
+
     def __init__(self, url, outname, configure, make):
         self.url = url
         self.outname = outname
@@ -80,7 +100,7 @@ class Benchmark():
 
     def getName(self):
         return self.outname
-    
+
     def tar_path(self):
         return "{}.tar.gz".format(self.outname)
 
@@ -92,18 +112,18 @@ class Benchmark():
 
     def download(self):
         if verbose:
-            print("Checking {} and {}".format(self.src_dir_name(), self.tar_path()))
+            print("Checking {} and {}".format(self.src_dir_name(),
+                                              self.tar_path()))
         if os.path.isdir(self.src_dir_name()) or os.path.isfile(
                 self.tar_path()):
             return
-        wget = os.system("wget {} -O {}".format(self.url,
-                                                self.tar_path()))
+        wget = os.system("wget {} -O {}".format(self.url, self.tar_path()))
         if wget == 0:
             return
         # should delete the file/directory if we get here
-        print("Failed to download {} into {}, so you should delete".format(self.src_dir_name(), self.tar_path()))
+        print("Failed to download {} into {}, so you should delete".format(
+            self.src_dir_name(), self.tar_path()))
         assert wget == 0
-
 
     def unpack(self):
         if os.path.isdir(self.src_dir_name()):
@@ -153,7 +173,7 @@ class Benchmark():
         self.unpack()
         self.cleanup()
 
-
+# Todo add https://github.com/LPD-EPFL/CLHT
 benchmarks = [
     Benchmark("http://parsec.cs.princeton.edu/download/3.0/parsec-3.0.tar.gz",
               "parsec-3.0", None, None),
