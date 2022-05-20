@@ -1,19 +1,30 @@
 #ifndef _SRC__AUTOLOCK_IMPLS__TICKET_AUTOLOCK_H_
 #define _SRC__AUTOLOCK_IMPLS__TICKET_AUTOLOCK_H_
 
-/* Need to implement autolock base custom. */
-#include "arch/ll-pause.h"
-#include "autolock-impls/autolock-kernel-api.h"
-#include "autolock-impls/internal/autolock-common-consts.h"
+/* Simple ticket spinlock. Naive and performs horribly once nthreads >
+ * ncores. */
 
+#include "arch/ll-pause.h"
+#include "util/attrs.h"
+#include "util/cpu-info.h"
+
+/* Need to implement autolock base custom. */
+#include "autolock-impls/common/autolock-returns.h"
+#include "autolock-impls/sys/autolock-kernel-api.h"
+
+
+/* Leaving off for now. */
+#define TICKET_AUTOLOCK
 
 typedef struct I_ticket_autolock {
-    uint32_t cur_count;
-    /* Padd to cache line to `cur_count` line is not being ping-ponged
-     * as threads busy-wait on it. */
-    uint8_t  padding[64 - sizeof(uint32_t) * 1];
+    union {
+        uint32_t cur_count;
+        /* Padd to cache line to `cur_count` line is not being
+         * ping-ponged as threads busy-wait on it. */
+        uint8_t I_padding[L1_CACHE_LINE_SIZE - sizeof(uint32_t) * 1];
+    };
     uint32_t next_count;
-} ticket_autolock_t __attribute__((aligned(64)));
+} ticket_autolock_t ALIGNED(L1_CACHE_LINE_SIZE);
 
 
 /* Zero relevant fields and init kernel state. */

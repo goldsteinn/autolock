@@ -4,6 +4,10 @@
 #include "util/macro.h"
 #include "util/portability.h"
 
+#define ALWAYS_INLINE inline __attribute__((always_inline))
+#define NEVER_INLINE  __attribute__((noinline))
+
+
 #define MAYBE_UNUSED __attribute__((unused))
 #define MALLOC_FUNC  __attribute__((malloc))
 #define CONST_FUNC   __attribute__((const)) constexpr

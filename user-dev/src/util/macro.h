@@ -15,9 +15,10 @@
  */
 #undef __FILENAME__
 #ifndef __FILENAME__
-#define __FILENAME__                                                           \
-    (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1   \
-                                      : __FILE__)
+#define __FILENAME__                                                   \
+    (__builtin_strrchr(__FILE__, '/')                                  \
+         ? __builtin_strrchr(__FILE__, '/') + 1                        \
+         : __FILE__)
 #endif
 #define ERR_ARGS __FILENAME__, __func__, __LINE__
 /******************************************************************************/
@@ -477,7 +478,7 @@
 
 /* Take advatage of fact that macro(,) has two arguments but
    macro(OP_THATS_NOT_COMMA) only has one. */
-#define FWD_TOKEN(...)                                                         \
+#define FWD_TOKEN(...)                                                 \
     CAT_BASE(REMAKE_COMMA_, NOT_ONE_NARG(__VA_ARGS__))(__VA_ARGS__)
 #define REMAKE_COMMA_ONE(...)  __VA_ARGS__
 #define REMAKE_COMMA_MANY(...) COMMA
@@ -486,13 +487,17 @@
 #define DEPAREN_PASTE(x, ...)            x##__VA_ARGS__
 #define DEPAREN_EVALUATING_PASTE(x, ...) DEPAREN_PASTE(x, __VA_ARGS__)
 #define DEPAREN_EXTRACT(...)             DEPAREN_EXTRACT __VA_ARGS__
-#define DEPAREN(...)                                                           \
-    DEPAREN_EVALUATING_PASTE(DEPAREN_NOTHING_, DEPAREN_EXTRACT __VA_ARGS__)
+#define DEPAREN(...)                                                   \
+    DEPAREN_EVALUATING_PASTE(DEPAREN_NOTHING_,                         \
+                             DEPAREN_EXTRACT __VA_ARGS__)
 
 #define I__ADD_ARG0(...)    __VA_ARGS__
 #define I__ADD_ARG1(x, ...) x
-#define ADD_ARG_FRONT(x, ...)                                                  \
+#define ADD_ARG_FRONT(x, ...)                                          \
     CAT_BASE(I__ADD_ARG, IS_EMPTY(__VA_ARGS__))(x, __VA_ARGS__)
+
+#define I_REMOVE_FIRST(first, ...) __VA_ARGS__
+#define REMOVE_FIRST(...)          I_REMOVE_FIRST(__VA_ARGS__)
 
 #define FORWARD(...) __VA_ARGS__
 #define EAT(...)
@@ -506,13 +511,13 @@
 #define I_ARR_ARG_1(...)   NULL, 0
 #define I_ARR_ARG_1_T(...) NULL, 0
 
-#define I_ARR_ARG_0_T(type, ...)                                               \
+#define I_ARR_ARG_0_T(type, ...)                                       \
     (type const[]){ __VA_ARGS__ }, PP_NARG(__VA_ARGS__)
-#define I_ARR_ARG_0(first, ...)                                                \
+#define I_ARR_ARG_0(first, ...)                                        \
     I_ARR_ARG_0_T(get_type(first), first, ##__VA_ARGS__)
 
 #define ARR_ARG(...) CAT(I_ARR_ARG_, IS_EMPTY(__VA_ARGS__))(__VA_ARGS__)
-#define ARR_ARG_T(type, ...)                                                   \
+#define ARR_ARG_T(type, ...)                                           \
     CAT(I_ARR_ARG_, IS_EMPTY(__VA_ARGS__), _T)(type, __VA_ARGS__)
 
 

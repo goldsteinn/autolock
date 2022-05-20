@@ -5,8 +5,8 @@
 #include "util/memory-util.h"
 
 #include "arch/ll-syscall.h"
-#include "autolock-impls/autolock-kernel-abi.h"
-#include "autolock-impls/internal/autolock-common-consts.h"
+#include "autolock-impls/sys/autolock-kernel-abi.h"
+#include "autolock-impls/common/autolock-returns.h"
 
 /********************************************************************/
 /* Syscall numbers. */
