@@ -6,10 +6,23 @@
  * Never include this file directly! */
 
 #include "arch/ll-pause.h"
-#include "autolock-impls/autolock-kernel-api.h"
-#include "autolock-impls/internal/autolock-common-consts.h"
+#include "autolock-impls/sys/autolock-kernel-api.h"
+#include "autolock-impls/common/autolock-returns.h"
 #include "util/common.h"
 /********************************************************************/
+
+
+#ifdef I_USE_FOR_SHARED_LIBRARY_INTERPOSE
+/* For compatibility with PTHREAD_MUTEX_INITIALIZER must be I_UNLOCKED =
+ * 0, I_LOCKED = 1. This is not ideal (from efficiency point of view)
+ * but is necessary for benchmarking. */
+enum { I_UNLOCKED = 0, I_LOCKED = 1 };
+
+#else
+
+enum { I_UNLOCKED = 1, I_LOCKED = 0 };
+
+#endif
 
 
 /* Lock structure. */

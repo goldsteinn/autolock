@@ -8,6 +8,14 @@
 #include "util/error-util.h"
 #include "util/types.h"
 
+/* TODO: Do all this with config. */
+enum { NUM_NUMA_NODES = 1 };
+
+enum {
+    /* For any CPU we are targetting this is true. */
+    L1_CACHE_LINE_SIZE = 64
+};
+
 #ifndef I_SYS_NUM_CPUS
 #define I_SYS_NUM_CPUS 0
 #endif
@@ -73,5 +81,6 @@ get_phys_cpu_id(uint32_t logical_cpu_id) {
 
     return (v - 1);
 }
+
 
 #endif

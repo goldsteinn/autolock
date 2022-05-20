@@ -1,4 +1,4 @@
-#include "autolock-impls/backoff-autolock.h"
+#include "autolock-impls/locks/backoff-autolock.h"
 #include "interpose/pthread-mutex-interpose.h"
 #include "util/attrs.h"
 

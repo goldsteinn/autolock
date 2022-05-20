@@ -1,6 +1,8 @@
 #ifndef _SRC__UTIL__PORTABILITY_H_
 #define _SRC__UTIL__PORTABILITY_H_
 
+/* TODO: Do all this with config. */
+
 // clang-format off
 #if defined(__STDC__)
 # if defined(__STDC_VERSION__)
@@ -68,6 +70,7 @@
 
 #define constexpr
 #define I_static_assert_base _Static_assert
+
 #define I_choose_const_expr(cond, e0, e1)                              \
     __builtin_choose_expr(cond, e0, e1)
 

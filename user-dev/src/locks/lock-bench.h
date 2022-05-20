@@ -30,7 +30,7 @@ I_bench_runner_kernel(lock_T *           lock,
 
     /* Initialize rseq. Used for some locks. This is done during TLS on
      * newer GLIBC distros but we may need to do manually. */
-    die_assert(rseq_init() == 0);
+    //    die_assert(rseq_init() == 0);
 
     /* Wait for all threads to be ready before starting. Note this is
      * implemented with a futex. We may get more precision with a second

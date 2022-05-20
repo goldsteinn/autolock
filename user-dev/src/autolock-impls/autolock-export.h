@@ -1,10 +1,27 @@
 #ifndef _SRC__AUTLOCK_IMPLS__AUTOLOCK_EXPORT_H_
 #define _SRC__AUTLOCK_IMPLS__AUTOLOCK_EXPORT_H_
 
-#include "autolock-impls/backoff-autolock.h"
-#include "autolock-impls/rseq-autolock.h"
-#include "autolock-impls/simple-autolock.h"
-#include "autolock-impls/ticket-autolock.h"
+#include "autolock-impls/internal/autolock-macro-helpers.h"
+
+#include "autolock-impls/locks/backoff-autolock.h"
+#include "autolock-impls/locks/rseq-autolock.h"
+#include "autolock-impls/locks/simple-autolock.h"
+#include "autolock-impls/locks/ticket-autolock.h"
+
+#include "autolock-impls/locks/aepfl-autolock.h"
+#include "autolock-impls/locks/aepfl-normlock.h"
+#include "autolock-impls/locks/clh-autolock.h"
+#include "autolock-impls/locks/clh-normlock.h"
+#include "autolock-impls/locks/mcs-autolock.h"
+#include "autolock-impls/locks/mcs-normlock.h"
+
+/* Add any implementations here. The capitol ones are generally macros
+ * that can optionally be empty or the name of a lock. */
+#define I_AUTOLOCK_IMPLS                                               \
+    simple_autolock, backoff_autolock, clh_autolock, clh_normlock,     \
+        RSEQ_AUTOLOCK, TICKET_AUTOLOCK, MCS_AUTOLOCK, MCS_NORMLOCK,    \
+        aepfl_autolock, aepfl_normlock
+
 
 #define I_gen_autolock(autolock_name)                                  \
     class autolock_name {                                              \
@@ -38,15 +55,8 @@
     } __attribute__((may_alias));
 
 
-I_gen_autolock(simple_autolock);
-I_gen_autolock(backoff_autolock);
-I_gen_autolock(ticket_autolock);
-RSEQ_GEN_LOCK(I_gen_autolock);
+#define AUTOLOCK_IMPLS list_autolocks(I_AUTOLOCK_IMPLS)
 
-
-#define AUTOLOCK_IMPLS                                                 \
-    simple_autolock,                                                   \
-        backoff_autolock RSEQ_AUTOLOCK_EXPORT /* , ticket_autolock */
-
+gen_autolocks(I_gen_autolock, I_AUTOLOCK_IMPLS);
 
 #endif
