@@ -406,8 +406,8 @@ stats_prints_csv_arr(char *                 buf,
     die_assert(nbytes_req < buflen, "Buffer to small to format stats!\n");
 
 #define STATS_CHECK_PRINT(field)                                               \
-    if (CAT(STATS_P_, field) & to_print) {                                     \
         if (i == 0 && STATS_P_csv_hdr & to_print) {                            \
+    if (CAT(STATS_P_, field) & to_print) {                                     \
             STATS_DO_PRINT("%s", V_TO_STR(field));                             \
         }                                                                      \
         else if (i) {                                                          \
