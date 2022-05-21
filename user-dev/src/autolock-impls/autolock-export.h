@@ -18,7 +18,7 @@
 /* Add any implementations here. The capitol ones are generally macros
  * that can optionally be empty or the name of a lock. */
 #define I_AUTOLOCK_IMPLS                                               \
-    simple_autolock, backoff_autolock, clh_autolock, clh_normlock,     \
+    simple_autolock, backoff_autolock, clh_normlock, clh_autolock,     \
         RSEQ_AUTOLOCK, TICKET_AUTOLOCK, MCS_AUTOLOCK, MCS_NORMLOCK,    \
         aepfl_autolock, aepfl_normlock
 

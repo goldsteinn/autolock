@@ -1,4 +1,5 @@
 
+
 /* NB: This file is meant to be included by another with I_WITH_AUTOLOCK
  * as zero or non-zero. */
 
@@ -164,34 +165,35 @@ CAT(I_clh_lock_base_lock, I_WITH_AUTOLOCK)(I_clh_lock_base_t * lock) {
     if (UNLIKELY(__atomic_load_n(&(prev_node->mem), __ATOMIC_RELAXED) ==
                  I_CLH_LOCKED)) {
 
-#if I_WITH_AUTOLOCK
-        struct kernel_autolock_abi * k_autolock_mem;
-        k_autolock_mem = autolock_init_kernel_state();
-
-        autolock_set_kernel_watch_for(I_CLH_UNLOCKED, k_autolock_mem);
-        autolock_set_kernel_watch_neq(0, k_autolock_mem);
-        autolock_set_kernel_watch_mem(&(prev_node->mem),
-                                      k_autolock_mem);
-        
-#endif
 
         if (lock->head == prev_node) {
-            /* we are next in queue. Don't yield. */
             lock_wait(LIKELY(__atomic_load_n(&(prev_node->mem),
                                              __ATOMIC_RELAXED) !=
                              I_CLH_LOCKED) /* recheck expression. */,
                       ll_pause() /* wait expression. */,
-                      0 /* pause loop forever. */,
+                      0 /* wait iters. */,
                       I_clh_has_lock /* target when succeeded. */);
         }
         else {
-            //            yield();
+#if I_WITH_AUTOLOCK
+            struct kernel_autolock_abi * k_autolock_mem;
+            k_autolock_mem = autolock_init_kernel_state();
+
+            autolock_set_kernel_watch_mem(&(prev_node->mem),
+                                          k_autolock_mem);
+            autolock_set_kernel_watch_for(I_CLH_UNLOCKED,
+                                          k_autolock_mem);
+            autolock_set_kernel_watch_neq(0, k_autolock_mem);
+#endif
+
+
+            yield();
             lock_wait(LIKELY(__atomic_load_n(&(prev_node->mem),
                                              __ATOMIC_RELAXED) !=
                              I_CLH_LOCKED) /* recheck expression. */,
                       ll_pause() /* wait expression. */,
                       I_CLH_PAUSE_ITERS /* wait iters. */,
-                      I_clh_has_lock /* target when succeeded. */);
+                      I_clh_has_lock2 /* target when succeeded. */);
 
 #if 0
             futex_wait(&(prev_node->mem), I_CLH_UNLOCKED);
@@ -201,14 +203,16 @@ CAT(I_clh_lock_base_lock, I_WITH_AUTOLOCK)(I_clh_lock_base_t * lock) {
                              I_CLH_LOCKED) /* recheck expression. */,
                       yield() /* wait expression. */,
                       0 /* yield loop forever. */,
-                      I_clh_has_lock /* target when succeeded. */);
+                      I_clh_has_lock2 /* target when succeeded. */);
+#endif
+        I_clh_has_lock2:
+            (void)(0);
+#if I_WITH_AUTOLOCK
+            autolock_set_kernel_watch_mem(NULL, k_autolock_mem);
 #endif
         }
     I_clh_has_lock:
         (void)(0);
-#if I_WITH_AUTOLOCK
-        autolock_set_kernel_watch_mem(NULL, k_autolock_mem);
-#endif
     }
     I_clh_lock_base_node_free(prev_node);
 

@@ -13,6 +13,8 @@ static int32_t do_list  = 0;
 static int32_t do_test  = 0;
 static int32_t do_bench = 0;
 
+static int32_t stats_csv = 0;
+
 static uint32_t outer_iter = 1000 * 1000;
 static uint32_t cs_iter    = 1;
 static uint32_t extra_iter = 0;
@@ -39,6 +41,12 @@ static ArgOption args[] = {
     ADD_ARG(KindOption, Set, "--list", 0, &do_list, "List all locks"),
     ADD_ARG(KindOption, Set, "--bench", 0, &do_bench, "Run benchmarks"),
     ADD_ARG(KindOption, Set, "--test", 0, &do_test, "Run tests"),
+    ADD_ARG(KindOption,
+            Set,
+            "--csv",
+            0,
+            &stats_csv,
+            "Display stats as CSV (only relevent if benchmarking)"),
     ADD_ARG(KindOption,
             Set,
             "--all",
@@ -163,15 +171,37 @@ main(int argc, char * argv[]) {
 
     if (stats) {
         uint32_t i;
-        printf(
-            "Stats for lock benchmarks with (Trials = %u, Threads = %u)\n",
-            num_trials, num_threads);
-        for (i = 0; i < stats_idx; ++i) {
-            stats_printf_arr(stdout, stats + i,
-                             STATS_P_desc | STATS_P_min | STATS_P_max |
-                                 STATS_P_geomean | STATS_P_stdev,
-                             NULL, 0);
-            printf("\n");
+
+        if (stats_csv) {
+            printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "lock", "min",
+                   "max", "geomean", "stdev", "median", "p75", "p90",
+                   "p95", "p99");
+            for (i = 0; i < stats_idx; ++i) {
+                printf("%s,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+                       stats_get_desc(stats + i),
+                       stats_get_min(stats + i),
+                       stats_get_max(stats + i),
+                       stats_get_geomean(stats + i),
+                       stats_get_stdev(stats + i),
+                       stats_get_median(stats + i),
+                       stats_get_percentile(stats + i, 75),
+                       stats_get_percentile(stats + i, 90),
+                       stats_get_percentile(stats + i, 95),
+                       stats_get_percentile(stats + i, 99));
+            }
+        }
+        else {
+            printf(
+                "Stats for lock benchmarks with (Trials = %u, Threads = %u)\n",
+                num_trials, num_threads);
+            for (i = 0; i < stats_idx; ++i) {
+                stats_printf_arr(stdout, stats + i,
+                                 STATS_P_desc | STATS_P_min |
+                                     STATS_P_max | STATS_P_geomean |
+                                     STATS_P_stdev,
+                                 NULL, 0);
+                printf("\n");
+            }
         }
 
 
