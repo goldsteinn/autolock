@@ -1,8 +1,9 @@
+import sys
 import subprocess
 
-TIMEOUT = 15
+TIMEOUT = 5
 PRINTED_HDR = False
-BASE_CMD = "./user-bin/driver {} --csv-out --outer-iter {} --cs-iter {} --extra-iter {} -t {} --bench  -T {} {}"
+BASE_CMD = "./user-bin/driver {} --csv --outer-iter {} --cs-iter {} --extra-iter {} -t {} --bench  -T {} {}"
 
 locks = [
     "pthread_mutex", "pthread_spinlock", "spinlock", "backoff_spinlock",
@@ -32,7 +33,7 @@ def cpus_to_hex(cpus):
         return hex(0xf)
     cmap = 0
     for cpu in cpus:
-        cmap |= 1
+        cmap |= (1 << cpu)
     return hex(cmap)
 
 
@@ -44,13 +45,15 @@ def run_process(cmd):
         sproc = subprocess.Popen(cmd,
                                  shell=True,
                                  stdout=subprocess.PIPE,
-                                 stderr=subprocess.DEVNULL,
-                                 timeout=TIMEOUT)
+                                 stderr=subprocess.DEVNULL)
 
-        stdout_data = sproc.communicate()
-        return stdout_data[0]
+        stdout_data = sproc.communicate(timeout=TIMEOUT)
+        stdout_data = stdout_data[0].decode('utf-8')
+        print(str(stdout_data))
+        sys.stdout.flush()
+        return stdout_data
 
-    except TimeoutError:
+    except subprocess.TimeoutExpired:
         return None
 
 
@@ -186,7 +189,7 @@ class Run():
 cpu_confs = [[], [0], [0, 1], [0, 1, 2], [0, 1, 2, 3]]
 trials_conf = 10
 
-outer_iter_conf = 10 * 1000 * 1000
+outer_iter_conf = 25 * 100 * 1000
 cs_iter_confs = [1, 25]
 extra_iter_confs = [1, 25]
 
