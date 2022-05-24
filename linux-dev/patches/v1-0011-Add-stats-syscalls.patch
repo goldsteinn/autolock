@@ -1,0 +1,491 @@
+From c423ae358898a9376ca9380f457b7d3bfbfa3b40 Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Mon, 23 May 2022 23:30:35 -0500
+Subject: [PATCH v1 11/11] Add stats syscalls
+
+---
+ arch/x86/entry/syscalls/syscall_64.tbl |   1 +
+ include/linux/auto-lock.h              |   5 +
+ include/linux/syscalls.h               |   1 +
+ include/uapi/asm-generic/unistd.h      |   8 +-
+ kernel/auto-lock.c                     | 274 ++++++++++++++++++++++---
+ kernel/sys_ni.c                        |   1 +
+ 6 files changed, 258 insertions(+), 32 deletions(-)
+
+diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+index 02bc1124d51b..2885b978ca82 100644
+--- a/arch/x86/entry/syscalls/syscall_64.tbl
++++ b/arch/x86/entry/syscalls/syscall_64.tbl
+@@ -374,6 +374,7 @@
+ 450	common	set_mempolicy_home_node	sys_set_mempolicy_home_node
+ 451	common	auto_lock_create		sys_auto_lock_create
+ 452	common	auto_lock_destroy		sys_auto_lock_destroy
++453	common	auto_lock_stats		sys_auto_lock_stats
+ #
+ # Due to a historical design error, certain syscalls are numbered differently
+ # in x32 as compared to native x86_64.  These syscalls have numbers 512-547.
+diff --git a/include/linux/auto-lock.h b/include/linux/auto-lock.h
+index 818a867ac2e8..e973c9841b5d 100644
+--- a/include/linux/auto-lock.h
++++ b/include/linux/auto-lock.h
+@@ -27,4 +27,9 @@ int auto_lock_exists(struct task_struct const *tsk);
+ int auto_lock_has_al(struct task_struct const *tsk);
+ int auto_lock_is_armed_s(struct task_struct const *tsk);
+ 
++
++void auto_lock_stats_start(void);
++void auto_lock_stats_end(u32 end_idx);
++u32 auto_lock_stats_add(struct task_struct const *tsk, u32 idx);
++
+ #endif
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index feed6e153206..97925a45a632 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -347,6 +347,7 @@ asmlinkage long sys_io_uring_register(unsigned int fd, unsigned int op,
+ 
+ asmlinkage long sys_auto_lock_create();
+ asmlinkage long sys_auto_lock_destroy();
++asmlinkage long sys_auto_lock_stats(int fd);
+ 
+ /* fs/xattr.c */
+ asmlinkage long sys_setxattr(const char __user *path, const char __user *name,
+diff --git a/include/uapi/asm-generic/unistd.h b/include/uapi/asm-generic/unistd.h
+index 5c7d2f463d7f..5ef28afacc87 100644
+--- a/include/uapi/asm-generic/unistd.h
++++ b/include/uapi/asm-generic/unistd.h
+@@ -889,11 +889,15 @@ __SYSCALL(__NR_set_mempolicy_home_node, sys_set_mempolicy_home_node)
+ #define __NR_auto_lock_create 451
+ __SYSCALL(__NR_auto_lock_create, sys_auto_lock_create)
+ 
+-#define __NR_auto_lock_create 452
++#define __NR_auto_lock_destroy 452
+ __SYSCALL(__NR_auto_lock_destroy, sys_auto_lock_destroy)
+ 
++#define __NR_auto_lock_stats 453
++__SYSCALL(__NR_auto_lock_stats, sys_auto_lock_stats)
++
++
+ #undef __NR_syscalls
+-#define __NR_syscalls 453
++#define __NR_syscalls 454
+ 
+ /*
+  * 32 bit systems traditionally used different
+diff --git a/kernel/auto-lock.c b/kernel/auto-lock.c
+index 08b9391ec97c..340a40f8f927 100644
+--- a/kernel/auto-lock.c
++++ b/kernel/auto-lock.c
+@@ -9,6 +9,8 @@
+ #include <linux/uio.h>
+ #include <linux/bits.h>
+ 
++#include <linux/ktime.h>
++#include <linux/time.h>
+ #include <linux/sched/signal.h>
+ #include <linux/fs.h>
+ #include <linux/file.h>
+@@ -20,6 +22,7 @@
+ #include <linux/blk-mq.h>
+ #include <linux/bvec.h>
+ #include <linux/net.h>
++#include <linux/time64.h>
+ #include <net/sock.h>
+ #include <net/af_unix.h>
+ #include <net/scm.h>
+@@ -64,6 +67,212 @@ struct auto_lock_ctx {
+ #endif
+ };
+ 
++#define WITH_AUTOLOCK_STATS 1
++#if WITH_AUTOLOCK_STATS
++static int __auto_lock_dont_sched(struct auto_lock_ctx const *ctx);
++static int __auto_lock_is_armed(struct auto_lock const *auto_lock);
++struct auto_lock_stats_task_entry {
++	u32 pid : 28;
++	u32 al_exists : 1;
++	u32 al_armed : 1;
++	u32 al_has_pinned : 1;
++	u32 al_dont_sched : 1;
++};
++
++struct auto_lock_stats_entry {
++	struct timespec64 ts;
++	u32 num_entries;
++	struct auto_lock_stats_task_entry entries[];
++};
++
++enum { AUTO_LOCK_STATS_SIZE = (1 << 22) };
++static struct auto_lock_stats_entry *__auto_lock_stats_out;
++DEFINE_PER_CPU(u32, __auto_lock_stats_out_offsets);
++
++static int __auto_lock_stats_setup(void)
++{
++	u32 num_cpus, i;
++	void *p;
++	int ret;
++
++	if (__auto_lock_stats_out != NULL) {
++		PRINTK("Non Null\n");
++		ret = 0;
++		goto done;
++	}
++	num_cpus = NR_CPUS;
++	p = (void *)vzalloc(num_cpus * AUTO_LOCK_STATS_SIZE);
++	if (p == NULL) {
++		PRINTK("Bad Alloc\n");
++		ret = -ENOMEM;
++        goto done;
++	}
++	ret = 0;
++	__auto_lock_stats_out = (struct auto_lock_stats_entry *)p;
++done:
++	PRINTK("INIT CPUS\n");
++	for (i = 0; i < num_cpus; ++i) {
++		per_cpu(__auto_lock_stats_out_offsets, i) = 0;
++	}
++	PRINTK("Return: %d\n", ret);
++	return ret;
++}
++
++static int __auto_lock_stats_writeout(void __user *buf)
++{
++	u32 num_cpus, i;
++	size_t offset = 0, to_write = 0;
++	int ret = 0;
++	char *kbuf;
++	if (__auto_lock_stats_out == NULL) {
++		PRINTK("No write\n");
++		ret = -ENOMEM;
++		goto done;
++	}
++	if (buf == NULL) {
++		PRINTK("buf is bad\n");
++		ret = -EBADF;
++		goto done;
++	}
++	kbuf = buf;
++
++	PRINTK("write start\n");
++	num_cpus = NR_CPUS;
++	for (i = 0; i < num_cpus; ++i) {
++		to_write = per_cpu(__auto_lock_stats_out_offsets, i);
++		if (ret == 0 && copy_to_user(kbuf + offset,
++					     __auto_lock_stats_out +
++						     i * AUTO_LOCK_STATS_SIZE,
++					     to_write)) {
++			ret = -EFAULT;
++		}
++		offset += to_write;
++		per_cpu(__auto_lock_stats_out_offsets, i) = 0;
++	}
++	PRINTK("write end\n");
++done:
++	return ret;
++}
++
++static struct auto_lock_stats_entry *__auto_lock_stats_cur_entry(void)
++{
++	u32 offset;
++	if (__auto_lock_stats_out == NULL) {
++		return NULL;
++	}
++
++	offset = get_cpu_var(__auto_lock_stats_out_offsets);
++	if (offset >= AUTO_LOCK_STATS_SIZE - 4096) {
++		WARN_ONCE(1, "auto lock stats full!\n");
++		return NULL;
++	}
++
++	return __auto_lock_stats_out +
++	       smp_processor_id() * AUTO_LOCK_STATS_SIZE + offset;
++}
++
++void auto_lock_stats_start(void)
++{
++	struct auto_lock_stats_entry *cur_entry;
++	preempt_disable();
++
++	cur_entry = __auto_lock_stats_cur_entry();
++	if (cur_entry == NULL) {
++		return;
++	}
++
++	ktime_get_ts64(&(cur_entry->ts));
++}
++
++void auto_lock_stats_end(u32 end_idx)
++{
++	struct auto_lock_stats_entry *cur_entry;
++	cur_entry = __auto_lock_stats_cur_entry();
++	if (cur_entry == NULL) {
++		goto done;
++	}
++
++	cur_entry->num_entries = end_idx;
++
++	get_cpu_var(__auto_lock_stats_out_offsets) +=
++		sizeof(struct auto_lock_stats_entry) +
++		end_idx * sizeof(struct auto_lock_stats_task_entry);
++
++done:
++	preempt_enable();
++}
++
++u32 auto_lock_stats_add(struct task_struct const *tsk, u32 idx)
++{
++	struct auto_lock_stats_entry *cur_entry;
++	struct auto_lock_stats_task_entry this_entry;
++	struct auto_lock const *auto_lock;
++	if (tsk == NULL) {
++		goto done;
++	}
++	cur_entry = __auto_lock_stats_cur_entry();
++	if (cur_entry == NULL) {
++		goto done;
++	}
++
++	this_entry.pid = tsk->pid;
++	if (tsk == NULL || tsk->auto_lock == NULL) {
++		this_entry.al_exists = 0;
++		this_entry.al_armed = 0;
++		this_entry.al_has_pinned = 0;
++		this_entry.al_dont_sched = 0;
++	} else {
++		auto_lock = tsk->auto_lock->auto_lock;
++		this_entry.al_exists = 1;
++		this_entry.al_armed = !!__auto_lock_is_armed(auto_lock);
++		this_entry.al_has_pinned =
++			tsk->auto_lock->usr_virt_page_start != 0;
++		this_entry.al_dont_sched =
++			!!__auto_lock_dont_sched(tsk->auto_lock);
++	}
++
++	cur_entry->entries[idx] = this_entry;
++	++idx;
++done:
++	return idx;
++}
++
++#else
++void auto_lock_stats_start(void)
++{
++}
++
++void auto_lock_stats_end(u32 end_idx)
++{
++	(void)(tsk);
++	(void)(end_idx);
++}
++
++u32 auto_lock_stats_add(struct task_struct const *tsk, u32 idx)
++{
++	(void)(tsk);
++	(void)(end_idx);
++	return 0;
++}
++#endif
++
++static int __auto_lock_stats(void __user *buf)
++{
++	int ret;
++	PRINTK("In get stats: %p\n", buf);
++#if WITH_AUTOLOCK_STATS
++	if (buf == NULL) {
++		PRINTK("Setup!\n");
++		ret = __auto_lock_stats_setup();
++	} else {
++		ret = __auto_lock_stats_writeout(buf);
++	}
++#else
++	ret = 0;
++#endif
++	return ret;
++}
++
+ /* Allocate a page of physical memory. */
+ static struct auto_lock *auto_lock_alloc_mem(void)
+ {
+@@ -107,7 +316,9 @@ static int __auto_lock_usr_page_is_mapped(struct auto_lock_ctx const *ctx,
+ static void __auto_lock_unpin_pages(struct auto_lock_ctx *ctx,
+ 				    struct page *page)
+ {
+-	LPRINTK_HV("Unpinnging kern virt mapping (%d, %lx vs %lx)!\n", current->pid, (unsigned long)(page), (unsigned long)(ctx->page));
++	LPRINTK_HV("Unpinnging kern virt mapping (%d, %lx vs %lx)!\n",
++		   current->pid, (unsigned long)(page),
++		   (unsigned long)(ctx->page));
+ 	/* void. */
+ 	kunmap(page);
+ 	/* void. */
+@@ -118,7 +329,7 @@ static void __auto_lock_unpin_pages(struct auto_lock_ctx *ctx,
+ 	LPRINTK_HV("Zeroing memory!\n");
+ 	ctx->kern_virt_page = 0;
+ 	ctx->usr_virt_page_start = 0;
+-    LPRINTK_HV("Done zeroing!\n");
++	LPRINTK_HV("Done zeroing!\n");
+ }
+ 
+ static void __auto_lock_check_unpin_pages(struct auto_lock_ctx *ctx)
+@@ -132,7 +343,7 @@ static void __auto_lock_check_unpin_pages(struct auto_lock_ctx *ctx)
+ static int __auto_lock_cache_phys_addr(struct task_struct const *tsk,
+ 				       struct auto_lock_ctx *ctx)
+ {
+-	struct auto_lock  *auto_lock;
++	struct auto_lock *auto_lock;
+ 	unsigned long usr_virt_addr, kern_virt_page, usr_virt_page_start,
+ 		usr_virt_page_mask;
+ 	struct page *page;
+@@ -145,17 +356,17 @@ static int __auto_lock_cache_phys_addr(struct task_struct const *tsk,
+ 		return 0;
+ 	}
+ 
+-    //	LPRINTK_HV("Getting user VA\n");
++	//	LPRINTK_HV("Getting user VA\n");
+ 	usr_virt_addr = (unsigned long)READ_ONCE(auto_lock->watch_mem);
+ 
+ 	/* We already have this mapping. */
+ 	if (__auto_lock_usr_page_is_mapped(ctx, usr_virt_addr)) {
+-        return 0;
++		return 0;
+ 	}
+ 	LPRINTK_HV("Got user VA: %lx\n", usr_virt_addr);
+ 	LPRINTK_HV("Checking if kern VP is mapped: %lx\n", ctx->kern_virt_page);
+ 
+-    LPRINTK_HV("Real pid: %d, %d\n", current->pid, 0);
++	LPRINTK_HV("Real pid: %d, %d\n", current->pid, 0);
+ 	if (ctx->kern_virt_page != 0) {
+ 		LPRINTK_HV("Kern page is mapped!\n");
+ 		if (ctx->page == NULL) {
+@@ -173,10 +384,10 @@ static int __auto_lock_cache_phys_addr(struct task_struct const *tsk,
+ #endif
+ 
+ 	LPRINTK_HV("Pinning user pages!\n");
+-    //    mmap_read_lock(current->mm);
++	//    mmap_read_lock(current->mm);
+ 	ret = pin_user_pages_fast(usr_virt_addr, 1 /* one page. */,
+ 				  FOLL_LONGTERM, &page);
+-    //    mmap_read_unlock(current->mm);
++	//    mmap_read_unlock(current->mm);
+ 	if (unlikely(ret != 1)) {
+ 		LPRINTK_HV("Unable to get ping pages!\n");
+ 		goto done_dearm;
+@@ -193,37 +404,36 @@ static int __auto_lock_cache_phys_addr(struct task_struct const *tsk,
+          * from virt->phys its correct. */
+ 		page = compound_head(page);
+ 		LPRINTK_HV("HUGE page (%lx, %lx)\n", usr_virt_page_mask,
+-			  usr_virt_page_start);
++			   usr_virt_page_start);
+ 	} else {
+ 		usr_virt_page_mask = ~PAGE_MASK;
+ 		usr_virt_page_start = usr_virt_addr & PAGE_MASK;
+ 		LPRINTK_HV("NORM page (%lx, %lx)\n", usr_virt_page_mask,
+-			  usr_virt_page_start);
++			   usr_virt_page_start);
+ 	}
+ 
+-    LPRINTK_HV("Getting kernel mapping!\n");
++	LPRINTK_HV("Getting kernel mapping!\n");
+ 	kern_virt_page = (unsigned long)kmap(page);
+-    LPRINTK_HV("Got kernel mapping: %lx!\n", kern_virt_page);
++	LPRINTK_HV("Got kernel mapping: %lx!\n", kern_virt_page);
+ 	if (unlikely(kern_virt_page == 0)) {
+-
+ 		ret = -1;
+ 		LPRINTK_HV("Pretty sure this is impossible but kmap failed\n");
+ 		goto done_unpin;
+ 	}
+ 
+-    LPRINTK_HV("Setting context\n");
++	LPRINTK_HV("Setting context\n");
+ 	ctx->usr_virt_page_start = usr_virt_page_start;
+ 	ctx->usr_virt_page_mask = usr_virt_page_mask;
+ 	ctx->kern_virt_page = kern_virt_page;
+ 	ctx->page = page;
+-    LPRINTK_HV("Success pid: %d, %d\n", current->pid, 0);
+-    //    LPRINTK_HV("Return Normal\n");
++	LPRINTK_HV("Success pid: %d, %d\n", current->pid, 0);
++	//    LPRINTK_HV("Return Normal\n");
+ 	return ret;
+ done_unpin:
+-    LPRINTK_HV("Return Unpin\n");
++	LPRINTK_HV("Return Unpin\n");
+ 	__auto_lock_unpin_pages(ctx, page);
+ done_dearm:
+-    smp_store_release(&(auto_lock->watch_mem), NULL);
++	smp_store_release(&(auto_lock->watch_mem), NULL);
+ 	return ret;
+ }
+ static void __auto_lock_dearm(struct auto_lock_ctx *ctx)
+@@ -243,9 +453,6 @@ static void __auto_lock_dearm(struct auto_lock_ctx *ctx)
+ 	smp_store_release(&(auto_lock->watch_mem), NULL);
+ }
+ 
+-
+-
+-
+ /* Return zero if we should schedule or one if we shouldn't. Returns
+  * zero on error (counter intuitively) to avoid hanging the process.
+  */
+@@ -278,13 +485,14 @@ static int __auto_lock_check_mem(struct auto_lock_ctx const *ctx)
+ 	kern_cur_mem = (u32 *)(ctx->kern_virt_page +
+ 			       (usr_cur_virt_addr & ctx->usr_virt_page_mask));
+ 
+-    if((unsigned long)kern_cur_mem & 8) {
+-	LPRINTK_HV(
+-		"Testing kernel mem: %lx == (%lx + (%lx & %lx)) == (%lx + %lx)\n",
+-		(unsigned long)kern_cur_mem, ctx->kern_virt_page, usr_cur_virt_addr,
+-		ctx->usr_virt_page_mask, ctx->kern_virt_page,
+-		usr_cur_virt_addr & ctx->usr_virt_page_mask);
+-    }
++	if ((unsigned long)kern_cur_mem & 8) {
++		LPRINTK_HV(
++			"Testing kernel mem: %lx == (%lx + (%lx & %lx)) == (%lx + %lx)\n",
++			(unsigned long)kern_cur_mem, ctx->kern_virt_page,
++			usr_cur_virt_addr, ctx->usr_virt_page_mask,
++			ctx->kern_virt_page,
++			usr_cur_virt_addr & ctx->usr_virt_page_mask);
++	}
+ 
+ 	cur_mem = *kern_cur_mem;
+ 
+@@ -610,6 +818,12 @@ SYSCALL_DEFINE0(auto_lock_destroy)
+ 	return auto_lock_release();
+ }
+ 
++SYSCALL_DEFINE1(auto_lock_stats, void __user *, buf)
++{
++	PRINTK("Getting stats: %p\n", buf);
++	return __auto_lock_stats(buf);
++}
++
+ /* API. */
+ int auto_lock_dont_sched(struct task_struct const *tsk)
+ {
+@@ -646,10 +860,10 @@ int auto_lock_cache_phys_addr(struct task_struct const *tsk)
+ 		LPRINTK_VVVV("cache usr page: no autolock\n");
+ 		return 0;
+ 	}
+-    //	LPRINTK_HV("Trying to cache user page\n");
++	//	LPRINTK_HV("Trying to cache user page\n");
+ 	ret = __auto_lock_cache_phys_addr(tsk, tsk->auto_lock);
+ 
+-    //	LPRINTK_HV("done to cache user page: %d\n", ret);
++	//	LPRINTK_HV("done to cache user page: %d\n", ret);
+ 	return ret;
+ }
+ 
+diff --git a/kernel/sys_ni.c b/kernel/sys_ni.c
+index 0595fd16361b..f20b20a730ce 100644
+--- a/kernel/sys_ni.c
++++ b/kernel/sys_ni.c
+@@ -53,6 +53,7 @@ COND_SYSCALL(io_uring_enter);
+ COND_SYSCALL(io_uring_register);
+ COND_SYSCALL(auto_lock_create);
+ COND_SYSCALL(auto_lock_destroy);
++COND_SYSCALL(auto_lock_stats);
+ 
+ /* fs/xattr.c */
+ 
+-- 
+2.34.1
+
