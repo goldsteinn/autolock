@@ -5,12 +5,16 @@
 #include "util/memory-util.h"
 
 #include "arch/ll-syscall.h"
-#include "autolock-impls/sys/autolock-kernel-abi.h"
 #include "autolock-impls/common/autolock-returns.h"
+#include "autolock-impls/sys/autolock-kernel-abi.h"
 
 /********************************************************************/
 /* Syscall numbers. */
-enum { _NR_AUTOLOCK_CREATE = 451, _NR_AUTOLOCK_RELEASE = 452 };
+enum {
+    _NR_AUTOLOCK_CREATE  = 451,
+    _NR_AUTOLOCK_RELEASE = 452,
+    _NR_AUTOLOCK_STATS   = 453
+};
 
 extern_C_start();
 /* Ideally this is initialized at TLS startup. */
@@ -42,6 +46,10 @@ static NONNULL(2) void autolock_set_kernel_watch_neq(
 static struct kernel_autolock_abi * autolock_get_kernel_mem();
 static NONNULL(1) void autolock_set_kernel_mem(
     struct kernel_autolock_abi * k_autolock_mem);
+
+/* Just for stats API. */
+static int32_t autolock_init_kstats();
+static NONNULL(1) int64_t autolock_collect_kstats(uint8_t * ptr);
 
 
 /********************************************************************/
@@ -83,6 +91,21 @@ autolock_init_kernel_state() {
     autolock_set_kernel_mem((struct kernel_autolock_abi *)p);
     return (struct kernel_autolock_abi *)p;
 }
+
+static int32_t
+autolock_init_kstats() {
+    return ll_syscall_cc(
+        _NR_AUTOLOCK_STATS, (0), /* None */, /* None */,
+        /* None */);
+}
+
+
+static int64_t
+autolock_collect_kstats(uint8_t * ptr) {
+    return ll_syscall_cc(_NR_AUTOLOCK_STATS, (ptr), /* None */,
+                         /* None */, ((uint8_t(*)[])ptr));
+}
+
 
 static int32_t
 autolock_release_kernel_state() {

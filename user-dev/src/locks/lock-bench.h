@@ -11,6 +11,8 @@
 
 #include "thread/rseq/rseq.h"
 
+#include "autolock-impls/stats/autolock-stats.h"
+
 
 #define I_cs_work(state)    (++(*(state)))
 #define I_extra_work(state) (++(state))
@@ -84,16 +86,17 @@ I_bench_runner_kernel(lock_T *           lock,
 template<typename lock_T>
 void *
 bench_runner(void * arg) {
-    void *  res;
-    int32_t is_unique;
-
-    run_params_t *     params        = (run_params_t *)arg;
-    void *             shared_memory = params->shared_memory;
-    global_counter_t * global_state  = params->global_state;
-    uint32_t           outer_iter    = params->outer_iter;
-    uint32_t           cs_iter       = params->cs_iter;
-    uint32_t           extra_iter    = params->extra_iter;
-    thread_barrier_t * barrier       = &(params->barrier);
+    void *             res;
+    int32_t            is_unique;
+    auto_lock_stats_t  kstats;
+    run_params_t *     params           = (run_params_t *)arg;
+    void *             shared_memory    = params->shared_memory;
+    global_counter_t * global_state     = params->global_state;
+    uint32_t           with_sched_stats = params->with_sched_stats;
+    uint32_t           outer_iter       = params->outer_iter;
+    uint32_t           cs_iter          = params->cs_iter;
+    uint32_t           extra_iter       = params->extra_iter;
+    thread_barrier_t * barrier          = &(params->barrier);
 
     lock_T * lock;
 
@@ -106,15 +109,26 @@ bench_runner(void * arg) {
                     ? lock_T::init(shared_memory)
                     : CAST(lock_T *, shared_memory);
 
+    if (with_sched_stats && is_unique) {
+        autolock_start_stats();
+    }
+
     /* Setup done run the benchmark. */
     res = CAST(void *, I_bench_runner_kernel<lock_T>(
                            lock, global_state, outer_iter, cs_iter,
                            extra_iter, barrier));
-
+    PRINTFFL;
     is_unique = thread_barrier_wait(barrier);
+    PRINTFFL;
     if (is_unique == THREAD_BARRIER_IS_UNIQUE) {
         lock->destroy();
     }
+    PRINTFFL;
+    if (with_sched_stats && is_unique) {
+        autolock_get_stats(&kstats);
+        autolock_stats_out(stdout, &kstats);
+    }
+
     PRINTFFL;
     return res;
 }

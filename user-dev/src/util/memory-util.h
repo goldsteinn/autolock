@@ -13,28 +13,30 @@
 #define PAGE_SIZE 4096
 
 #define safe_calloc(n, sz) I_safe_calloc(n, sz, ERR_ARGS)
-#define safe_aligned_alloc(alignment, sz)                                      \
+#define safe_zalloc(sz)    I_safe_calloc(sz, 1, ERR_ARGS)
+
+#define safe_aligned_alloc(alignment, sz)                              \
     I_safe_aligned_alloc(alignment, sz, ERR_ARGS)
 
 #define safe_realloc(p, sz) I_safe_realloc(p, sz, ERR_ARGS)
-#define safe_srealloc(p, sz_old, sz_new)                                       \
+#define safe_srealloc(p, sz_old, sz_new)                               \
     I_safe_srealloc(p, sz_old, sz_new, ERR_ARGS)
 #define safe_malloc(sz) I_safe_malloc(sz, ERR_ARGS)
-#define safe_mmap(addr, sz, prot_flags, mmap_flags, fd, offset)                \
-    I_safe_mmap(addr, sz, prot_flags, mmap_flags, fd, offset, __FILENAME__,    \
-                __func__, __LINE__)
-#define safe_mmap_alloc(sz)                                                    \
-    safe_mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,   \
-              -1, 0)
+#define safe_mmap(addr, sz, prot_flags, mmap_flags, fd, offset)        \
+    I_safe_mmap(addr, sz, prot_flags, mmap_flags, fd, offset,          \
+                __FILENAME__, __func__, __LINE__)
+#define safe_mmap_alloc(sz)                                            \
+    safe_mmap(NULL, sz, PROT_READ | PROT_WRITE,                        \
+              MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
 #define safe_munmap(addr, sz) I_safe_munmap(addr, sz, ERR_ARGS)
-#define safe_mprotect(addr, sz, prot_flags)                                    \
+#define safe_mprotect(addr, sz, prot_flags)                            \
     I_safe_mprotect(addr, sz, prot_flags, ERR_ARGS)
 
 #define safe_free(addr)      I_safe_free(addr)
 #define safe_sfree(addr, sz) I_safe_sfree(addr, sz)
 
-#define is_valid_addr(addr)                                                    \
-    (CAST(uint64_t, addr) > CAST(uint64_t, 65536) &&                           \
+#define is_valid_addr(addr)                                            \
+    (CAST(uint64_t, addr) > CAST(uint64_t, 65536) &&                   \
      (!(CAST(uint64_t, addr) >> 48)))
 
 static MALLOC_FUNC

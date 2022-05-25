@@ -1,0 +1,867 @@
+From 45f74e1e07aeb8fd7c111dc08fe7fe34780fa9cb Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Wed, 25 May 2022 00:00:26 -0500
+Subject: [PATCH v1 12/12] Fixup stats and improve scheduler
+
+---
+ include/linux/auto-lock.h |   7 +-
+ kernel/auto-lock.c        | 108 ++++++----
+ kernel/sched/fair.c       | 407 +++++++++++++++++++++++++++-----------
+ 3 files changed, 359 insertions(+), 163 deletions(-)
+
+diff --git a/include/linux/auto-lock.h b/include/linux/auto-lock.h
+index e973c9841b5d..112291c57e69 100644
+--- a/include/linux/auto-lock.h
++++ b/include/linux/auto-lock.h
+@@ -22,14 +22,15 @@ void auto_lock_free(struct task_struct *tsk);
+ /* Called before scheduling a task. */
+ void auto_lock_sched(struct task_struct const *tsk);
+ 
+-
+ int auto_lock_exists(struct task_struct const *tsk);
+ int auto_lock_has_al(struct task_struct const *tsk);
+ int auto_lock_is_armed_s(struct task_struct const *tsk);
+ 
+-
+ void auto_lock_stats_start(void);
+ void auto_lock_stats_end(u32 end_idx);
+-u32 auto_lock_stats_add(struct task_struct const *tsk, u32 idx);
++u32 auto_lock_stats_add(struct task_struct const *tsk, u32 idx, u32 is_pick,
++			u32 is_curr);
++
++#define WITH_AUTOLOCK_STATS 0
+ 
+ #endif
+diff --git a/kernel/auto-lock.c b/kernel/auto-lock.c
+index 340a40f8f927..d739d33bf00e 100644
+--- a/kernel/auto-lock.c
++++ b/kernel/auto-lock.c
+@@ -67,12 +67,13 @@ struct auto_lock_ctx {
+ #endif
+ };
+ 
+-#define WITH_AUTOLOCK_STATS 1
+ #if WITH_AUTOLOCK_STATS
+ static int __auto_lock_dont_sched(struct auto_lock_ctx const *ctx);
+ static int __auto_lock_is_armed(struct auto_lock const *auto_lock);
+ struct auto_lock_stats_task_entry {
+-	u32 pid : 28;
++	u32 pid : 26;
++	u32 is_pick : 1;
++	u32 is_curr : 1;
+ 	u32 al_exists : 1;
+ 	u32 al_armed : 1;
+ 	u32 al_has_pinned : 1;
+@@ -81,13 +82,14 @@ struct auto_lock_stats_task_entry {
+ 
+ struct auto_lock_stats_entry {
+ 	struct timespec64 ts;
++	u32 cpu;
+ 	u32 num_entries;
+ 	struct auto_lock_stats_task_entry entries[];
+ };
+ 
+-enum { AUTO_LOCK_STATS_SIZE = (1 << 22) };
+-static struct auto_lock_stats_entry *__auto_lock_stats_out;
+-DEFINE_PER_CPU(u32, __auto_lock_stats_out_offsets);
++enum { AUTO_LOCK_STATS_SIZE = (1 << 18) };
++static u8 *__auto_lock_stats_out;
++static u32 __auto_lock_stats_out_offsets[16 * 8] __attribute__((aligned(64)));
+ 
+ static int __auto_lock_stats_setup(void)
+ {
+@@ -95,86 +97,103 @@ static int __auto_lock_stats_setup(void)
+ 	void *p;
+ 	int ret;
+ 
++	num_cpus = num_online_cpus();
+ 	if (__auto_lock_stats_out != NULL) {
+-		PRINTK("Non Null\n");
++		LPRINTK_V("Non Null\n");
+ 		ret = 0;
+ 		goto done;
+ 	}
+-	num_cpus = NR_CPUS;
++
+ 	p = (void *)vzalloc(num_cpus * AUTO_LOCK_STATS_SIZE);
+ 	if (p == NULL) {
+-		PRINTK("Bad Alloc\n");
++		LPRINTK_V("Bad Alloc\n");
+ 		ret = -ENOMEM;
+-        goto done;
++		goto done;
+ 	}
++
+ 	ret = 0;
+-	__auto_lock_stats_out = (struct auto_lock_stats_entry *)p;
++	__auto_lock_stats_out = (u8 *)p;
+ done:
+-	PRINTK("INIT CPUS\n");
++	LPRINTK_V("INIT CPUS (%d)\n", num_cpus);
+ 	for (i = 0; i < num_cpus; ++i) {
+-		per_cpu(__auto_lock_stats_out_offsets, i) = 0;
++		__auto_lock_stats_out_offsets[i * 8] = 0;
+ 	}
+-	PRINTK("Return: %d\n", ret);
++
++	LPRINTK_V("Return: %d\n", ret);
+ 	return ret;
+ }
+ 
+-static int __auto_lock_stats_writeout(void __user *buf)
++static long __auto_lock_stats_writeout(void __user *buf)
+ {
+ 	u32 num_cpus, i;
+ 	size_t offset = 0, to_write = 0;
+-	int ret = 0;
++	long ret = 0;
+ 	char *kbuf;
+ 	if (__auto_lock_stats_out == NULL) {
+-		PRINTK("No write\n");
++		LPRINTK_V("No write\n");
+ 		ret = -ENOMEM;
+ 		goto done;
+ 	}
+ 	if (buf == NULL) {
+-		PRINTK("buf is bad\n");
++		LPRINTK_V("buf is bad\n");
+ 		ret = -EBADF;
+ 		goto done;
+ 	}
+ 	kbuf = buf;
+ 
+-	PRINTK("write start\n");
+-	num_cpus = NR_CPUS;
++	LPRINTK_V("write start: %d\n", num_online_cpus());
++	num_cpus = num_online_cpus();
+ 	for (i = 0; i < num_cpus; ++i) {
+-		to_write = per_cpu(__auto_lock_stats_out_offsets, i);
++#if 0
++        //		struct auto_lock_stats_entry cpu_hdr = { { 0, 0 }, i << 16 };
++		if (ret == 0 &&
++		    copy_to_user(kbuf + offset, &cpu_hdr, sizeof(cpu_hdr))) {
++			LPRINTK_V("Write Failure - hdr\n");
++			ret = -EFAULT;
++		}
++        offset += sizeof(cpu_hdr);
++#endif
++		to_write = __auto_lock_stats_out_offsets[i * 8];
+ 		if (ret == 0 && copy_to_user(kbuf + offset,
+ 					     __auto_lock_stats_out +
+ 						     i * AUTO_LOCK_STATS_SIZE,
+ 					     to_write)) {
++			LPRINTK_V("Write Failure\n");
+ 			ret = -EFAULT;
+ 		}
+ 		offset += to_write;
+-		per_cpu(__auto_lock_stats_out_offsets, i) = 0;
++		__auto_lock_stats_out_offsets[i * 8] = 0;
+ 	}
+-	PRINTK("write end\n");
++
++	ret = offset;
++
++	LPRINTK_V("write end: %lu\n", ret);
+ done:
+ 	return ret;
+ }
+ 
+ static struct auto_lock_stats_entry *__auto_lock_stats_cur_entry(void)
+ {
+-	u32 offset;
++	u32 offset, cur_cpu;
+ 	if (__auto_lock_stats_out == NULL) {
+ 		return NULL;
+ 	}
+-
+-	offset = get_cpu_var(__auto_lock_stats_out_offsets);
++	cur_cpu = smp_processor_id();
++	offset = __auto_lock_stats_out_offsets[cur_cpu * 8];
+ 	if (offset >= AUTO_LOCK_STATS_SIZE - 4096) {
+ 		WARN_ONCE(1, "auto lock stats full!\n");
+ 		return NULL;
+ 	}
+ 
+-	return __auto_lock_stats_out +
+-	       smp_processor_id() * AUTO_LOCK_STATS_SIZE + offset;
++	return (struct auto_lock_stats_entry *)(__auto_lock_stats_out +
++						cur_cpu * AUTO_LOCK_STATS_SIZE +
++						offset);
+ }
+ 
+ void auto_lock_stats_start(void)
+ {
+ 	struct auto_lock_stats_entry *cur_entry;
+-	preempt_disable();
++	//	preempt_disable();
+ 
+ 	cur_entry = __auto_lock_stats_cur_entry();
+ 	if (cur_entry == NULL) {
+@@ -187,22 +206,25 @@ void auto_lock_stats_start(void)
+ void auto_lock_stats_end(u32 end_idx)
+ {
+ 	struct auto_lock_stats_entry *cur_entry;
++	u32 cur_cpu;
+ 	cur_entry = __auto_lock_stats_cur_entry();
+ 	if (cur_entry == NULL) {
+ 		goto done;
+ 	}
+ 
++	cur_cpu = smp_processor_id();
++	cur_entry->cpu = cur_cpu;
+ 	cur_entry->num_entries = end_idx;
+-
+-	get_cpu_var(__auto_lock_stats_out_offsets) +=
++	__auto_lock_stats_out_offsets[cur_cpu * 8] +=
+ 		sizeof(struct auto_lock_stats_entry) +
+ 		end_idx * sizeof(struct auto_lock_stats_task_entry);
+ 
+ done:
+-	preempt_enable();
++	//	preempt_enable();
+ }
+ 
+-u32 auto_lock_stats_add(struct task_struct const *tsk, u32 idx)
++u32 auto_lock_stats_add(struct task_struct const *tsk, u32 idx, u32 is_pick,
++			u32 is_curr)
+ {
+ 	struct auto_lock_stats_entry *cur_entry;
+ 	struct auto_lock_stats_task_entry this_entry;
+@@ -216,6 +238,8 @@ u32 auto_lock_stats_add(struct task_struct const *tsk, u32 idx)
+ 	}
+ 
+ 	this_entry.pid = tsk->pid;
++	this_entry.is_pick = is_pick;
++	this_entry.is_curr = is_curr;
+ 	if (tsk == NULL || tsk->auto_lock == NULL) {
+ 		this_entry.al_exists = 0;
+ 		this_entry.al_armed = 0;
+@@ -244,31 +268,33 @@ void auto_lock_stats_start(void)
+ 
+ void auto_lock_stats_end(u32 end_idx)
+ {
+-	(void)(tsk);
+ 	(void)(end_idx);
+ }
+ 
+-u32 auto_lock_stats_add(struct task_struct const *tsk, u32 idx)
++u32 auto_lock_stats_add(struct task_struct const *tsk, u32 idx, u32 is_pick,
++			u32 is_curr)
+ {
+ 	(void)(tsk);
+-	(void)(end_idx);
++	(void)(idx);
++	(void)(is_pick);
++	(void)(is_curr);
+ 	return 0;
+ }
+ #endif
+ 
+-static int __auto_lock_stats(void __user *buf)
++static long __auto_lock_stats(void __user *buf)
+ {
+-	int ret;
+-	PRINTK("In get stats: %p\n", buf);
++	long ret;
++	LPRINTK_V("In get stats: %p\n", buf);
+ #if WITH_AUTOLOCK_STATS
+ 	if (buf == NULL) {
+-		PRINTK("Setup!\n");
++		LPRINTK_V("Setup!\n");
+ 		ret = __auto_lock_stats_setup();
+ 	} else {
+ 		ret = __auto_lock_stats_writeout(buf);
+ 	}
+ #else
+-	ret = 0;
++	ret = -EOPNOTSUPP;
+ #endif
+ 	return ret;
+ }
+@@ -502,7 +528,7 @@ static int __auto_lock_check_mem(struct auto_lock_ctx const *ctx)
+ 		    auto_lock->watch_neq, 0, ret, !ret,
+ 		    (auto_lock->watch_neq == 0) ? ret : !ret);
+ 
+-	return (auto_lock->watch_neq == 0) ? ret : !ret;
++	return ((auto_lock->watch_neq == 0) ? ret : !ret);
+ }
+ 
+ /* Return 1 if we should skip this task (called by auto_lock_dont_sched()). */
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index b3b4f316b221..f2e90c14c76b 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -647,6 +647,7 @@ static struct sched_entity *__pick_next_entity(struct sched_entity *se)
+ 	return __node_2_se(next);
+ }
+ 
++
+ #ifdef CONFIG_SCHED_DEBUG
+ struct sched_entity *__pick_last_entity(struct cfs_rq *cfs_rq)
+ {
+@@ -4557,7 +4558,65 @@ wakeup_preempt_entity(struct sched_entity *curr, struct sched_entity *se);
+  * 3) pick the "last" process, for cache locality
+  * 4) do not run the "skip" process, if something else is available
+  */
+-#define SCHED_VERSION 5
++#define SCHED_VERSION 6
++
++// clang-format on
++#if WITH_AUTOLOCK_STATS
++static void __add_autolock_stats(struct sched_entity *first,
++				 struct sched_entity *pick,
++				 struct sched_entity *curr)
++{
++	u32 i = 0, has_pick = 0, has_curr = 0, is_pick = 0, is_curr = 0;
++	if (first == NULL && pick == NULL) {
++		return;
++	}
++	auto_lock_stats_start();
++
++	while (first) {
++		struct rb_node *next;
++		is_pick = first == pick;
++		is_curr = first == curr;
++
++		auto_lock_stats_add(task_of(first), i, is_pick, is_curr);
++
++		has_pick |= is_pick;
++		has_curr |= is_curr;
++
++		++i;
++		next = rb_next(&first->run_node);
++		if (next == NULL) {
++			break;
++		}
++		first = __node_2_se(next);
++	}
++
++	if (!has_pick && pick != NULL) {
++		is_curr = pick == curr;
++		auto_lock_stats_add(task_of(pick), i, 1, is_curr);
++		has_curr |= is_curr;
++		++i;
++	}
++
++	if (!has_curr && curr != NULL) {
++		is_pick = curr == pick;
++		auto_lock_stats_add(task_of(curr), i, is_pick, 1);
++		++i;
++	}
++
++	auto_lock_stats_end(i);
++}
++#elif 1
++static void __add_autolock_stats(struct sched_entity *first,
++				 struct sched_entity *pick,
++				 struct sched_entity *curr)
++{
++	(void)(first);
++	(void)(pick);
++	(void)(curr);
++}
++#endif
++// clang-format off
++
+ #if SCHED_VERSION == 0
+ /*
+  * Pick the next process, keeping these things in mind, in this order:
+@@ -4687,12 +4746,14 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+ 		 */
+ 		se = cfs_rq->last;
+ 	}
+-	sched_stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_dont_sched,
++			se && auto_lock_dont_sched(task_of(se)));
+ 
+ 	sched_stats_print(sched_print_throttle,
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n",
+-		    STATS_V_OUT(total_calls), STATS_V_OUT(out_dont_sched));
++			  "%-24s: %10u\n"
++			  "%-24s: %10u\n",
++			  STATS_V_OUT(total_calls),
++			  STATS_V_OUT(out_dont_sched));
+ 	return se;
+ }
+ #elif SCHED_VERSION == 2
+@@ -4704,18 +4765,18 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 
+ 	sched_stats_add(&total_calls, 1);
+ 	sched_stats_add(&curr_dont_sched,
+-		  curr && auto_lock_dont_sched(task_of(curr)));
++			curr && auto_lock_dont_sched(task_of(curr)));
+ 	sched_stats_add(&left_dont_sched,
+-		  left && auto_lock_dont_sched(task_of(left)));
++			left && auto_lock_dont_sched(task_of(left)));
+ 	/*
+ 	 * If curr is set we have to see if its left of the leftmost entity
+ 	 * still in the tree, provided there was anything in the tree at all.
+ 	 */
+ 	if (!left || (curr && entity_before(curr, left))) {
+ 		sched_stats_add(&replace_left_curr_dont_sched,
+-			  curr && auto_lock_dont_sched(task_of(curr)));
++				curr && auto_lock_dont_sched(task_of(curr)));
+ 		sched_stats_add(&replace_left_left_dont_sched,
+-			  left && auto_lock_dont_sched(task_of(left)));
++				left && auto_lock_dont_sched(task_of(left)));
+ 		sched_stats_add(&replace_left, 1);
+ 		left = curr;
+ 	}
+@@ -4733,8 +4794,8 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 			sched_stats_add(&se_eq_curr, 1);
+ 			second = __pick_first_entity(cfs_rq);
+ 			sched_stats_add(&sec_second_dont_sched,
+-				  second && auto_lock_dont_sched(
+-						    task_of(second)));
++					second && auto_lock_dont_sched(
++							  task_of(second)));
+ 		} else {
+ 			sched_stats_add(&se_neq_curr, 1);
+ 			second = __pick_next_entity(se);
+@@ -4744,8 +4805,8 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 			}
+ 
+ 			sched_stats_add(&snc_second_dont_sched,
+-				  second && auto_lock_dont_sched(
+-						    task_of(second)));
++					second && auto_lock_dont_sched(
++							  task_of(second)));
+ 		}
+ 
+ 		if (second && wakeup_preempt_entity(second, left) < 1) {
+@@ -4760,7 +4821,7 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 		 */
+ 		sched_stats_add(&replace_wakeup_next, 1);
+ 		sched_stats_add(&next_dont_sched,
+-			  auto_lock_dont_sched(task_of(cfs_rq->next)));
++				auto_lock_dont_sched(task_of(cfs_rq->next)));
+ 		se = cfs_rq->next;
+ 	} else if (cfs_rq->last &&
+ 		   wakeup_preempt_entity(cfs_rq->last, left) < 1) {
+@@ -4770,11 +4831,13 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 		 */
+ 		sched_stats_add(&replace_wakeup_last, 1);
+ 		sched_stats_add(&next_dont_sched,
+-			  auto_lock_dont_sched(task_of(cfs_rq->last)));
++				auto_lock_dont_sched(task_of(cfs_rq->last)));
+ 		se = cfs_rq->last;
+ 	}
+-	sched_stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
+-	sched_stats_add(&out_may_sched, se && !auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_dont_sched,
++			se && auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_may_sched,
++			se && !auto_lock_dont_sched(task_of(se)));
+ 
+ 	sched_stats_add(&out_has_al_ctx, se && auto_lock_exists(task_of(se)));
+ 	sched_stats_add(&out_has_al, se && auto_lock_has_al(task_of(se)));
+@@ -4782,47 +4845,46 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 
+ 	sched_stats_add(&out_is_null, !se);
+ 
+-	sched_stats_print(sched_print_throttle,
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n",
+-		    STATS_V_OUT(total_calls), STATS_V_OUT(out_dont_sched),
+-		    STATS_V_OUT(out_may_sched), STATS_V_OUT(out_is_null),
+-		    STATS_V_OUT(out_has_al_ctx), STATS_V_OUT(out_has_al),
+-		    STATS_V_OUT(out_is_armed), STATS_V_OUT(curr_dont_sched),
+-		    STATS_V_OUT(left_dont_sched), STATS_V_OUT(se_dont_sched),
+-		    STATS_V_OUT(next_dont_sched), STATS_V_OUT(last_dont_sched),
+-		    STATS_V_OUT(replace_left_left_dont_sched),
+-		    STATS_V_OUT(replace_left_curr_dont_sched),
+-		    STATS_V_OUT(se_skip), STATS_V_OUT(se_eq_curr),
+-		    STATS_V_OUT(se_neq_curr), STATS_V_OUT(second_eq_curr),
+-		    STATS_V_OUT(sec_second_dont_sched),
+-		    STATS_V_OUT(snc_second_dont_sched),
+-		    STATS_V_OUT(replace_left),
+-		    STATS_V_OUT(replace_wakeup_second),
+-		    STATS_V_OUT(replace_wakeup_next),
+-		    STATS_V_OUT(replace_wakeup_last));
++	sched_stats_print(
++		sched_print_throttle,
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n",
++		STATS_V_OUT(total_calls), STATS_V_OUT(out_dont_sched),
++		STATS_V_OUT(out_may_sched), STATS_V_OUT(out_is_null),
++		STATS_V_OUT(out_has_al_ctx), STATS_V_OUT(out_has_al),
++		STATS_V_OUT(out_is_armed), STATS_V_OUT(curr_dont_sched),
++		STATS_V_OUT(left_dont_sched), STATS_V_OUT(se_dont_sched),
++		STATS_V_OUT(next_dont_sched), STATS_V_OUT(last_dont_sched),
++		STATS_V_OUT(replace_left_left_dont_sched),
++		STATS_V_OUT(replace_left_curr_dont_sched), STATS_V_OUT(se_skip),
++		STATS_V_OUT(se_eq_curr), STATS_V_OUT(se_neq_curr),
++		STATS_V_OUT(second_eq_curr), STATS_V_OUT(sec_second_dont_sched),
++		STATS_V_OUT(snc_second_dont_sched), STATS_V_OUT(replace_left),
++		STATS_V_OUT(replace_wakeup_second),
++		STATS_V_OUT(replace_wakeup_next),
++		STATS_V_OUT(replace_wakeup_last));
+ 
+ 	return se;
+ }
+@@ -4835,18 +4897,18 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 
+ 	sched_stats_add(&total_calls, 1);
+ 	sched_stats_add(&curr_dont_sched,
+-		  curr && auto_lock_dont_sched(task_of(curr)));
++			curr && auto_lock_dont_sched(task_of(curr)));
+ 	sched_stats_add(&left_dont_sched,
+-		  left && auto_lock_dont_sched(task_of(left)));
++			left && auto_lock_dont_sched(task_of(left)));
+ 	/*
+ 	 * If curr is set we have to see if its left of the leftmost entity
+ 	 * still in the tree, provided there was anything in the tree at all.
+ 	 */
+ 	if (!left || (curr && entity_before(curr, left))) {
+ 		sched_stats_add(&replace_left_curr_dont_sched,
+-			  curr && auto_lock_dont_sched(task_of(curr)));
++				curr && auto_lock_dont_sched(task_of(curr)));
+ 		sched_stats_add(&replace_left_left_dont_sched,
+-			  left && auto_lock_dont_sched(task_of(left)));
++				left && auto_lock_dont_sched(task_of(left)));
+ 		sched_stats_add(&replace_left, 1);
+ 		left = curr;
+ 	}
+@@ -4893,9 +4955,10 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 			if (se == curr) {
+ 				sched_stats_add(&se_eq_curr, 1);
+ 				second = __pick_first_entity(cfs_rq);
+-				sched_stats_add(&sec_second_dont_sched,
+-					  second && auto_lock_dont_sched(
+-							    task_of(second)));
++				sched_stats_add(
++					&sec_second_dont_sched,
++					second && auto_lock_dont_sched(
++							  task_of(second)));
+ 			} else {
+ 				sched_stats_add(&se_neq_curr, 1);
+ 				second = __pick_next_entity(se);
+@@ -4905,9 +4968,10 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 					second = curr;
+ 				}
+ 
+-				sched_stats_add(&snc_second_dont_sched,
+-					  second && auto_lock_dont_sched(
+-							    task_of(second)));
++				sched_stats_add(
++					&snc_second_dont_sched,
++					second && auto_lock_dont_sched(
++							  task_of(second)));
+ 			}
+ 
+ 			if (second && !auto_lock_dont_sched(task_of(second)) &&
+@@ -4925,7 +4989,7 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 		 */
+ 		sched_stats_add(&replace_wakeup_next, 1);
+ 		sched_stats_add(&next_dont_sched,
+-			  auto_lock_dont_sched(task_of(cfs_rq->next)));
++				auto_lock_dont_sched(task_of(cfs_rq->next)));
+ 		se = cfs_rq->next;
+ 	} else if (cfs_rq->last &&
+ 		   wakeup_preempt_entity(cfs_rq->last, left) < 1) {
+@@ -4935,13 +4999,15 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 		 */
+ 		sched_stats_add(&replace_wakeup_last, 1);
+ 		sched_stats_add(&next_dont_sched,
+-			  auto_lock_dont_sched(task_of(cfs_rq->last)));
++				auto_lock_dont_sched(task_of(cfs_rq->last)));
+ 		se = cfs_rq->last;
+ 	}
+ 
+ return_good:
+-	sched_stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
+-	sched_stats_add(&out_may_sched, se && !auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_dont_sched,
++			se && auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_may_sched,
++			se && !auto_lock_dont_sched(task_of(se)));
+ 
+ 	sched_stats_add(&out_has_al_ctx, se && auto_lock_exists(task_of(se)));
+ 	sched_stats_add(&out_has_al, se && auto_lock_has_al(task_of(se)));
+@@ -4949,47 +5015,46 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 
+ 	sched_stats_add(&out_is_null, !se);
+ 
+-	sched_stats_print(sched_print_throttle,
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n",
+-		    STATS_V_OUT(total_calls), STATS_V_OUT(out_dont_sched),
+-		    STATS_V_OUT(out_may_sched), STATS_V_OUT(out_is_null),
+-		    STATS_V_OUT(out_has_al_ctx), STATS_V_OUT(out_has_al),
+-		    STATS_V_OUT(out_is_armed), STATS_V_OUT(curr_dont_sched),
+-		    STATS_V_OUT(left_dont_sched), STATS_V_OUT(se_dont_sched),
+-		    STATS_V_OUT(next_dont_sched), STATS_V_OUT(last_dont_sched),
+-		    STATS_V_OUT(replace_left_left_dont_sched),
+-		    STATS_V_OUT(replace_left_curr_dont_sched),
+-		    STATS_V_OUT(se_skip), STATS_V_OUT(se_eq_curr),
+-		    STATS_V_OUT(se_neq_curr), STATS_V_OUT(second_eq_curr),
+-		    STATS_V_OUT(sec_second_dont_sched),
+-		    STATS_V_OUT(snc_second_dont_sched),
+-		    STATS_V_OUT(replace_left),
+-		    STATS_V_OUT(replace_wakeup_second),
+-		    STATS_V_OUT(replace_wakeup_next),
+-		    STATS_V_OUT(replace_wakeup_last));
++	sched_stats_print(
++		sched_print_throttle,
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n"
++		"%-24s: %10u\n",
++		STATS_V_OUT(total_calls), STATS_V_OUT(out_dont_sched),
++		STATS_V_OUT(out_may_sched), STATS_V_OUT(out_is_null),
++		STATS_V_OUT(out_has_al_ctx), STATS_V_OUT(out_has_al),
++		STATS_V_OUT(out_is_armed), STATS_V_OUT(curr_dont_sched),
++		STATS_V_OUT(left_dont_sched), STATS_V_OUT(se_dont_sched),
++		STATS_V_OUT(next_dont_sched), STATS_V_OUT(last_dont_sched),
++		STATS_V_OUT(replace_left_left_dont_sched),
++		STATS_V_OUT(replace_left_curr_dont_sched), STATS_V_OUT(se_skip),
++		STATS_V_OUT(se_eq_curr), STATS_V_OUT(se_neq_curr),
++		STATS_V_OUT(second_eq_curr), STATS_V_OUT(sec_second_dont_sched),
++		STATS_V_OUT(snc_second_dont_sched), STATS_V_OUT(replace_left),
++		STATS_V_OUT(replace_wakeup_second),
++		STATS_V_OUT(replace_wakeup_next),
++		STATS_V_OUT(replace_wakeup_last));
+ 
+ 	return se;
+ }
+@@ -5084,12 +5149,13 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 		    STATS_V_OUT(total_calls), STATS_V_OUT(out_dont_sched));
+ 	return se;
+ }
+-#else
++#elif SCHED_VERSION == 5
+ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 					     struct sched_entity *curr)
+ // clang-format on
+ {
+ 	struct sched_entity *left = __pick_first_entity(cfs_rq);
++	struct sched_entity *first = left;
+ 	struct sched_entity *se;
+ 	int dont_sched_se = 0;
+ 	sched_stats_add(&total_calls, 1);
+@@ -5099,6 +5165,9 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 	 */
+ 	if (!left || (curr && entity_before(curr, left)))
+ 		left = curr;
++	if (first == NULL) {
++		first = left;
++	}
+ 
+ 	se = left; /* ideally we run the leftmost entity */
+ 
+@@ -5109,7 +5178,6 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 	if (se && (cfs_rq->skip == se ||
+ 		   (dont_sched_se = auto_lock_dont_sched(task_of(se))))) {
+ 		struct sched_entity *second;
+-
+ 		if (se == curr) {
+ 			LPRINTK_VVVV("se == curr\n");
+ 			second = __pick_first_entity(cfs_rq);
+@@ -5161,12 +5229,113 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 		 */
+ 		se = cfs_rq->last;
+ 	}
+-	sched_stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_dont_sched,
++			se && auto_lock_dont_sched(task_of(se)));
+ 
+ 	sched_stats_print(sched_print_throttle,
+-		    "%-24s: %10u\n"
+-		    "%-24s: %10u\n",
+-		    STATS_V_OUT(total_calls), STATS_V_OUT(out_dont_sched));
++			  "%-24s: %10u\n"
++			  "%-24s: %10u\n",
++			  STATS_V_OUT(total_calls),
++			  STATS_V_OUT(out_dont_sched));
++
++	__add_autolock_stats(first, se, curr);
++	return se;
++}
++#else
++static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
++					     struct sched_entity *curr)
++// clang-format on
++{
++	struct sched_entity *left = __pick_first_entity(cfs_rq);
++	struct sched_entity *first = left;
++	struct sched_entity *se;
++	int dont_sched_se = 0;
++	sched_stats_add(&total_calls, 1);
++	/*
++	 * If curr is set we have to see if its left of the leftmost entity
++	 * still in the tree, provided there was anything in the tree at all.
++	 */
++	if (!left || (curr && entity_before(curr, left)))
++		left = curr;
++	if (first == NULL) {
++		first = left;
++	}
++
++	se = left; /* ideally we run the leftmost entity */
++
++	/*
++	 * Avoid running the skip buddy, if running something else can
++	 * be done without getting too unfair.
++	 */
++	if (se && (cfs_rq->skip == se ||
++		   (dont_sched_se = auto_lock_dont_sched(task_of(se))))) {
++		struct sched_entity *second;
++		if (se == curr) {
++			LPRINTK_VVVV("se == curr\n");
++			second = __pick_first_entity(cfs_rq);
++		} else {
++			LPRINTK_VVVV("se != curr\n");
++			second = __pick_next_entity(se);
++			if (!second || (curr && entity_before(curr, second))) {
++				LPRINTK_VVVV("second = curr\n");
++				second = curr;
++			} else if (dont_sched_se) {
++				struct sched_entity *next_second = second;
++				for (;;) {
++					if (dont_sched_se &&
++					    !auto_lock_dont_sched(
++						    task_of(next_second))) {
++						return next_second;
++					}
++					next_second =
++						__pick_next_entity(next_second);
++					if (!next_second) {
++						break;
++					}
++				}
++			}
++		}
++
++		if (second && wakeup_preempt_entity(second, left) < 1)
++			se = second;
++#if 0
++		if (second) {
++			if (dont_sched_se) {
++				LPRINTK_VVVV("Setting se = second (A)\n");
++				se = second;
++			} else if ((!auto_lock_dont_sched(task_of(second))) &&
++				   wakeup_preempt_entity(second, left) < 1) {
++				LPRINTK_VVVV("Setting se = second (B)\n");
++				se = second;
++			}
++		}
++#endif
++	}
++
++	if (cfs_rq->next && wakeup_preempt_entity(cfs_rq->next, left) < 1) {
++		LPRINTK_VVVV("Taking next\n");
++		/*
++		 * Someone really wants this to run. If it's not unfair, run it.
++		 */
++		se = cfs_rq->next;
++	} else if (cfs_rq->last &&
++		   wakeup_preempt_entity(cfs_rq->last, left) < 1) {
++		LPRINTK_VVVV("Taking Last\n");
++		/*
++		 * Prefer last buddy, try to return the CPU to a preempted task.
++		 */
++		se = cfs_rq->last;
++	}
++	sched_stats_add(&out_dont_sched,
++			se && auto_lock_dont_sched(task_of(se)));
++
++	sched_stats_print(sched_print_throttle,
++			  "%-24s: %10u\n"
++			  "%-24s: %10u\n",
++			  STATS_V_OUT(total_calls),
++			  STATS_V_OUT(out_dont_sched));
++
++	__add_autolock_stats(first, se, curr);
+ 	return se;
+ }
+ #endif
+-- 
+2.34.1
+
