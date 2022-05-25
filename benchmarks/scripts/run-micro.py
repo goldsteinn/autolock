@@ -115,6 +115,7 @@ class Run():
         self.trials = trials
         self.results = {}
 
+    # hard codes maximum of 3 threads per core (and 4 max cores)
     def max_nthreads(self):
         if len(self.cpus) == 0:
             return 12
@@ -186,11 +187,15 @@ class Run():
                     self.fmt_info() + result_to_csv(self.results[i]))))
 
 
+# usable cpu list for pinning
 cpu_confs = [[], [0], [0, 1], [0, 1, 2], [0, 1, 2, 3]]
 trials_conf = 10
 
+# total times you grab lock
 outer_iter_conf = 25 * 100 * 1000
+# critical section length
 cs_iter_confs = [1, 25]
+# other work besides lock
 extra_iter_confs = [1, 25]
 
 runs = []
