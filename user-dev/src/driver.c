@@ -13,7 +13,8 @@ static int32_t do_list  = 0;
 static int32_t do_test  = 0;
 static int32_t do_bench = 0;
 
-static int32_t stats_csv = 0;
+static int32_t stats_csv        = 0;
+static int32_t with_sched_stats = 0;
 
 static uint32_t outer_iter = 1000 * 1000;
 static uint32_t cs_iter    = 1;
@@ -53,6 +54,12 @@ static ArgOption args[] = {
             0,
             &run_all,
             "Run all lock versions"),
+    ADD_ARG(KindOption,
+            Set,
+            ("--sched-stats"),
+            0,
+            &with_sched_stats,
+            "With kernel scheduling info."),
     ADD_ARG(
         KindOption,
         String,
@@ -161,9 +168,9 @@ main(int argc, char * argv[]) {
         stats = (stats_result_t *)safe_calloc(lock_list.ndecls,
                                               sizeof(stats_result_t));
     }
-    run_params_init(&common_params, outer_iter, cs_iter, extra_iter,
-                    num_trials, num_threads, cpu_list, num_cpus,
-                    pin_cpus, prefer_hyper_threads);
+    run_params_init(&common_params, with_sched_stats, outer_iter,
+                    cs_iter, extra_iter, num_trials, num_threads,
+                    cpu_list, num_cpus, pin_cpus, prefer_hyper_threads);
 
 
     run_decls(&lock_list, run_all ? NULL : lock_names.ptrs,

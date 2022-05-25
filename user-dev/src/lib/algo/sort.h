@@ -56,6 +56,7 @@ static NONNULL(1, 4) void I_qsort(void *                base,
 
 #define generic_sort(...)                                                      \
     CAT(I_generic_sort_, PP_NARG(__VA_ARGS__))(__VA_ARGS__)
+
 #endif
 
 #endif
