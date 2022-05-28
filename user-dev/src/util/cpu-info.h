@@ -8,8 +8,22 @@
 #include "util/error-util.h"
 #include "util/types.h"
 
+#include "arch/ll-getcpu.h"
+
 /* TODO: Do all this with config. */
 enum { NUM_NUMA_NODES = 1 };
+
+
+static CONST_FUNC uint32_t
+logical_id_to_socket(uint32_t logical_id) {
+    (void)(logical_id);
+    return 0;
+}
+
+static uint32_t
+get_current_socket() {
+    return ll_get_cpu();
+}
 
 enum {
     /* For any CPU we are targetting this is true. */
