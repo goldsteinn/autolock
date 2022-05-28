@@ -31,12 +31,28 @@ $> sudo apt install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libun
 ```
 $> sudo apt install patchelf
 ```
+**After this point NOTHING should require `sudo`.**
+
+### Benchmark Env Setup
+
+Append the following lines to your `.bashrc` file.
+
+```
+if [ ! -z "${BASHRC_TO_RUN}" ]
+then
+    echo "Running: ${BASHRC_TO_RUN}"
+    $BASHRC_TO_RUN
+    unset BASHRC_TO_RUN
+    exit
+
+fi
+```
+
+This is used to making scripting benchmarks easier.
 
 ### Glibc-dev Install Dependencies
 
 None (assuming all other dependencies have been installed)
-
-**After this point NOTHING should require `sudo`.**
 
 
 ### Linux Setup
