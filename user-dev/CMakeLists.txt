@@ -2,15 +2,27 @@ cmake_minimum_required(VERSION 3.1.3)
 project(Project_Template C CXX ASM)
 include(ProcessorCount)
 
+
+set(compiler_flags_extra "")
+set(link_libraries  "")
+
+
 set(third_party_libs abseil folly)
 
-foreach(third_party_lib ${third_party_libs})
-  add_subdirectory("third-party/${third_party_lib}")
-endforeach()
-foreach(third_party_lib ${third_party_libs})
-  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/third-party/${third_party_lib}")
-endforeach()
-
+set(WITH_THIRD_PART 0)
+if(${with_third_party})
+  foreach(third_party_lib ${third_party_libs})
+    add_subdirectory("third-party/${third_party_lib}")
+  endforeach()
+  foreach(third_party_lib ${third_party_libs})
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/third-party/${third_party_lib}")
+  endforeach()
+  list(APPEND compiler_flags_extra "-DI_WITH_THIRD_PARTY=1")
+  # Add third party stuff
+  list(APPEND link_libraries "absl::synchronization" "folly")
+else()
+  list(APPEND compiler_flags_extra "-DI_WITH_THIRD_PARTY=0")
+endif()
 
 
 set(WITH_MATH 1 CACHE BOOL "Set to load math (enables some stats stuff)")
@@ -64,9 +76,6 @@ else()
   message(FATAL_ERROR "Invalid language selection: ${LANG}")
 endif()
 
-set(compiler_flags_extra "")
-set(link_libraries  "")
-
 if(${WITH_MATH})
   list(APPEND link_libraries "-lm")
   list(APPEND compiler_flags_extra "-DWITH_MATH")
@@ -82,8 +91,6 @@ if(${WITH_VDSO})
   list(APPEND compiler_flags_extra "-DWITH_VDSO")
 endif()
 
-# Add third party stuff
-list(APPEND link_libraries "absl::synchronization" "folly")
 
 get_filename_component(LINUX_DIR "${LINUX_DIR}" ABSOLUTE)
 

@@ -1,10 +1,7 @@
-/* Third part. */
-#include "absl/synchronization/mutex.h"
-#include "folly/MicroLock.h"
-
 /* Internal. */
 #include "locks/lock-base.h"
 #include "locks/lock-bench.h"
+#include "locks/lock-gen-macros.h"
 
 #include "autolock-impls/autolock-export.h"
 
@@ -140,6 +137,17 @@ class pthread_spinlock {
     }
 } __attribute__((may_alias));
 
+
+#ifndef I_WITH_THIRD_PARTY
+#define I_WITH_THIRD_PARTY 0
+#endif
+#if I_WITH_THIRD_PARTY
+
+/* Third party. */
+#include "absl/synchronization/mutex.h"
+#include "folly/MicroLock.h"
+
+
 /* Lock API build on google abseil's mutex. */
 class abseil_mutex {
     absl::Mutex m;
@@ -202,17 +210,23 @@ class folly_mutex {
     }
 } __attribute__((may_alias));
 
+#define ABSEIL_MUTEX abseil_mutex
+#define FOLLY_MUTEX  folly_mutex
+#else
+#define ABSEIL_MUTEX
+#define FOLLY_MUTEX
+#endif
 
 /* All implementations (AUTOLOCK_IMPLS defined in
  * autolock-impls/autolock-export.h. */
 
-#define LOCK_IMPLS                                                     \
+#define I_LOCK_IMPLS                                                   \
     pthread_mutex, pthread_spinlock, spinlock, backoff_spinlock,       \
         yield_spinlock, yield_backoff_spinlock, futex_spinlock,        \
         futex_backoff_spinlock, futex_yield_spinlock,                  \
-        futex_yield_backoff_spinlock, folly_mutex, abseil_mutex,       \
-        AUTOLOCK_IMPLS
+        futex_yield_backoff_spinlock, FOLLY_MUTEX, ABSEIL_MUTEX
 
+#define LOCK_IMPLS list_locks(I_LOCK_IMPLS), AUTOLOCK_IMPLS
 
 #define make_lock_info(class_name)                                     \
     {                                                                  \
