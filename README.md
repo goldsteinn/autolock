@@ -22,14 +22,14 @@ $> sudo apt install dwarves busybox qemu-system-x86
 
 ```
 # Ubuntu 22+
-$> sudo apt install libdouble-conversion-dev libfmt-dev libglog-dev libunwind-dev libboost-all-dev
+$> sudo apt cmake install libdouble-conversion-dev libfmt-dev libglog-dev libunwind-dev libboost-all-dev
 # Ubuntu 18 & Ubuntu 20
-$> sudo apt install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libunwind-dev libboost-all-dev
+$> sudo apt cmake install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libunwind-dev libboost-all-dev
 ```
 
 ### Benchmark Dependencies
 ```
-$> sudo apt install patchelf
+$> sudo apt install patchelf libevent-dev
 ```
 **After this point NOTHING should require `sudo`.**
 
