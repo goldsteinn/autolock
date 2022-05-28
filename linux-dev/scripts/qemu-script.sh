@@ -80,20 +80,20 @@ host() {
 		-append "$cmdline" -s
 
 	# qemu-system-x86_64 \
-	# 	-nodefaults \
-	# 	-d int \
-	# 	-machine accel=tcg \
-	# 	-watchdog i6300esb \
-	# 	-device virtio-rng-pci \
-	# 	-cpu max \
-	# 	-smp $NRCPU \
-	# 	-m $MEMORY \
-	# 	$fs \
-	# 	$console \
-	# 	$net \
-	# 	$QEMUARG \
-	# 	-kernel "$kernel" \
-	# 	-append "$cmdline" -s
+	    # 	-nodefaults \
+	    # 	-d int \
+	    # 	-machine accel=tcg \
+	    # 	-watchdog i6300esb \
+	    # 	-device virtio-rng-pci \
+	    # 	-cpu max \
+	    # 	-smp $NRCPU \
+	    # 	-m $MEMORY \
+	    # 	$fs \
+	    # 	$console \
+	    # 	$net \
+	    # 	$QEMUARG \
+	    # 	-kernel "$kernel" \
+	    # 	-append "$cmdline" -s
 }
 
 say() {
@@ -190,7 +190,7 @@ guest() {
 	say dhcp on iface $iface
 	ip link set dev $iface up
 	busybox udhcpc -i $iface -p /run/udhcpc \
-		-s /usr/share/udhcpc/default.script -q -t 1 -n -f
+		    -s /usr/share/udhcpc/default.script -q -t 1 -n -f
 
 	say setup cgroups
 	sysctl -q kernel.allow_bpf_attach_netcg=0 &>/dev/null
@@ -236,15 +236,21 @@ EOF
 
 	say root environment
 
-cat << EOF >> $HOME/.profile
+    cat << EOF >> $HOME/.profile
 export KERNEL=$KERNEL
 
 export PATH=\$HOME/local/bin:\$PATH
 export PATH=\$KERNEL/tools/bpf/bpftool:\$PATH
 export PATH=\$KERNEL/tools/perf:\$PATH
 EOF
-
+    if [ ! -z "${TO_RUN}" ]
+    then
+        export BASHRC_TO_RUN=${TO_RUN}
+        unset TO_RUN
+    fi
 	cat << EOF >> $HOME/.bashrc
+
+
 mask-dir () {
 	touch "\$1"
 	setfattr -n trusted.overlay.opaque -v y /mnt/base-root/tmp/rootdir-overlay/upper/"\$1"
@@ -285,8 +291,8 @@ QEMUARG=""
 IMAGE=""
 NRCPU=4
 MEMORY=2048
-
-while getopts "hgmsk:c:i:a:H:N:M:q:" opt; do
+TO_RUN="echo \"Hello World\""
+while getopts "hgmsk:c:i:a:H:N:M:q:r:" opt; do
 	case $opt in
 		h) usage ;;
 		g) GUEST=y ;;
@@ -300,9 +306,9 @@ while getopts "hgmsk:c:i:a:H:N:M:q:" opt; do
 		M) MEMORY="$OPTARG" ;;
 		N) NRCPU="$OPTARG" ;;
 		q) QEMUARG="$OPTARG" ;;
+        r) TO_RUN="$OPTARG" ;;
 	esac
 done
 shift $((OPTIND -1))
-
 [ "$GUEST" = "y" ] && guest "$@" || host "$@"
 

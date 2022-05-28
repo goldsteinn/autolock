@@ -1,9 +1,11 @@
 import sys
+import time
+import psutil
 import subprocess
 
 TIMEOUT = 5
 PRINTED_HDR = False
-BASE_CMD = "./user-bin/driver {} --csv --outer-iter {} --cs-iter {} --extra-iter {} -t {} --bench  -T {} {}"
+BASE_CMD = "./qemu-script.sh r \"./user-bin/driver {} --csv --outer-iter {} --cs-iter {} --extra-iter {} -t {} --bench  -T {} {} > .tmp-result-out\""
 
 locks = [
     "pthread_mutex", "pthread_spinlock", "spinlock", "backoff_spinlock",
@@ -42,27 +44,43 @@ def run_process(cmd):
     global CNT
     try:
         print(cmd)
+        time.sleep(5)
+        ts_start = time.time_ns()
+        cpu_start = psutil.cpu_percent()
         sproc = subprocess.Popen(cmd,
                                  shell=True,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.DEVNULL)
 
         stdout_data = sproc.communicate(timeout=TIMEOUT)
-        stdout_data = stdout_data[0].decode('utf-8')
+
+        ts_end = time.time_ns()
+        cpu_end = psutil.cpu_percent()
+
+        try:
+            stdout_data_f = open(".tmp-result-out", "r")
+            stdout_data = stdout_data_f.read()
+        except IOError:
+            print("IO Error!")
+            return None, [None, None], [None, None]
+
         print(str(stdout_data))
         sys.stdout.flush()
-        return stdout_data
+        return stdout_data, [ts_start, ts_end], [cpu_start, cpu_end]
 
     except subprocess.TimeoutExpired:
-        return None
+        return None, [None, None], [None, None]
 
 
 class Result():
 
-    def __init__(self, outer_iter, nthread, data):
+    def __init__(self, outer_iter, nthread, data, interval, cpu_usage):
         self.outer_iter = outer_iter
         self.nthread = nthread
         self.data = data.lstrip().rstrip()
+
+        self.interval = interval
+        self.cpu_usage = cpu_usage
 
     def get_outer_iter(self):
         return self.outer_iter
@@ -95,13 +113,17 @@ class Result():
 def result_to_csv(result):
     global RESULT_HDR
     if result is None:
-        return ["ERROR"] * (RESULT_LEN + 2)
+        return ["ERROR"] * (RESULT_LEN + 6)
     else:
         if RESULT_HDR is None:
-            RESULT_HDR = ["outer_iter", "nthreads"] + result.get_hdr()
+            RESULT_HDR = [
+                "outer_iter", "nthreads", "ns_start", "ns_end",
+                "cpu_usage_start", "cpu_usage_end"
+            ] + result.get_hdr()
 
         return [result.get_outer_iter(),
-                result.get_nthread()] + result.get_val()
+                result.get_nthread()
+                ] + result.interval + result.cpu_usage + result.get_val()
 
 
 class Run():
@@ -118,8 +140,8 @@ class Run():
     # hard codes maximum of 3 threads per core (and 4 max cores)
     def max_nthreads(self):
         if len(self.cpus) == 0:
-            return 12
-        return len(self.cpus) * 3
+            return 4
+        return len(self.cpus) * 4
 
     def min_nthreads(self):
         return max(len(self.cpus), 1)
@@ -140,14 +162,13 @@ class Run():
             return "--cpus {}".format(",".join(map(str, self.cpus)))
 
     def run(self):
-
         for i in self.thread_iter():
             result = None
             oiter = self.outer_iter
             while True:
-                data = run_process(self.cmd(i, oiter))
+                data, interval, cpu_usage = run_process(self.cmd(i, oiter))
                 if data is not None:
-                    result = Result(oiter, i, data)
+                    result = Result(oiter, i, data, interval, cpu_usage)
                     break
                 if oiter <= (10 * 1000):
                     print("\tError")
