@@ -12,6 +12,8 @@
 #include "autolock-impls/locks/aepfl-normlock.h"
 #include "autolock-impls/locks/clh-autolock.h"
 #include "autolock-impls/locks/clh-normlock.h"
+#include "autolock-impls/locks/cptltkt-autolock.h"
+#include "autolock-impls/locks/cptltkt-normlock.h"
 #include "autolock-impls/locks/mcs-autolock.h"
 #include "autolock-impls/locks/mcs-normlock.h"
 
@@ -20,7 +22,8 @@
 #define I_AUTOLOCK_IMPLS                                               \
     simple_autolock, backoff_autolock, clh_normlock, clh_autolock,     \
         RSEQ_AUTOLOCK, TICKET_AUTOLOCK, MCS_AUTOLOCK, MCS_NORMLOCK,    \
-        aepfl_autolock, aepfl_normlock
+        aepfl_autolock, aepfl_normlock, cptltkt_normlock,              \
+        cptltkt_autolock,
 
 
 #define I_gen_autolock(autolock_name)                                  \
