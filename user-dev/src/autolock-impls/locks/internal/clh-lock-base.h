@@ -40,7 +40,7 @@ extern_C_start();
 
 /********************************************************************/
 /* Lock constants. */
-enum { I_CLH_UNLOCKED = 1, I_CLH_LOCKED = 0, I_CLH_PAUSE_ITERS = 128 };
+enum { I_CLH_UNLOCKED = 1, I_CLH_LOCKED = 0, I_CLH_PAUSE_ITERS = 512 };
 
 /********************************************************************/
 /* Internal node struct. */
