@@ -2,7 +2,7 @@
 #include "util/file-util.h"
 
 #include "thread/cpuset.h"
-
+#if 0
 #if I_SYS_NUM_CPUS == 0
 uint32_t I_sys_num_cpus = 0;
 #endif
@@ -115,3 +115,4 @@ I_slow_get_phys_cpu_id(uint32_t logical_cpu_id) {
         CAST(cpu_id_t, phys_id + 1);
     return phys_id;
 }
+#endif
