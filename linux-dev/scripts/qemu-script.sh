@@ -291,7 +291,7 @@ QEMUARG=""
 IMAGE=""
 NRCPU=4
 MEMORY=2048
-TO_RUN="echo \"Hello World\""
+TO_RUN=""
 while getopts "hgmsk:c:i:a:H:N:M:q:r:" opt; do
 	case $opt in
 		h) usage ;;
