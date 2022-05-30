@@ -167,7 +167,7 @@ static void
 NONNULL(1) cset_clr_first(cpuset_t * cset) {
     uint32_t cpu = cset_first(cset);
     die_assert(cpu != -1U);
-    cset_set(cpu, cset);
+    cset_clr(cpu, cset);
 }
 
 
