@@ -13,6 +13,7 @@
 #include "arch/ll-prefetch.h"
 #include "util/attrs.h"
 #include "util/cpu-info.h"
+#include "util/error-util.h"
 
 extern_C_start();
 #include "autolock-impls/common/autolock-returns.h"
@@ -27,13 +28,12 @@ extern_C_start();
 /* Lock constants. */
 enum {
     I_CPTLTKT_HAS_SOCKET         = 1,
-    I_CPTLTKT_DOESNT_HAVE_SOCKET = 1,
+    I_CPTLTKT_DOESNT_HAVE_SOCKET = 0,
 
     I_CPTLTKT_SOCKET_BATCH_COUNT  = 100,
     I_CPTLTKT_SOCKET_NUM_SPINNERS = NUM_NUMA_NODES,
 
-    I_CPTLTKT_PAUSE_ITERS = 128,
-    I_CPTLTKT_PAUSE_BOUND = 2,
+    I_CPTLTKT_PAUSE_ITERS = 512,
 };
 
 /********************************************************************/
@@ -57,6 +57,7 @@ typedef struct I_cptltkt_cpu_tkl {
         struct {
             uint32_t socket_grant;
             uint32_t batch_count;
+            uint32_t owner_req_num;
         };
         uint8_t padding1[L1_CACHE_LINE_SIZE];
     } ALIGNED(L1_CACHE_LINE_SIZE);
@@ -74,11 +75,8 @@ typedef struct I_cptltkt_socket_tkl {
     union {
         struct {
             union {
-                struct {
-                    uint32_t request;
-                    uint32_t owner_req_num;
-                };
-                uint8_t padding0[L1_CACHE_LINE_SIZE];
+                uint32_t request;
+                uint8_t  padding0[L1_CACHE_LINE_SIZE];
             } ALIGNED(L1_CACHE_LINE_SIZE);
 
             I_cptltkl_cache_line_u32_t
@@ -116,6 +114,12 @@ static NONNULL(1) int32_t
 static int32_t
 I_cptltkt_lock_base_init(I_cptltkt_lock_base_t * lock) {
     __builtin_memset(lock, 0, sizeof(*lock));
+#if I_WITH_AUTOLOCK
+    if (UNLIKELY(autolock_init_kernel_state() == NULL)) {
+        return I_FAILURE;
+    }
+    asm volatile("" : : :);
+#endif
     return I_SUCCESS;
 }
 
@@ -139,25 +143,27 @@ I_cptltkt_lock_base_unlock(I_cptltkt_lock_base_t * lock) {
 
     next_grant =
         __atomic_load_n(&(local_lock->grant), __ATOMIC_RELAXED) + 1;
-    if (UNLIKELY(__atomic_load_n(&(local_lock->requests),
-                                 __ATOMIC_RELAXED) == next_grant)) {
-        uint32_t batch_count = --(local_lock->batch_count);
-        if (batch_count != 0) {
+    if (LIKELY(__atomic_load_n(&(local_lock->requests),
+                               __ATOMIC_RELAXED) != next_grant)) {
+        if (local_lock->batch_count != 0) {
+            --(local_lock->batch_count);
             __atomic_store_n(&(local_lock->socket_grant),
                              I_CPTLTKT_HAS_SOCKET, __ATOMIC_RELAXED);
+            /* Cant reorder these. */
+            asm volatile("" : : : "memory");
             __atomic_store_n(&(local_lock->grant), next_grant,
                              __ATOMIC_RELAXED);
             return I_SUCCESS;
         }
         local_lock->batch_count = I_CPTLTKT_SOCKET_BATCH_COUNT;
     }
-    /* Noah todo: 99% sure this can be next_grant. Either way move this
-     * field to cpu_tkl. */
-    req_num = lock->inter_socket_lock.owner_req_num;
-    req_idx = req_num %= I_CPTLTKT_SOCKET_NUM_SPINNERS;
-    __atomic_store_n(&(lock->inter_socket_lock.grants[req_idx].val32),
-                     req_num + 1, __ATOMIC_RELAXED);
 
+    req_num = local_lock->owner_req_num + 1;
+    req_idx = req_num % I_CPTLTKT_SOCKET_NUM_SPINNERS;
+
+    /* These can safely reorder (generally better perf not too). */
+    __atomic_store_n(&(lock->inter_socket_lock.grants[req_idx].val32),
+                     req_num, __ATOMIC_RELAXED);
     __atomic_store_n(&(local_lock->grant), next_grant,
                      __ATOMIC_RELAXED);
     return I_SUCCESS;
@@ -177,16 +183,39 @@ static NONNULL(1) int32_t
 static int32_t
 CAT(I_cptltkt_lock_base_lock,
     I_WITH_AUTOLOCK)(I_cptltkt_lock_base_t * lock) {
-    uint32_t              req_num, req_idx;
+    uint32_t req_num, req_idx;
+
     I_cptltkt_cpu_tkl_t * local_lock =
         &(lock->per_socket_lock[get_current_socket()]);
-
     req_num = __atomic_fetch_add(&(local_lock->requests), 1,
                                  __ATOMIC_RELAXED);
-    while (UNLIKELY(req_num != __atomic_load_n(&(local_lock->grant),
-                                               __ATOMIC_RELAXED))) {
-        ll_pause();
-    }
+    PRINTFFL;
+
+#if I_WITH_AUTOLOCK
+    struct kernel_autolock_abi * k_autolock_mem;
+    k_autolock_mem = autolock_init_kernel_state();
+    autolock_set_kernel_watch_for(req_num, k_autolock_mem);
+    autolock_set_kernel_watch_neq(0, k_autolock_mem);
+    autolock_set_kernel_watch_mem(&(local_lock->grant), k_autolock_mem);
+#endif
+
+    lock_wait(LIKELY(__atomic_load_n(&(local_lock->grant),
+                                     __ATOMIC_RELAXED) ==
+                     req_num) /* recheck expression. */,
+              ll_pause() /* wait expression. */,
+              I_CPTLTKT_PAUSE_ITERS /* wait iters. */,
+              I_cptltkt_has_local_lock /* target when succeeded. */);
+
+
+    lock_wait(LIKELY(__atomic_load_n(&(local_lock->grant),
+                                     __ATOMIC_RELAXED) ==
+                     req_num) /* recheck expression. */,
+              yield() /* wait expression. */,
+              0 /* yield loop forever. */,
+              I_cptltkt_has_local_lock /* target when succeeded. */);
+
+
+I_cptltkt_has_local_lock:
 
     /* Check if this socket already owns the inter-socket lock. */
     if (LIKELY(__atomic_load_n(&(local_lock->socket_grant),
@@ -195,23 +224,40 @@ CAT(I_cptltkt_lock_base_lock,
         __atomic_store_n(&(local_lock->socket_grant),
                          I_CPTLTKT_DOESNT_HAVE_SOCKET,
                          __ATOMIC_RELAXED);
+#if I_WITH_AUTOLOCK
+        autolock_set_kernel_watch_mem(NULL, k_autolock_mem);
+#endif
         return I_SUCCESS;
     }
 
     req_num = __atomic_fetch_add(&(lock->inter_socket_lock.request), 1,
                                  __ATOMIC_RELAXED);
-    req_idx = req_num %= I_CPTLTKT_SOCKET_NUM_SPINNERS;
+    req_idx = req_num % I_CPTLTKT_SOCKET_NUM_SPINNERS;
 
-    while (UNLIKELY(
-        req_num != __atomic_load_n(
-                       &(lock->inter_socket_lock.grants[req_idx].val32),
-                       __ATOMIC_RELAXED))) {
-        ll_pause();
-    }
+#if I_WITH_AUTOLOCK
+    autolock_set_kernel_watch_for(req_num, k_autolock_mem);
+    autolock_set_kernel_watch_neq(0, k_autolock_mem);
+    autolock_set_kernel_watch_mem(
+        &(lock->inter_socket_lock.grants[req_idx].val32),
+        k_autolock_mem);
+#endif
 
+    lock_wait(
+        LIKELY(__atomic_load_n(
+                   &(lock->inter_socket_lock.grants[req_idx].val32),
+                   __ATOMIC_RELAXED) ==
+               req_num) /* recheck expression. */,
+        yield() /* wait expression. */, 0 /* wait iters. */,
+        I_cptltkt_has_global_lock /* target when succeeded. */);
 
-    lock->cur_psl                         = local_lock;
-    lock->inter_socket_lock.owner_req_num = req_num;
+I_cptltkt_has_global_lock:
+
+#if I_WITH_AUTOLOCK
+    autolock_set_kernel_watch_mem(NULL, k_autolock_mem);
+#endif
+
+    lock->cur_psl             = local_lock;
+    local_lock->owner_req_num = req_num;
     return I_SUCCESS;
 }
 
