@@ -1,11 +1,13 @@
 import sys
 import time
+import os
 import psutil
 import subprocess
 
-TIMEOUT = 5
+TIMEOUT = 30
+NUM_CPUS = int(psutil.cpu_count() / 2)
 PRINTED_HDR = False
-BASE_CMD = "./qemu-script.sh r \"./user-bin/driver {} --csv --outer-iter {} --cs-iter {} --extra-iter {} -t {} --bench  -T {} {} > .tmp-result-out\""
+BASE_CMD = "sudo ./qemu-script.sh r \"./user-bin/driver {} --csv --outer-iter {} --cs-iter {} --extra-iter {} -t {} --bench  -T {} {} > .tmp-result-out\""
 
 locks = [
     "pthread_mutex", "pthread_spinlock", "spinlock", "backoff_spinlock",
@@ -18,7 +20,7 @@ locks = [
 
 locks_todo = [
     "pthread_mutex",
-    "pthread_spinlock",
+    #    "pthread_spinlock",
     "clh_normlock",
     "clh_autolock",
     "aepfl_normlock",
@@ -27,8 +29,8 @@ locks_todo = [
     "cptltkt_autolock",
     "spin_normlock",
     "spin_autolock",
-    "yield_normlock",
-    "yield_autolock",
+    #    "yield_normlock",
+    #    "yield_autolock",
     "backoff_normlock",
     "backoff_autolock",
     "backoff_yield_normlock",
@@ -37,11 +39,13 @@ locks_todo = [
     "backoff_yield_futex_autolock",
     "backoff_futex_normlock",
     "backoff_futex_autolock",
-    "futex_normlock",
-    "futex_autolock",
-    "yield_futex_normlock",
+    #    "futex_normlock",
+    #    "futex_autolock",
+    #    "yield_futex_normlock",
+    #    "yield_futex_autolock",
 ]
 
+#locks_todo = ["backoff_normlock", "backoff_autolock"]
 RESULT_LEN = -1
 RESULT_HDR = None
 RUN_HDR = None
@@ -49,10 +53,17 @@ OUT = []
 
 CNT = 0
 
+OUTFILE = open("benchmark.log", "w+")
 
+def myprint(msg):
+    print(msg)
+    OUTFILE.write(msg + "\n")
+    OUTFILE.flush()
+    
 def cpus_to_hex(cpus):
+    global NUM_CPUS
     if len(cpus) == 0:
-        return hex(0xf)
+        return hex((1 << NUM_CPUS) - 1)
     cmap = 0
     for cpu in cpus:
         cmap |= (1 << cpu)
@@ -62,11 +73,13 @@ def cpus_to_hex(cpus):
 def run_process(cmd):
     global TIMEOUT
     global CNT
+    os.system("rm -f .tmp-result-out")
     try:
-        print(cmd)
-        time.sleep(5)
+        myprint(cmd)
+        time.sleep(1)
         ts_start = time.time_ns()
         cpu_start = psutil.cpu_percent()
+
         sproc = subprocess.Popen(cmd,
                                  shell=True,
                                  stdout=subprocess.PIPE,
@@ -76,19 +89,19 @@ def run_process(cmd):
 
         ts_end = time.time_ns()
         cpu_end = psutil.cpu_percent()
-
         try:
             stdout_data_f = open(".tmp-result-out", "r")
             stdout_data = stdout_data_f.read()
         except IOError:
-            print("IO Error!")
+            myprint("IO Error!")
             return None, [None, None], [None, None]
 
-        print(str(stdout_data))
+        myprint(str(stdout_data))
         sys.stdout.flush()
         return stdout_data, [ts_start, ts_end], [cpu_start, cpu_end]
 
     except subprocess.TimeoutExpired:
+        os.system("kill -9 $(pidof qemu-system-x86_64)")
         return None, [None, None], [None, None]
 
 
@@ -157,17 +170,48 @@ class Run():
         self.trials = trials
         self.results = {}
 
-    # hard codes maximum of 3 threads per core (and 4 max cores)
+    # hard codes maximum of 3 threads per core
     def max_nthreads(self):
+        global NUM_CPUS
         if len(self.cpus) == 0:
-            return 4
+            return NUM_CPUS
         return len(self.cpus) * 4
 
     def min_nthreads(self):
         return max(len(self.cpus), 1)
 
+    def custom_thread_iter(self):
+        return [len(self.cpus)]
+
     def thread_iter(self):
-        return [x for x in range(self.min_nthreads(), self.max_nthreads())]
+        global NUM_CPUS
+
+        if True:
+            return self.custom_thread_iter()
+
+        iter_set = []
+
+        iter_set += [
+            x for x in range(self.min_nthreads(),
+                             min(self.min_nthreads() + 4, self.max_nthreads()))
+        ]
+
+        iter_set += [
+            x * 8 for x in range(self.min_nthreads(), self.max_nthreads())
+        ]
+
+        iter_set_f = set()
+        iter_set_out = []
+        for x in iter_set:
+            if x < self.min_nthreads() or x > self.max_nthreads(
+            ) or x in iter_set_f:
+                continue
+            iter_set_f.add(x)
+            iter_set_out.append(x)
+
+        iter_set_out.sort()
+
+        return iter_set_out
 
     def is_pinned(self):
         r = 0
@@ -182,6 +226,7 @@ class Run():
             return "--cpus {}".format(",".join(map(str, self.cpus)))
 
     def run(self):
+        div = 25
         for i in self.thread_iter():
             result = None
             oiter = self.outer_iter
@@ -191,9 +236,8 @@ class Run():
                     result = Result(oiter, i, data, interval, cpu_usage)
                     break
                 if oiter <= (10 * 1000):
-                    print("\tError")
                     break
-                oiter = int(oiter / 25)
+                oiter = int(oiter / div)
 
             self.results[i] = result
 
@@ -229,8 +273,25 @@ class Run():
 
 
 # usable cpu list for pinning
-cpu_confs = [[], [0], [0, 1], [0, 1, 2], [0, 1, 2, 3]]
-trials_conf = 10
+cpu_confs = []
+i = 1
+while i <= min(8, NUM_CPUS):
+    cpu_confs.append([x for x in range(0, i)])
+    i += i
+
+while i <= min(48, NUM_CPUS):
+    if i == 32:
+        i += i
+        continue
+    cpu_confs.append([x for x in range(0, int(i / 2))] +
+                     [24 + x for x in range(0, int(i / 2))])
+    i += i
+
+for i in [1, 2, 4]:
+    cpu_confs.append(
+        [x % min(48, NUM_CPUS) for x in range(0, min(48 * i, NUM_CPUS * i))])
+
+trials_conf = 5
 
 # total times you grab lock
 outer_iter_conf = 25 * 100 * 1000
@@ -254,5 +315,6 @@ for run in runs:
 for run in runs:
     run.display()
 
-print(",".join(RUN_HDR + RESULT_HDR))
-print("\n".join(OUT))
+
+myprint(",".join(RUN_HDR + RESULT_HDR))
+myprint("\n".join(OUT))
