@@ -1,7 +1,7 @@
 From 67dfd3455744a9239891cca3401ed080702ec5ec Mon Sep 17 00:00:00 2001
 From: Noah Goldstein <goldstein.w.n@gmail.com>
 Date: Sat, 7 May 2022 14:20:17 -0500
-Subject: [PATCH v1 6/6] Factor stats collection out to autolock-verbose and
+Subject: [PATCH v1 6/9] Factor stats collection out to autolock-verbose and
  start profiling scheduler
 
 ---

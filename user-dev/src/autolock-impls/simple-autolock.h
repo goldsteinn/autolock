@@ -18,21 +18,28 @@ static typedef_func(simple_autolock_unlock, I_user_autolock_unlock);
  * readability value of seeing the API defined explicitly here
  * outweights. */
 
-static NONNULL(1) int32_t simple_autolock_lock(simple_autolock_t * lock) {
+static NONNULL(1) int32_t
+    simple_autolock_lock(simple_autolock_t * lock) {
+    struct kernel_autolock_abi * k_autolock_mem;
     /* Uncontended just grab the lock. No intialization is needed. */
     if (simple_autolock_trylock(lock) == I_SUCCESS) {
         return I_SUCCESS;
     }
-    autolock_init_kernel_state();
+    k_autolock_mem = autolock_init_kernel_state();
 
 
     /* Initialize kernel for this simple_autolock. */
-    autolock_set_kernel_watch_for(I_UNLOCKED); /* What for unlocked. */
-    autolock_set_kernel_watch_neq(0); /* Schedule when equals. */
+
+    /* What for unlocked. */
+    autolock_set_kernel_watch_for(I_UNLOCKED, k_autolock_mem);
+
+    /* Schedule when equals. */
+    autolock_set_kernel_watch_neq(0, k_autolock_mem);
     for (;;) {
         /* I_simple_autolock_trylock_maybe_sched will manage enabling /
          * disabling autolock in a safe manner. */
-        if (I_internal_user_autolock_trylock_maybe_sched(lock) == 0) {
+        if (I_internal_user_autolock_trylock_maybe_sched(
+                lock, k_autolock_mem) == 0) {
             /* watch_mem will be NULL. */
             return I_SUCCESS;
         }

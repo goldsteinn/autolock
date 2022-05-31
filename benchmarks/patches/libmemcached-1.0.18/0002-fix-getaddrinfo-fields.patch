@@ -1,0 +1,10 @@
+--- clients/ms_conn.c	2022-05-13 23:55:18.729152226 -0500
++++ tmp/ms_conn.c	2022-05-13 23:55:11.349153170 -0500
+@@ -814,6 +814,7 @@
+     hints.ai_family= AF_UNSPEC;
+     hints.ai_protocol= IPPROTO_TCP;
+     hints.ai_socktype= SOCK_STREAM;
++    hints.ai_flags= AI_CANONNAME;
+   }
+ 
+   snprintf(port_buf, NI_MAXSERV, "%d", srv_port);

@@ -27,6 +27,11 @@ $> sudo apt install libdouble-conversion-dev libfmt-dev libglog-dev libunwind-de
 $> sudo apt install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libunwind-dev libboost-all-dev
 ```
 
+### Benchmark Dependencies
+```
+$> sudo apt install patchelf
+```
+
 ### Glibc-dev Install Dependencies
 
 None (assuming all other dependencies have been installed)
@@ -84,7 +89,7 @@ None (assuming all other dependencies have been installed)
 
 2. **Config userland support**
     ```
-    $> cmake -DBUILD_TESTING=OFF -DLANG=CXX -DCOMPILER=g++ -DWITH_MATH=1 -DWITH_THREAD=1 -DWITH_VDSO=1 -S user-dev/ -B user-dev/build
+    $> cmake -DLINUX_DIR=linux-dev/src -DBUILD_TESTING=OFF -DLANG=CXX -DCOMPILER=g++ -DWITH_MATH=1 -DWITH_THREAD=1 -DWITH_VDSO=1 -S user-dev/ -B user-dev/build
     ```
 
 3. **Build userland support**
@@ -102,33 +107,43 @@ None (assuming all other dependencies have been installed)
     $> (cd user-dev/build; make install)
     ```
 
+### Benchmark setup
+1. **Build and install**
+    ```
+    # This may take 5-10 min
+    $> (cd benchmarks; ./scripts/setup-benchmarks.py)
+    ```
+
 ### Glibc-dev Setup
 
 1. **Get glibc**
     ```
     $> git clone https://sourceware.org/git/glibc.git glibc-dev/src
     ```
-    
+
 2. **Checkout 2.35**
     ```
-    $> (cd glibc-dev/src; git checkout git checkout glibc-2.35)
+    $> (cd glibc-dev/src; git checkout glibc-2.35; git checkout -b glibc-2-3-5-cond-var-plt)
     ```
-    
+
 3. **Apply cond var patches**
     ```
-    $> (cd glibc-dev/src; git am ../patches/*
+    $> (cd glibc-dev/src; git am ../patches/*)
     ```
 
 4. **Configure**
     ```
-    $> mkdir -p glibc-dev/build/glibc; (cd glibc-dev/build/glibc; unset LD_LIBRARY_PATH; ../src/configure --prefix=$(realpath ../../../linux-dev/src/glibc-install))
+    $> mkdir -p glibc-dev/build/glibc; (cd glibc-dev/build/glibc; unset LD_LIBRARY_PATH; ../../src/configure --prefix=$(realpath ../../../linux-dev/src/glibc-install))
     ```
 5. **Build Glibc**
     ```
-    $> (cd glibc-dev/build/glibc; unset LD_LIBRARY_PATH; make && make install)
+    $> (cd glibc-dev/build/glibc; unset LD_LIBRARY_PATH; make --silent && make install)
     ```
 
 ## Running
+
+
+### Microbench / Test
 
 1. **Enter Linux source directory**
     ```
@@ -165,6 +180,51 @@ None (assuming all other dependencies have been installed)
     # If no errors you can usually do Ctrl-D
     $> kill -9 $(pidof qemu-system-x86_64)
     ```
+    
+### Application Benchmarks
+
+Application benchmarks expect all setup steps. The way we do the
+benchmarks is interpose our own locks infront of the glibc
+ones. Specically with interpose any lock implemented (that is ABI
+compatible) over `pthread_mutex_attr`.
+
+This requires a slightly customized `glibc` to handing
+`pthread_cond_wait` and `patchelf` to modify the `elf` file (as
+opposed to messing with the source of the applications)
+
+**All instructions are from the kernel directory ie: `cd linux-dev/src`**
+
+#### Memcached
+
+1. **Use custom GLIBC**
+    ```
+    # We need to add back the libevent dependency
+    $> ./../../glibc-dev/scripts/use-this-glibc.py glibc-install/ bench-install/bin/memcached /lib/x86_64-linux-gnu/libevent-2.1.so.7
+    ```
+
+##### Memcached Without QEMU (no autolock)
+1. **Run memcached**
+    ```
+    # pthread-mutex-profile is just a wrapper for pthread-mutex
+    # that collects timing data on the locks
+    $> LD_PRELOAD=./interpose-libs/libpthread-mutex-profile.so ./bench-install/bin/memcached -u noah -t 8 -m 4096 -n 2048 &
+    ```
+    
+2. **Run memaslap**
+    ```
+    $> ./bench-install/bin/memaslap -s 127.0.0.1:11211 -S 5s -B -T 8 -c 32
+    ```
+    
+`memaslap` will output data as it runs. To see the lock data collected
+in `memcached` send `SIGINT` to the process (or some other means of
+allowing it gracefully shut down).
+
+##### Memcached With QEMU (w/ autolock)
+1. **
+
+
+
+
 
 ## Browsing
 
@@ -316,3 +376,5 @@ Found in directory: [`src/autolock-impls/`](https://github.com/goldsteinn/autolo
 - To run all locks you can use `--all` and to list the available locks you can use `--list`.
 - Searching for lock names will essentially use `fnmatch` syntax so something like:
     - `$> ./driver --test spin*` will test all lock implementations whose names are prefixed with 'spin'.
+
+

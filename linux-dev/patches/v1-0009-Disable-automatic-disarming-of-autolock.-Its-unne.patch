@@ -1,0 +1,26 @@
+From af6834314e4430497e8231088c02ae4737820dca Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Sat, 14 May 2022 12:46:37 -0500
+Subject: [PATCH v1 9/9] Disable automatic disarming of autolock. Its
+ unnecissary given that user-land has to do it anyways
+
+---
+ kernel/sched/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index c4cb88b14e81..cf4860702a64 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -5028,7 +5028,7 @@ context_switch(struct rq *rq, struct task_struct *prev,
+      * unnecissary at the moment but has little cost and is necessary for
+      * some potential future directs.
+      */
+-    auto_lock_sched(next);
++    // auto_lock_sched(next);
+ 	prepare_task_switch(rq, prev, next);
+ 
+ 	/*
+-- 
+2.34.1
+

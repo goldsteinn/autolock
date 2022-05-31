@@ -7,13 +7,17 @@
 #include "thread/rseq/rseq.h"
 
 
-#ifndef I_HAS_RSEQ
+/* For now don't support rseq for shared library interpose because TLS
+ * access is 1) indirect and 2) maintaing the assembly for both
+ * compatability with PTHREAD_MUTEX_INITIALIZER and optimal is not worth
+ * it unless we are 100% sure this is the lock we want to present. */
+#if (!defined I_HAS_RSEQ) ||                                           \
+    (defined I_USE_FOR_SHARED_LIBRARY_INTERPOSE)
 #define RSEQ_AUTOLOCK_EXPORT
 #define RSEQ_GEN_LOCK(...)
 #else
-#define RSEQ_AUTOLOCK_EXPORT , auto_rseq_lock
-#define RSEQ_GEN_LOCK(gen_macro)                                       \
-    gen_macro(auto_rseq_lock, rseq_autolock)
+#define RSEQ_AUTOLOCK_EXPORT     , rseq_autolock
+#define RSEQ_GEN_LOCK(gen_macro) gen_macro(rseq_autolock)
 /* The user-level lock type and functions {init|destroy|trylock|unlock}
  * are all essentially unchanging so just use alias them to common
  * defintions. */

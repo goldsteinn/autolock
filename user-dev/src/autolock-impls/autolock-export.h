@@ -6,16 +6,16 @@
 #include "autolock-impls/simple-autolock.h"
 #include "autolock-impls/ticket-autolock.h"
 
-#define I_gen_autolock(name, autolock_name)                            \
-    class name {                                                       \
+#define I_gen_autolock(autolock_name)                                  \
+    class autolock_name {                                              \
         using base_autolock = CAT(autolock_name, _t);                  \
                                                                        \
         base_autolock lock_internal;                                   \
                                                                        \
        public:                                                         \
-        static name *                                                  \
+        static autolock_name *                                         \
         init(void * init_mem) {                                        \
-            name * lock = CAST(name *, init_mem);                      \
+            autolock_name * lock = CAST(autolock_name *, init_mem);    \
             CAT(autolock_name, _init)(&(lock->lock_internal));         \
             return lock;                                               \
         }                                                              \
@@ -38,15 +38,15 @@
     } __attribute__((may_alias));
 
 
-I_gen_autolock(auto_spinlock, simple_autolock);
-I_gen_autolock(auto_backoff_lock, backoff_autolock);
-I_gen_autolock(auto_ticket_lock, ticket_autolock);
+I_gen_autolock(simple_autolock);
+I_gen_autolock(backoff_autolock);
+I_gen_autolock(ticket_autolock);
 RSEQ_GEN_LOCK(I_gen_autolock);
 
 
 #define AUTOLOCK_IMPLS                                                 \
-    auto_spinlock, auto_backoff_lock                                   \
-                       RSEQ_AUTOLOCK_EXPORT /* , auto_ticket_lock */
+    simple_autolock,                                                   \
+        backoff_autolock RSEQ_AUTOLOCK_EXPORT /* , ticket_autolock */
 
 
 #endif

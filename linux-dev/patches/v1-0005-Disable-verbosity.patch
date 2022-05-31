@@ -1,7 +1,7 @@
 From eff61f8fbccfa17fca1130888446813106f33640 Mon Sep 17 00:00:00 2001
 From: Noah Goldstein <goldstein.w.n@gmail.com>
 Date: Fri, 6 May 2022 01:58:01 -0500
-Subject: [PATCH v1 5/6] Disable verbosity
+Subject: [PATCH v1 5/9] Disable verbosity
 
 ---
  include/linux/auto-lock-verbose.h | 8 ++++----

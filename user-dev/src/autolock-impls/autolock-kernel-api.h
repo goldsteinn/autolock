@@ -1,40 +1,60 @@
 #ifndef _SRC__AUTOLOCK_IMPLS__AUTOLOCK_KERNEL_API_H_
 #define _SRC__AUTOLOCK_IMPLS__AUTOLOCK_KERNEL_API_H_
 
+#include "util/common.h"
+#include "util/memory-util.h"
 
 #include "arch/ll-syscall.h"
 #include "autolock-impls/autolock-kernel-abi.h"
-#include "autolock-impls/internal/autolock-common-returns.h"
+#include "autolock-impls/internal/autolock-common-consts.h"
 
 /********************************************************************/
 /* Syscall numbers. */
 enum { _NR_AUTOLOCK_CREATE = 451, _NR_AUTOLOCK_RELEASE = 452 };
 
+extern_C_start();
 /* Ideally this is initialized at TLS startup. */
-extern __thread struct kernel_autolock_abi * I_kernel_autolock;
+extern __thread struct kernel_autolock_abi * I_kernel_autolock
+    ATTR_TLS_INIT_EXEC;
 
 /********************************************************************/
 /* API for intializing / releasing a autolock registered with the
- * kernel. Both return non-zero on failure and zero on success. */
+ * kernel.  */
 
 
-static int32_t autolock_init_kernel_state();
+/* Return NULL on failure and pointer to kernel_autolock_abi on success.
+ */
+static struct kernel_autolock_abi * autolock_init_kernel_state();
+
+/* Return non-zero on failure and zero on success. */
 static int32_t autolock_release_kernel_state();
 
-static void autolock_set_kernel_watch_mem(uint32_t * p);
-static void autolock_set_kernel_watch_for(uint32_t v);
-static void autolock_set_kernel_watch_neq(uint32_t v);
+static NONNULL(2) void autolock_set_kernel_watch_mem(
+    uint32_t * restrict p,
+    struct kernel_autolock_abi * restrict k_autolock_mem);
+static NONNULL(2) void autolock_set_kernel_watch_for(
+    uint32_t                     v,
+    struct kernel_autolock_abi * k_autolock_mem);
+static NONNULL(2) void autolock_set_kernel_watch_neq(
+    uint32_t                     v,
+    struct kernel_autolock_abi * k_autolock_mem);
+
+static struct kernel_autolock_abi * autolock_get_kernel_mem();
+static NONNULL(1) void autolock_set_kernel_mem(
+    struct kernel_autolock_abi * k_autolock_mem);
 
 
 /********************************************************************/
 /* Start API implementation. */
-static int32_t
+static struct kernel_autolock_abi *
 autolock_init_kernel_state() {
-    int32_t fd;
-    void *  p;
+    int32_t                      fd;
+    void *                       p;
+    struct kernel_autolock_abi * k_autolock_mem =
+        autolock_get_kernel_mem();
 
-    if (LIKELY(I_kernel_autolock != NULL)) {
-        return I_SUCCESS;
+    if (LIKELY(k_autolock_mem != NULL)) {
+        return k_autolock_mem;
     }
 
     /* Get fd back for shared memory mapping. */
@@ -43,7 +63,7 @@ autolock_init_kernel_state() {
         /* None */);
     /* Return non-zero value on failure. */
     if (UNLIKELY(fd < 0)) {
-        return fd;
+        return NULL;
     }
 
     /* Map a page (wasteful, looking into to putting this on the stack
@@ -54,16 +74,14 @@ autolock_init_kernel_state() {
                             MAP_SHARED | MAP_POPULATE, fd, 0),
                            /* None */, /* None */,
                            /* None */));
-    /* Return non-zero value on failure. */
+
     if (UNLIKELY(p == MAP_FAILED)) {
-        return CAST(int32_t,
-                    CAST(uint32_t, CAST(uint64_t, MAP_FAILED)));
+        return NULL;
     }
 
     /* Success, set thread's autolock and return zero. */
-    I_kernel_autolock = (struct kernel_autolock_abi *)p;
-
-    return I_SUCCESS;
+    autolock_set_kernel_mem((struct kernel_autolock_abi *)p);
+    return (struct kernel_autolock_abi *)p;
 }
 
 static int32_t
@@ -73,16 +91,34 @@ autolock_release_kernel_state() {
 }
 
 static void
-autolock_set_kernel_watch_mem(uint32_t * p) {
-    I_kernel_autolock->watch_mem = p;
+autolock_set_kernel_watch_mem(
+    uint32_t * restrict p,
+    struct kernel_autolock_abi * restrict k_autolock_mem) {
+    k_autolock_mem->watch_mem = p;
 }
 static void
-autolock_set_kernel_watch_for(uint32_t v) {
-    I_kernel_autolock->watch_for = v;
+autolock_set_kernel_watch_for(
+    uint32_t                     v,
+    struct kernel_autolock_abi * k_autolock_mem) {
+    k_autolock_mem->watch_for = v;
 }
 static void
-autolock_set_kernel_watch_neq(uint32_t v) {
-    I_kernel_autolock->watch_neq = v;
+autolock_set_kernel_watch_neq(
+    uint32_t                     v,
+    struct kernel_autolock_abi * k_autolock_mem) {
+    k_autolock_mem->watch_neq = v;
 }
 
+
+static struct kernel_autolock_abi *
+autolock_get_kernel_mem() {
+    return I_kernel_autolock;
+}
+
+static void
+autolock_set_kernel_mem(struct kernel_autolock_abi * k_autolock_mem) {
+    I_kernel_autolock = k_autolock_mem;
+}
+
+extern_C_end();
 #endif
