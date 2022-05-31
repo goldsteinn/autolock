@@ -53,7 +53,13 @@ OUT = []
 
 CNT = 0
 
+OUTFILE = open("benchmark.log", "w+")
 
+def myprint(msg):
+    print(msg)
+    OUTFILE.write(msg + "\n")
+    OUTFILE.flush()
+    
 def cpus_to_hex(cpus):
     global NUM_CPUS
     if len(cpus) == 0:
@@ -69,7 +75,7 @@ def run_process(cmd):
     global CNT
     os.system("rm -f .tmp-result-out")
     try:
-        print(cmd)
+        myprint(cmd)
         time.sleep(1)
         ts_start = time.time_ns()
         cpu_start = psutil.cpu_percent()
@@ -87,10 +93,10 @@ def run_process(cmd):
             stdout_data_f = open(".tmp-result-out", "r")
             stdout_data = stdout_data_f.read()
         except IOError:
-            print("IO Error!")
+            myprint("IO Error!")
             return None, [None, None], [None, None]
 
-        print(str(stdout_data))
+        myprint(str(stdout_data))
         sys.stdout.flush()
         return stdout_data, [ts_start, ts_end], [cpu_start, cpu_end]
 
@@ -310,5 +316,5 @@ for run in runs:
     run.display()
 
 
-print(",".join(RUN_HDR + RESULT_HDR))
-print("\n".join(OUT))
+myprint(",".join(RUN_HDR + RESULT_HDR))
+myprint("\n".join(OUT))
