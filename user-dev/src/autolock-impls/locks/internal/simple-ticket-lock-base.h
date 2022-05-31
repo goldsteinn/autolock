@@ -1,8 +1,15 @@
-#ifndef _SRC__AUTOLOCK_IMPLS__TICKET_AUTOLOCK_H_
-#define _SRC__AUTOLOCK_IMPLS__TICKET_AUTOLOCK_H_
+extern_C_start();
+
+#ifndef _SRC__AUTOLOCK_IMPLS__LOCKS__INTERNAL__SIMPLE_TICKET_LOCK_BASE_H_
+#define _SRC__AUTOLOCK_IMPLS__LOCKS__INTERNAL__SIMPLE_TICKET_LOCK_BASE_H_
+
 
 /* Simple ticket spinlock. Naive and performs horribly once nthreads >
  * ncores. */
+
+#ifndef I_WITH_AUTOLOCK
+#error "Must define I_WITH_AUTOLOCK before including ticket base"
+#endif
 
 #include "arch/ll-pause.h"
 #include "util/attrs.h"
@@ -13,10 +20,7 @@
 #include "autolock-impls/sys/autolock-kernel-api.h"
 
 
-/* Leaving off for now. */
-#define TICKET_AUTOLOCK
-
-typedef struct I_ticket_autolock {
+typedef struct I_simple_ticket_lock_base {
     union {
         uint32_t cur_count;
         /* Padd to cache line to `cur_count` line is not being
@@ -24,35 +28,19 @@ typedef struct I_ticket_autolock {
         uint8_t I_padding[L1_CACHE_LINE_SIZE - sizeof(uint32_t) * 1];
     };
     uint32_t next_count;
-} ticket_autolock_t ALIGNED(L1_CACHE_LINE_SIZE);
+} simple_ticket_lock_base_t ALIGNED(L1_CACHE_LINE_SIZE);
 
-
-/* Zero relevant fields and init kernel state. */
-static NONNULL(1) int32_t
-    ticket_autolock_init(ticket_autolock_t * lock) {
-    lock->next_count = 0;
-    lock->cur_count  = 0;
-
-
-    if (UNLIKELY(autolock_init_kernel_state() == NULL)) {
-        return I_FAILURE;
-    }
-
-    /* Don't let compiler implement this with cmov. */
-    asm volatile("" : : :);
-    return I_SUCCESS;
-}
 
 /* Nothing to do for destroy. */
-static NONNULL(1) int32_t
-    ticket_autolock_destroy(ticket_autolock_t * lock) {
+static NONNULL(1) int32_t I_simple_ticket_lock_base_destroy(
+    simple_ticket_lock_base_t * lock) {
     (void)(lock);
     return autolock_release_kernel_state();
 }
 
 
-static NONNULL(1) int32_t
-    ticket_autolock_trylock(ticket_autolock_t * lock) {
+static NONNULL(1) int32_t I_simple_ticket_lock_base_trylock(
+    simple_ticket_lock_base_t * lock) {
     uint32_t ticket_num =
         __atomic_load_n(&(lock->next_count), __ATOMIC_RELAXED);
     uint32_t cur_num =
@@ -69,15 +57,35 @@ static NONNULL(1) int32_t
     return 1;
 }
 static NONNULL(1) int32_t
-    ticket_autolock_unlock(ticket_autolock_t * lock) {
+    I_simple_ticket_lock_base_unlock(simple_ticket_lock_base_t * lock) {
     lock->cur_count += 1;
     return 0;
+}
+#endif
+
+/* Zero relevant fields and init kernel state. */
+static NONNULL(1) int32_t
+    CAT(I_simple_ticket_lock_base_init,
+        I_WITH_AUTOLOCK)(simple_ticket_lock_base_t * lock) {
+    lock->next_count = 0;
+    lock->cur_count  = 0;
+
+#if I_WITH_AUTOLOCK
+    if (UNLIKELY(autolock_init_kernel_state() == NULL)) {
+        return I_FAILURE;
+    }
+#endif
+
+    /* Don't let compiler implement this with cmov. */
+    asm volatile("" : : :);
+    return I_SUCCESS;
 }
 
 
 static NONNULL(1) int32_t
-    ticket_autolock_lock(ticket_autolock_t * lock) {
-    struct kernel_autolock_abi * k_autolock_mem;
+    CAT(I_simple_ticket_lock_base_lock,
+        I_WITH_AUTOLOCK)(simple_ticket_lock_base_t * lock) {
+
 
     /* Get count we need. Note we use fetch add here so we are getting
      * `next_count` BEFORE the incr. */
@@ -93,10 +101,11 @@ static NONNULL(1) int32_t
     if (LIKELY(ticket_num == cur_num)) {
         return 0;
     }
-
-
+#if I_WITH_AUTOLOCK
+    struct kernel_autolock_abi * k_autolock_mem;
     /* Initialize kernel state. */
     k_autolock_mem = autolock_init_kernel_state();
+
 
     /* For ticket lock we don't need to go back and forth between
      * arming/disarming the autolock as once the thread acquires the
@@ -105,7 +114,7 @@ static NONNULL(1) int32_t
     autolock_set_kernel_watch_mem(&(lock->cur_count), k_autolock_mem);
     autolock_set_kernel_watch_for(ticket_num, k_autolock_mem);
     autolock_set_kernel_watch_neq(0, k_autolock_mem);
-
+#endif
     for (;;) {
         uint32_t backoff;
         int32_t  s_cur_num;
@@ -115,9 +124,11 @@ static NONNULL(1) int32_t
          * which is just as efficient as `cmpl ...`. */
         cur_num -= ticket_num;
         if (cur_num == 0) {
+#if I_WITH_AUTOLOCK
             /* Disarm autolock before returning. */
             autolock_set_kernel_watch_mem(NULL, k_autolock_mem);
-            return 0;
+#endif
+            return I_SUCCESS;
         }
 
         /* Always pause to prohibit runaway speculation. */
@@ -129,7 +140,7 @@ static NONNULL(1) int32_t
          */
         if (s_cur_num <= (-1)) {
             /* It will be a while to desched self. */
-            if (s_cur_num <= (-8)) {
+            if (s_cur_num <= (-2)) {
                 yield();
             }
             else {
@@ -145,5 +156,4 @@ static NONNULL(1) int32_t
     }
 }
 
-
-#endif
+extern_C_end();

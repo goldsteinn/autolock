@@ -75,8 +75,6 @@ static NONNULL(1) uint32_t
 /********************************************************************/
 /* clh lock base api. */
 static NONNULL(1) int32_t
-    I_clh_lock_base_init(I_clh_lock_base_t * lock);
-static NONNULL(1) int32_t
     I_clh_lock_base_destroy(I_clh_lock_base_t * lock);
 static NONNULL(1) int32_t
     I_clh_lock_base_trylock(I_clh_lock_base_t * lock);
@@ -87,20 +85,6 @@ static NONNULL(1) int32_t
 
 /********************************************************************/
 /* API implementation. */
-static int32_t
-I_clh_lock_base_init(I_clh_lock_base_t * lock) {
-    /* Allocate here so we can unconditionally free. This speeds up lock
-     * code. */
-    lock->tail = I_clh_lock_base_node_new(I_CLH_UNLOCKED);
-    lock->head = NULL;
-#if I_WITH_AUTOLOCK
-    if (UNLIKELY(autolock_init_kernel_state() == NULL)) {
-        return I_FAILURE;
-    }
-    asm volatile("" : : :);
-#endif
-    return I_SUCCESS;
-}
 
 static int32_t
 I_clh_lock_base_destroy(I_clh_lock_base_t * lock) {
@@ -146,10 +130,28 @@ I_clh_lock_base_node_new(uint32_t lock_status) {
 }
 #endif
 
+static NONNULL(1) int32_t
+    CAT(I_clh_lock_base_init,
+        I_WITH_AUTOLOCK)(I_clh_lock_base_t * lock);
 
 static NONNULL(1) int32_t
     CAT(I_clh_lock_base_lock,
         I_WITH_AUTOLOCK)(I_clh_lock_base_t * lock);
+
+static int32_t
+CAT(I_clh_lock_base_init, I_WITH_AUTOLOCK)(I_clh_lock_base_t * lock) {
+    /* Allocate here so we can unconditionally free. This speeds up lock
+     * code. */
+    lock->tail = I_clh_lock_base_node_new(I_CLH_UNLOCKED);
+    lock->head = NULL;
+#if I_WITH_AUTOLOCK
+    if (UNLIKELY(autolock_init_kernel_state() == NULL)) {
+        return I_FAILURE;
+    }
+    asm volatile("" : : :);
+#endif
+    return I_SUCCESS;
+}
 
 
 static int32_t
@@ -172,7 +174,7 @@ CAT(I_clh_lock_base_lock, I_WITH_AUTOLOCK)(I_clh_lock_base_t * lock) {
         autolock_set_kernel_watch_neq(0, k_autolock_mem);
         autolock_set_kernel_watch_mem(&(prev_node->mem),
                                       k_autolock_mem);
-        
+
 #endif
 
         if (lock->head == prev_node) {

@@ -83,8 +83,6 @@ static NONNULL(1) I_aepfl_mem_flag_t * I_aepfl_lock_base_get_next(
 /********************************************************************/
 /* aepfl lock base api. */
 static NONNULL(1) int32_t
-    I_aepfl_lock_base_init(I_aepfl_lock_base_t * lock);
-static NONNULL(1) int32_t
     I_aepfl_lock_base_destroy(I_aepfl_lock_base_t * lock);
 static NONNULL(1) int32_t
     I_aepfl_lock_base_trylock(I_aepfl_lock_base_t * lock);
@@ -95,19 +93,6 @@ static NONNULL(1) int32_t
 
 /********************************************************************/
 /* api implementation. */
-static int32_t
-I_aepfl_lock_base_init(I_aepfl_lock_base_t * lock) {
-    lock->tail = 0;
-    lock->head = 0;
-
-    /* memset performs better when you give it power of 2 so just
-     * duplicate the write. */
-    __builtin_memset(lock->flags, I_AEPFL_LOCKED,
-                     I_AEPFL_MAX_THREADS * sizeof(I_aepfl_flag_t));
-
-    lock->flags[0].mem = I_AEPFL_UNLOCKED;
-    return I_SUCCESS;
-}
 
 static int32_t
 I_aepfl_lock_base_destroy(I_aepfl_lock_base_t * lock) {
@@ -174,9 +159,28 @@ I_aepfl_lock_base_get_next(I_aepfl_flag_t * flags, uint32_t slot) {
 #endif
 
 static NONNULL(1) int32_t
+    CAT(I_aepfl_lock_base_init,
+        I_WITH_AUTOLOCK)(I_aepfl_lock_base_t * lock);
+
+
+static NONNULL(1) int32_t
     CAT(I_aepfl_lock_base_lock,
         I_WITH_AUTOLOCK)(I_aepfl_lock_base_t * lock);
 
+static int32_t
+CAT(I_aepfl_lock_base_init,
+    I_WITH_AUTOLOCK)(I_aepfl_lock_base_t * lock) {
+    lock->tail = 0;
+    lock->head = 0;
+
+    /* memset performs better when you give it power of 2 so just
+     * duplicate the write. */
+    __builtin_memset(lock->flags, I_AEPFL_LOCKED,
+                     I_AEPFL_MAX_THREADS * sizeof(I_aepfl_flag_t));
+
+    lock->flags[0].mem = I_AEPFL_UNLOCKED;
+    return I_SUCCESS;
+}
 
 static int32_t
 CAT(I_aepfl_lock_base_lock,

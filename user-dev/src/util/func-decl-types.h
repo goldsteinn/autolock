@@ -22,7 +22,7 @@ typedef struct decl_list {
     const uint64_t ndecls;
     const char *   decl_desc;
 #ifdef __cplusplus
-    const func_decl_t decls[30];
+    const func_decl_t decls[30 + 16];
 #else
     const func_decl_t decls[];
 #endif

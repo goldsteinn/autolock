@@ -70,8 +70,6 @@ static NONNULL(1) int32_t
 /* mcs lock base api. */
 
 static NONNULL(1) uint32_t
-    I_mcs_lock_base_init(I_mcs_lock_base_t * lock);
-static NONNULL(1) uint32_t
     I_mcs_lock_base_destroy(I_mcs_lock_base_t * lock);
 static NONNULL(1, 2) uint32_t
     I_mcs_lock_base_trylock(I_mcs_lock_base_t * lock,
@@ -84,11 +82,6 @@ static NONNULL(1, 2) uint32_t
 /********************************************************************/
 /* API implementation. */
 
-static uint32_t
-I_mcs_lock_base_init(I_mcs_lock_base_t * lock) {
-    lock->tail = NULL;
-    return I_SUCCESS;
-}
 
 static uint32_t
 I_mcs_lock_base_destroy(I_mcs_lock_base_t * lock) {
@@ -150,9 +143,26 @@ I_mcs_lock_base_node_init(I_mcs_node_t * node,
 
 #endif
 
+static NONNULL(1) uint32_t
+    CAT(I_mcs_lock_base_init,
+        I_WITH_AUTOLOCK)(I_mcs_lock_base_t * lock);
+
 static NONNULL(1, 2) uint32_t
     CAT(I_mcs_lock_base_lock, I_WITH_AUTOLOCK)(I_mcs_lock_base_t * lock,
                                                I_mcs_node_t * node);
+
+
+static uint32_t
+CAT(I_mcs_lock_base_init, I_WITH_AUTOLOCK)(I_mcs_lock_base_t * lock) {
+    lock->tail = NULL;
+#if I_WITH_AUTOLOCK
+    if (UNLIKELY(autolock_init_kernel_state() == NULL)) {
+        return I_FAILURE;
+    }
+    asm volatile("" : : :);
+#endif
+    return I_SUCCESS;
+}
 
 static uint32_t
 CAT(I_mcs_lock_base_lock, I_WITH_AUTOLOCK)(I_mcs_lock_base_t * lock,

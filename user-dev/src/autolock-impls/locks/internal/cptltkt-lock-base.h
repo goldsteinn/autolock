@@ -99,8 +99,6 @@ typedef struct I_cptltkt_lock_base {
 /********************************************************************/
 /* cptltkt lock base api. */
 static NONNULL(1) int32_t
-    I_cptltkt_lock_base_init(I_cptltkt_lock_base_t * lock);
-static NONNULL(1) int32_t
     I_cptltkt_lock_base_destroy(I_cptltkt_lock_base_t * lock);
 static NONNULL(1) int32_t
     I_cptltkt_lock_base_trylock(I_cptltkt_lock_base_t * lock);
@@ -111,17 +109,6 @@ static NONNULL(1) int32_t
 
 /********************************************************************/
 /* api implementation. */
-static int32_t
-I_cptltkt_lock_base_init(I_cptltkt_lock_base_t * lock) {
-    __builtin_memset(lock, 0, sizeof(*lock));
-#if I_WITH_AUTOLOCK
-    if (UNLIKELY(autolock_init_kernel_state() == NULL)) {
-        return I_FAILURE;
-    }
-    asm volatile("" : : :);
-#endif
-    return I_SUCCESS;
-}
 
 static int32_t
 I_cptltkt_lock_base_destroy(I_cptltkt_lock_base_t * lock) {
@@ -176,8 +163,27 @@ I_cptltkt_lock_base_unlock(I_cptltkt_lock_base_t * lock) {
 #endif
 
 static NONNULL(1) int32_t
+    CAT(I_cptltkt_lock_base_init,
+        I_WITH_AUTOLOCK)(I_cptltkt_lock_base_t * lock);
+
+
+static NONNULL(1) int32_t
     CAT(I_cptltkt_lock_base_lock,
         I_WITH_AUTOLOCK)(I_cptltkt_lock_base_t * lock);
+
+
+static int32_t
+CAT(I_cptltkt_lock_base_init,
+    I_WITH_AUTOLOCK)(I_cptltkt_lock_base_t * lock) {
+    __builtin_memset(lock, 0, sizeof(*lock));
+#if I_WITH_AUTOLOCK
+    if (UNLIKELY(autolock_init_kernel_state() == NULL)) {
+        return I_FAILURE;
+    }
+    asm volatile("" : : :);
+#endif
+    return I_SUCCESS;
+}
 
 
 static int32_t
