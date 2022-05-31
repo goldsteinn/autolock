@@ -1,12 +1,13 @@
 import sys
 import time
+import os
 import psutil
 import subprocess
 
-TIMEOUT = 15
+TIMEOUT = 30
 NUM_CPUS = int(psutil.cpu_count() / 2)
 PRINTED_HDR = False
-BASE_CMD = "./qemu-script.sh r \"./user-bin/driver {} --csv --outer-iter {} --cs-iter {} --extra-iter {} -t {} --bench  -T {} {} > .tmp-result-out\""
+BASE_CMD = "sudo ./qemu-script.sh r \"./user-bin/driver {} --csv --outer-iter {} --cs-iter {} --extra-iter {} -t {} --bench  -T {} {} > .tmp-result-out\""
 
 locks = [
     "pthread_mutex", "pthread_spinlock", "spinlock", "backoff_spinlock",
@@ -44,6 +45,7 @@ locks_todo = [
     #    "yield_futex_autolock",
 ]
 
+#locks_todo = ["backoff_normlock", "backoff_autolock"]
 RESULT_LEN = -1
 RESULT_HDR = None
 RUN_HDR = None
@@ -65,9 +67,10 @@ def cpus_to_hex(cpus):
 def run_process(cmd):
     global TIMEOUT
     global CNT
+    os.system("rm -f .tmp-result-out")
     try:
         print(cmd)
-        time.sleep(5)
+        time.sleep(1)
         ts_start = time.time_ns()
         cpu_start = psutil.cpu_percent()
 
@@ -80,7 +83,6 @@ def run_process(cmd):
 
         ts_end = time.time_ns()
         cpu_end = psutil.cpu_percent()
-
         try:
             stdout_data_f = open(".tmp-result-out", "r")
             stdout_data = stdout_data_f.read()
@@ -93,6 +95,7 @@ def run_process(cmd):
         return stdout_data, [ts_start, ts_end], [cpu_start, cpu_end]
 
     except subprocess.TimeoutExpired:
+        os.system("kill -9 $(pidof qemu-system-x86_64)")
         return None, [None, None], [None, None]
 
 
@@ -217,7 +220,7 @@ class Run():
             return "--cpus {}".format(",".join(map(str, self.cpus)))
 
     def run(self):
-        div = 5
+        div = 25
         for i in self.thread_iter():
             result = None
             oiter = self.outer_iter
@@ -227,10 +230,8 @@ class Run():
                     result = Result(oiter, i, data, interval, cpu_usage)
                     break
                 if oiter <= (10 * 1000):
-                    print("\tError")
                     break
                 oiter = int(oiter / div)
-                div *= 5
 
             self.results[i] = result
 
@@ -287,7 +288,7 @@ for i in [1, 2, 4]:
 trials_conf = 5
 
 # total times you grab lock
-outer_iter_conf = 5 * 100 * 1000
+outer_iter_conf = 25 * 100 * 1000
 # critical section length
 cs_iter_confs = [1, 25]
 # other work besides lock
@@ -307,6 +308,7 @@ for run in runs:
 
 for run in runs:
     run.display()
+
 
 print(",".join(RUN_HDR + RESULT_HDR))
 print("\n".join(OUT))

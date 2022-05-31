@@ -289,7 +289,7 @@ SSH=n
 CMDLINE=""
 QEMUARG=""
 IMAGE=""
-NRCPU=4
+NRCPU=48
 MEMORY=2048
 TO_RUN=""
 while getopts "hgmsk:c:i:a:H:N:M:q:r:" opt; do
