@@ -4,9 +4,13 @@
 #include "util/macro.h"
 #include "util/portability.h"
 
+#define ALWAYS_INLINE inline __attribute__((always_inline))
+#define NEVER_INLINE  __attribute__((noinline))
+
+
 #define MAYBE_UNUSED __attribute__((unused))
 #define MALLOC_FUNC  __attribute__((malloc))
-#define CONST_FUNC   __attribute__((const)) constexpr
+#define CONST_FUNC   __attribute__((const))
 #define PURE_FUNC    __attribute__((pure))
 
 #define BENCH_FUNC __attribute__((noclone, noinline, aligned(4096)))

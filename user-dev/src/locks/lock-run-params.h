@@ -13,10 +13,11 @@ typedef struct run_params {
     /* Used in benchmark. */
     void * shared_memory; /* memory used for the lock. */
     global_counter_t *
-             global_state;    /* Global state to modify while locked. */
-    uint32_t outer_iter;      /* iterations of cs + extra loops. */
-    uint32_t cs_iter;         /* critical section iterations. */
-    uint32_t extra_iter;      /* non-critical section iterations. */
+             global_state; /* Global state to modify while locked. */
+    uint32_t with_sched_stats; /* Print sched info. */
+    uint32_t outer_iter;       /* iterations of cs + extra loops. */
+    uint32_t cs_iter;          /* critical section iterations. */
+    uint32_t extra_iter;       /* non-critical section iterations. */
     thread_barrier_t barrier; /* barrier for synchronizing benchmark. */
 
     /* Bookkeeping. */
@@ -54,6 +55,7 @@ run_params_reset(run_params_t * params) {
 /* Initialize params with all componenents. */
 static void
 run_params_init(run_params_t * params,
+                uint32_t       with_sched_stats,
                 uint32_t       outer_iter,
                 uint32_t       cs_iter,
                 uint32_t       extra_iter,
@@ -72,10 +74,11 @@ run_params_init(run_params_t * params,
     /* Just grab a page. */
     p = safe_aligned_alloc(PAGE_SIZE, PAGE_SIZE);
 
-    params->shared_memory = p;
-    params->outer_iter    = outer_iter;
-    params->cs_iter       = cs_iter;
-    params->extra_iter    = extra_iter;
+    params->shared_memory    = p;
+    params->with_sched_stats = with_sched_stats;
+    params->outer_iter       = outer_iter;
+    params->cs_iter          = cs_iter;
+    params->extra_iter       = extra_iter;
 
     safe_thread_barrier_init(&(params->barrier), NULL, num_threads);
 

@@ -1,4 +1,4 @@
-#include "autolock-impls/autolock-kernel-abi.h"
+#include "autolock-impls/sys/autolock-kernel-abi.h"
 #include "util/common.h"
 extern_C_start();
 

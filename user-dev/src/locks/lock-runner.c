@@ -281,18 +281,19 @@ I_run(func_decl_t const * to_run,
                 /* Set thread affinity. */
                 safe_thread_attr_set_affinity(&attr, &cset);
             }
-
+            PRINTFFL;
             /* Create the thread. */
             safe_thread_create(tids + j, &attr, to_run->bench_func,
                                params);
+            PRINTFFL;
         }
-
+        PRINTFFL;
         /* Join all threads and add times. */
         for (j = 0; j < num_threads; ++j) {
             safe_thread_join(tids[j], &res);
             times = add_time(times, res);
         }
-
+        PRINTFFL;
         /* Check result (benchmarks also end up testing). */
         test_assert(expec == *(params->global_state),
                     "%-16s(%u): Bad count %lu vs %lu\n", to_run->name,

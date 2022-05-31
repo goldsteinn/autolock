@@ -1,10 +1,41 @@
 #ifndef _SRC__AUTLOCK_IMPLS__AUTOLOCK_EXPORT_H_
 #define _SRC__AUTLOCK_IMPLS__AUTOLOCK_EXPORT_H_
 
-#include "autolock-impls/backoff-autolock.h"
-#include "autolock-impls/rseq-autolock.h"
-#include "autolock-impls/simple-autolock.h"
-#include "autolock-impls/ticket-autolock.h"
+#include "autolock-impls/internal/autolock-macro-helpers.h"
+
+/* Custom autolocks. More so for reference than to use. */
+#include "autolock-impls/locks/custom-backoff-autolock.h"
+#include "autolock-impls/locks/custom-spin-autolock.h"
+#include "autolock-impls/locks/rseq-autolock.h"
+
+
+/* Comparison spin locks. */
+#include "autolock-impls/locks/spin-comparisons.h"
+
+/* Simple ticket lock (bad). */
+#include "autolock-impls/locks/simple-ticket-autolock.h"
+#include "autolock-impls/locks/simple-ticket-normlock.h"
+
+
+/* Third party locks from papers. */
+#include "autolock-impls/locks/aepfl-autolock.h"
+#include "autolock-impls/locks/aepfl-normlock.h"
+#include "autolock-impls/locks/clh-autolock.h"
+#include "autolock-impls/locks/clh-normlock.h"
+#include "autolock-impls/locks/cptltkt-autolock.h"
+#include "autolock-impls/locks/cptltkt-normlock.h"
+#include "autolock-impls/locks/mcs-autolock.h"
+#include "autolock-impls/locks/mcs-normlock.h"
+
+/* Add any implementations here. The capitol ones are generally macros
+ * that can optionally be empty or the name of a lock. */
+#define I_AUTOLOCK_IMPLS                                               \
+    custom_spin_autolock, custom_backoff_autolock, clh_normlock,       \
+        clh_autolock, RSEQ_AUTOLOCK, SIMPLE_TICKET_AUTOLOCK,           \
+        SIMPLE_TICKET_NORMLOCK, MCS_AUTOLOCK, MCS_NORMLOCK,            \
+        aepfl_autolock, aepfl_normlock, cptltkt_normlock,              \
+        cptltkt_autolock,
+
 
 #define I_gen_autolock(autolock_name)                                  \
     class autolock_name {                                              \
@@ -38,15 +69,8 @@
     } __attribute__((may_alias));
 
 
-I_gen_autolock(simple_autolock);
-I_gen_autolock(backoff_autolock);
-I_gen_autolock(ticket_autolock);
-RSEQ_GEN_LOCK(I_gen_autolock);
+#define AUTOLOCK_IMPLS list_autolocks(I_AUTOLOCK_IMPLS), I_LOCK_COMPARISONS
 
-
-#define AUTOLOCK_IMPLS                                                 \
-    simple_autolock,                                                   \
-        backoff_autolock RSEQ_AUTOLOCK_EXPORT /* , ticket_autolock */
-
+gen_autolocks(I_gen_autolock, AUTOLOCK_IMPLS);
 
 #endif

@@ -13,6 +13,9 @@ static int32_t do_list  = 0;
 static int32_t do_test  = 0;
 static int32_t do_bench = 0;
 
+static int32_t stats_csv        = 0;
+static int32_t with_sched_stats = 0;
+
 static uint32_t outer_iter = 1000 * 1000;
 static uint32_t cs_iter    = 1;
 static uint32_t extra_iter = 0;
@@ -41,10 +44,22 @@ static ArgOption args[] = {
     ADD_ARG(KindOption, Set, "--test", 0, &do_test, "Run tests"),
     ADD_ARG(KindOption,
             Set,
+            "--csv",
+            0,
+            &stats_csv,
+            "Display stats as CSV (only relevent if benchmarking)"),
+    ADD_ARG(KindOption,
+            Set,
             "--all",
             0,
             &run_all,
             "Run all lock versions"),
+    ADD_ARG(KindOption,
+            Set,
+            ("--sched-stats"),
+            0,
+            &with_sched_stats,
+            "With kernel scheduling info."),
     ADD_ARG(
         KindOption,
         String,
@@ -146,16 +161,17 @@ main(int argc, char * argv[]) {
 
 
     if (do_list || (!run_all && lock_names.n == 0)) {
-        list_decls(&lock_list);
+        list_decls_filtered(
+            &lock_list, run_all ? NULL : lock_names.ptrs, lock_names.n);
         return 0;
     }
     else if (do_bench) {
         stats = (stats_result_t *)safe_calloc(lock_list.ndecls,
                                               sizeof(stats_result_t));
     }
-    run_params_init(&common_params, outer_iter, cs_iter, extra_iter,
-                    num_trials, num_threads, cpu_list, num_cpus,
-                    pin_cpus, prefer_hyper_threads);
+    run_params_init(&common_params, with_sched_stats, outer_iter,
+                    cs_iter, extra_iter, num_trials, num_threads,
+                    cpu_list, num_cpus, pin_cpus, prefer_hyper_threads);
 
 
     run_decls(&lock_list, run_all ? NULL : lock_names.ptrs,
@@ -163,15 +179,37 @@ main(int argc, char * argv[]) {
 
     if (stats) {
         uint32_t i;
-        printf(
-            "Stats for lock benchmarks with (Trials = %u, Threads = %u)\n",
-            num_trials, num_threads);
-        for (i = 0; i < stats_idx; ++i) {
-            stats_printf_arr(stdout, stats + i,
-                             STATS_P_desc | STATS_P_min | STATS_P_max |
-                                 STATS_P_geomean | STATS_P_stdev,
-                             NULL, 0);
-            printf("\n");
+
+        if (stats_csv) {
+            printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "lock", "min",
+                   "max", "geomean", "stdev", "median", "p75", "p90",
+                   "p95", "p99");
+            for (i = 0; i < stats_idx; ++i) {
+                printf("%s,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+                       stats_get_desc(stats + i),
+                       stats_get_min(stats + i),
+                       stats_get_max(stats + i),
+                       stats_get_geomean(stats + i),
+                       stats_get_stdev(stats + i),
+                       stats_get_median(stats + i),
+                       stats_get_percentile(stats + i, 75),
+                       stats_get_percentile(stats + i, 90),
+                       stats_get_percentile(stats + i, 95),
+                       stats_get_percentile(stats + i, 99));
+            }
+        }
+        else {
+            printf(
+                "Stats for lock benchmarks with (Trials = %u, Threads = %u)\n",
+                num_trials, num_threads);
+            for (i = 0; i < stats_idx; ++i) {
+                stats_printf_arr(stdout, stats + i,
+                                 STATS_P_desc | STATS_P_min |
+                                     STATS_P_max | STATS_P_geomean |
+                                     STATS_P_stdev,
+                                 NULL, 0);
+                printf("\n");
+            }
         }
 
 

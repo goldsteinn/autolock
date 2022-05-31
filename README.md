@@ -22,21 +22,37 @@ $> sudo apt install dwarves busybox qemu-system-x86
 
 ```
 # Ubuntu 22+
-$> sudo apt install libdouble-conversion-dev libfmt-dev libglog-dev libunwind-dev libboost-all-dev
-# Ubuntu 18
-$> sudo apt install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libunwind-dev libboost-all-dev
+$> sudo apt cmake install libdouble-conversion-dev libfmt-dev libglog-dev libunwind-dev libboost-all-dev
+# Ubuntu 18 & Ubuntu 20
+$> sudo apt cmake install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev libunwind-dev libboost-all-dev
 ```
 
 ### Benchmark Dependencies
 ```
-$> sudo apt install patchelf
+$> sudo apt install patchelf libevent-dev
 ```
+**After this point NOTHING should require `sudo`.**
+
+### Benchmark Env Setup
+
+Append the following lines to your `.bashrc` file.
+
+```
+if [ ! -z "${BASHRC_TO_RUN}" ]
+then
+    echo "Running: ${BASHRC_TO_RUN}"
+    $BASHRC_TO_RUN
+    unset BASHRC_TO_RUN
+    exit
+
+fi
+```
+
+This is used to making scripting benchmarks easier.
 
 ### Glibc-dev Install Dependencies
 
 None (assuming all other dependencies have been installed)
-
-**After this point NOTHING should require `sudo`.**
 
 
 ### Linux Setup
@@ -62,7 +78,7 @@ None (assuming all other dependencies have been installed)
     # info but any config difference related to virtualization, serial ports,
     # or scheduling will be an issue.
     # see: https://ops.tips/notes/booting-linux-on-qemu/ and https://www.linux-kvm.org/page/Virtio if any issues.
-    $> (cd linux-dev/src; make x86_64defconfig)
+    $> (cd linux-dev/src; make x86_64_defconfig)
     ```
 
 5. **Build linux**
@@ -89,7 +105,7 @@ None (assuming all other dependencies have been installed)
 
 2. **Config userland support**
     ```
-    $> cmake -DLINUX_DIR=linux-dev/src -DBUILD_TESTING=OFF -DLANG=CXX -DCOMPILER=g++ -DWITH_MATH=1 -DWITH_THREAD=1 -DWITH_VDSO=1 -S user-dev/ -B user-dev/build
+    $> cmake -DLINUX_DIR=../linux-dev/src -DBUILD_TESTING=OFF -DLANG=CXX -DCOMPILER=g++ -DWITH_MATH=1 -DWITH_THREAD=1 -DWITH_VDSO=1 -S user-dev/ -B user-dev/build
     ```
 
 3. **Build userland support**

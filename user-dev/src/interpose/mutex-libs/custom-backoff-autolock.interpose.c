@@ -1,4 +1,4 @@
-#include "autolock-impls/backoff-autolock.h"
+#include "autolock-impls/locks/custom-backoff-autolock.h"
 #include "interpose/pthread-mutex-interpose.h"
 #include "util/attrs.h"
 
@@ -13,5 +13,5 @@ __thread struct kernel_autolock_abi * I_kernel_autolock
     ATTR_TLS_INIT_EXEC;
 
 
-create_pthread_interpose(backoff_autolock);
+create_pthread_interpose(custom_backoff_autolock);
 extern_C_end();

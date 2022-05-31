@@ -1,0 +1,770 @@
+From 636c2e8cfd28b4de4fd2e4ef2ab7841f38db509b Mon Sep 17 00:00:00 2001
+From: Noah Goldstein <goldstein.w.n@gmail.com>
+Date: Sat, 21 May 2022 00:51:10 -0500
+Subject: [PATCH v1 10/10] With pinning pages
+
+---
+ include/linux/auto-lock-verbose.h |  24 ++-
+ include/linux/auto-lock.h         |   5 +
+ kernel/auto-lock.c                | 268 +++++++++++++++++++++++-------
+ kernel/sched/core.c               |   2 +-
+ kernel/sched/fair.c               | 112 ++++++-------
+ 5 files changed, 291 insertions(+), 120 deletions(-)
+
+diff --git a/include/linux/auto-lock-verbose.h b/include/linux/auto-lock-verbose.h
+index 98821ef08ba6..6512a233b91f 100644
+--- a/include/linux/auto-lock-verbose.h
++++ b/include/linux/auto-lock-verbose.h
+@@ -7,7 +7,8 @@
+ #define I_LPRINTK(msg, ...)                                                    \
+ 	printk("%-20s:%-6u: " msg, __func__, __LINE__, ##__VA_ARGS__)
+ 
+-#define LPRINTK_V(...) //I_LPRINTK(__VA_ARGS__)
++#define LPRINTK_HV(...) // I_LPRINTK(__VA_ARGS__)
++#define LPRINTK_V(...) // I_LPRINTK(__VA_ARGS__)
+ #define LPRINTK_VV(...) //I_LPRINTK(__VA_ARGS__)
+ #define LPRINTK_VVV(...) // I_LPRINTK(__VA_ARGS__)
+ #define LPRINTK_VVVV(...) // I_LPRINTK(__VA_ARGS__)
+@@ -24,6 +25,7 @@
+ #define STATS_V_OUT(x) LV_TO_STR(x), atomic_read(&(x))
+ 
+ //#define WITH_STATS
++//#define WITH_SCHED_STATS
+ #ifdef WITH_STATS
+ static atomic_t print_throttle __attribute__((unused));
+ 
+@@ -31,6 +33,7 @@ static atomic_t fast_read_success __attribute__((unused));
+ static atomic_t slow_read_success __attribute__((unused));
+ static atomic_t both_failure __attribute__((unused));
+ 
++#ifdef WITH_SCHED_STATS
+ static atomic_t sched_print_throttle __attribute__((unused));
+ static atomic_t total_calls __attribute__((unused));
+ static atomic_t out_is_null __attribute__((unused));
+@@ -60,10 +63,16 @@ static atomic_t replace_wakeup_second __attribute__((unused));
+ static atomic_t replace_wakeup_next __attribute__((unused));
+ static atomic_t replace_wakeup_last __attribute__((unused));
+ 
++#define sched_stats_add(...) stats_add(__VA_ARGS__)
++#define sched_stats_inc(...) stats_inc(__VA_ARGS__)
++#define sched_stats_print(...) stats_print(__VA_ARGS__)
++
++#endif
++
+ #define stats_add(x, v) atomic_fetch_add(!!(v), x)
+ #define stats_inc(x) atomic_inc(x)
+-#define stats_print(throttle, ...)                                       \
+-	if ((atomic_fetch_add(1, &(throttle)) % 256) == 0) {               \
++#define stats_print(throttle, ...)                                             \
++	if ((atomic_fetch_add(1, &(throttle)) % 256) == 0) {                   \
+ 		printk(__VA_ARGS__);                                           \
+ 	}
+ 
+@@ -73,4 +82,13 @@ static atomic_t replace_wakeup_last __attribute__((unused));
+ #define stats_print(...)
+ #endif
+ 
++#ifndef WITH_SCHED_STATS
++
++#define sched_stats_add(...)
++#define sched_stats_inc(...)
++#define sched_stats_print(...)
++
++
++#endif
++
+ #endif
+diff --git a/include/linux/auto-lock.h b/include/linux/auto-lock.h
+index f939954fd78d..818a867ac2e8 100644
+--- a/include/linux/auto-lock.h
++++ b/include/linux/auto-lock.h
+@@ -12,12 +12,17 @@
+ /* Called by scheduler to see if it should skip a task. */
+ int auto_lock_dont_sched(struct task_struct const *tsk);
+ 
++/* Called when task is context switch out to pin its page
++   if it has an armed autolock. */
++int auto_lock_cache_phys_addr(struct task_struct const *tsk);
++
+ /* Called on task exist. */
+ void auto_lock_free(struct task_struct *tsk);
+ 
+ /* Called before scheduling a task. */
+ void auto_lock_sched(struct task_struct const *tsk);
+ 
++
+ int auto_lock_exists(struct task_struct const *tsk);
+ int auto_lock_has_al(struct task_struct const *tsk);
+ int auto_lock_is_armed_s(struct task_struct const *tsk);
+diff --git a/kernel/auto-lock.c b/kernel/auto-lock.c
+index 3056d51ced9c..08b9391ec97c 100644
+--- a/kernel/auto-lock.c
++++ b/kernel/auto-lock.c
+@@ -46,6 +46,8 @@
+ #include <linux/auto-lock-verbose.h>
+ #include <uapi/linux/auto-lock.h>
+ 
++#define PRINTK(...) printk(__VA_ARGS__)
++
+ /* Store seperate context that wraps the autolock. This is ONLY ever
+  * necessary with CONFIG_UNIX. Otherwise we could drop this layer of
+  * indirection. Maybe worth optimizing a version that does that if no
+@@ -53,6 +55,10 @@
+  */
+ struct auto_lock_ctx {
+ 	struct auto_lock *auto_lock;
++	unsigned long usr_virt_page_start;
++	unsigned long usr_virt_page_mask;
++	unsigned long kern_virt_page;
++	struct page *page;
+ #if defined(CONFIG_UNIX)
+ 	struct socket *auto_lock_sock;
+ #endif
+@@ -89,12 +95,146 @@ static int __auto_lock_is_armed(struct auto_lock const *auto_lock)
+ 		    READ_ONCE(auto_lock->watch_mem) != NULL);
+ 	return auto_lock != NULL && READ_ONCE(auto_lock->watch_mem) != NULL;
+ }
++static int __auto_lock_usr_page_is_mapped(struct auto_lock_ctx const *ctx,
++					  unsigned long usr_virt_addr)
++{
++	/* Can't just & PAGE_MASK because we want to cover huge pages. */
++	return (usr_virt_addr & (~(ctx->usr_virt_page_mask))) ==
++	       ctx->usr_virt_page_start;
++}
++
++/* Only call directly in remapping. */
++static void __auto_lock_unpin_pages(struct auto_lock_ctx *ctx,
++				    struct page *page)
++{
++	LPRINTK_HV("Unpinnging kern virt mapping (%d, %lx vs %lx)!\n", current->pid, (unsigned long)(page), (unsigned long)(ctx->page));
++	/* void. */
++	kunmap(page);
++	/* void. */
++
++	LPRINTK_HV("Unpinnging user pages!\n");
++	unpin_user_pages(&page, 1);
++
++	LPRINTK_HV("Zeroing memory!\n");
++	ctx->kern_virt_page = 0;
++	ctx->usr_virt_page_start = 0;
++    LPRINTK_HV("Done zeroing!\n");
++}
++
++static void __auto_lock_check_unpin_pages(struct auto_lock_ctx *ctx)
++{
++	if (ctx != NULL && ctx->page != NULL) {
++		__auto_lock_unpin_pages(ctx, ctx->page);
++	}
++}
++
++/* Return 1 if we should skip this task (called by auto_lock_dont_sched()). */
++static int __auto_lock_cache_phys_addr(struct task_struct const *tsk,
++				       struct auto_lock_ctx *ctx)
++{
++	struct auto_lock  *auto_lock;
++	unsigned long usr_virt_addr, kern_virt_page, usr_virt_page_start,
++		usr_virt_page_mask;
++	struct page *page;
++	int ret = 0;
++	LTRACE_VVV();
++
++	auto_lock = ctx->auto_lock;
++	if (!__auto_lock_is_armed(auto_lock)) {
++		LPRINTK_HV("Autolock not armed: %d!\n", tsk->pid);
++		return 0;
++	}
++
++    //	LPRINTK_HV("Getting user VA\n");
++	usr_virt_addr = (unsigned long)READ_ONCE(auto_lock->watch_mem);
++
++	/* We already have this mapping. */
++	if (__auto_lock_usr_page_is_mapped(ctx, usr_virt_addr)) {
++        return 0;
++	}
++	LPRINTK_HV("Got user VA: %lx\n", usr_virt_addr);
++	LPRINTK_HV("Checking if kern VP is mapped: %lx\n", ctx->kern_virt_page);
++
++    LPRINTK_HV("Real pid: %d, %d\n", current->pid, 0);
++	if (ctx->kern_virt_page != 0) {
++		LPRINTK_HV("Kern page is mapped!\n");
++		if (ctx->page == NULL) {
++			PRINTK("kern_virt_page and page struct unsynch!\n");
++			BUG();
++		}
++
++		__auto_lock_unpin_pages(ctx, ctx->page);
++	}
++
++#if 0
++    /* pin_user_pages_fast will get_user_pages for us. */
++	ret = get_user_pages_fast(usr_virt_addr, 1 /* one page. */,
++				  0 /* read access. */, &page);
++#endif
++
++	LPRINTK_HV("Pinning user pages!\n");
++    //    mmap_read_lock(current->mm);
++	ret = pin_user_pages_fast(usr_virt_addr, 1 /* one page. */,
++				  FOLL_LONGTERM, &page);
++    //    mmap_read_unlock(current->mm);
++	if (unlikely(ret != 1)) {
++		LPRINTK_HV("Unable to get ping pages!\n");
++		goto done_dearm;
++	}
++
++	/* TODO: undisable (disabled now because im not 100% sure all my
++     * assumptions are right). */
++	if (1 && PageCompound(page)) {
++		/* Not the page masks for make read faster (the hot case). */
++		usr_virt_page_mask = ~HPAGE_MASK;
++		usr_virt_page_start = usr_virt_addr & HPAGE_MASK;
++
++		/* Get start of huge page so when we translate page offset
++         * from virt->phys its correct. */
++		page = compound_head(page);
++		LPRINTK_HV("HUGE page (%lx, %lx)\n", usr_virt_page_mask,
++			  usr_virt_page_start);
++	} else {
++		usr_virt_page_mask = ~PAGE_MASK;
++		usr_virt_page_start = usr_virt_addr & PAGE_MASK;
++		LPRINTK_HV("NORM page (%lx, %lx)\n", usr_virt_page_mask,
++			  usr_virt_page_start);
++	}
++
++    LPRINTK_HV("Getting kernel mapping!\n");
++	kern_virt_page = (unsigned long)kmap(page);
++    LPRINTK_HV("Got kernel mapping: %lx!\n", kern_virt_page);
++	if (unlikely(kern_virt_page == 0)) {
++
++		ret = -1;
++		LPRINTK_HV("Pretty sure this is impossible but kmap failed\n");
++		goto done_unpin;
++	}
+ 
+-static void __auto_lock_dearm(struct auto_lock *auto_lock)
++    LPRINTK_HV("Setting context\n");
++	ctx->usr_virt_page_start = usr_virt_page_start;
++	ctx->usr_virt_page_mask = usr_virt_page_mask;
++	ctx->kern_virt_page = kern_virt_page;
++	ctx->page = page;
++    LPRINTK_HV("Success pid: %d, %d\n", current->pid, 0);
++    //    LPRINTK_HV("Return Normal\n");
++	return ret;
++done_unpin:
++    LPRINTK_HV("Return Unpin\n");
++	__auto_lock_unpin_pages(ctx, page);
++done_dearm:
++    smp_store_release(&(auto_lock->watch_mem), NULL);
++	return ret;
++}
++static void __auto_lock_dearm(struct auto_lock_ctx *ctx)
+ {
++	struct auto_lock *auto_lock;
+ 	LTRACE_VVV();
++	__auto_lock_check_unpin_pages(ctx);
++
++	auto_lock = ctx->auto_lock;
+ 	if (auto_lock == NULL) {
+-		LPRINTK_V("ERROR!\n");
++		LPRINTK_HV("ERROR!\n");
+ 		/* For later: BUG(). */
+ 		return;
+ 	}
+@@ -103,59 +243,50 @@ static void __auto_lock_dearm(struct auto_lock *auto_lock)
+ 	smp_store_release(&(auto_lock->watch_mem), NULL);
+ }
+ 
++
++
++
+ /* Return zero if we should schedule or one if we shouldn't. Returns
+  * zero on error (counter intuitively) to avoid hanging the process.
+  */
+-static int __auto_lock_check_mem(struct task_struct const *tsk,
+-				 struct auto_lock const *auto_lock)
++static int __auto_lock_check_mem(struct auto_lock_ctx const *ctx)
+ {
++	struct auto_lock const *auto_lock;
+ 	u32 cur_mem;
+-	u32 *usr_cur_mem;
++	unsigned long usr_cur_virt_addr;
++	u32 *kern_cur_mem;
+ 	int ret;
+ 
++	auto_lock = ctx->auto_lock;
++
+ 	LTRACE_VVV();
+-	usr_cur_mem = READ_ONCE(auto_lock->watch_mem);
+-	if (usr_cur_mem == NULL) {
++	usr_cur_virt_addr = (unsigned long)READ_ONCE(auto_lock->watch_mem);
++	if (usr_cur_virt_addr == 0) {
+ 		LPRINTK_VVV("usr memory is NULL, may schedule\n");
+ 		return 0;
+ 	}
+-	LPRINTK_VVV("Reading user value\n");
+-	/* If get_user fails just resched to avoid hanging process
+-     * indefinetly if they pass bad mem.
+-     */
+-	preempt_disable();
+-
+-	/* Faster but more error-prone read. */
+-	ret = get_user(cur_mem, usr_cur_mem);
+-
+-	if (unlikely(ret)) {
+-		LPRINTK_VVV("Failed first read attempt. Using fallback\n");
+-
+-		/* Load in user page map. Unlikely. This is an issue as its
+-         * called in scheduler code.
+-         */
+-		if (access_remote_vm(tsk->mm, (unsigned long)usr_cur_mem,
+-				     &cur_mem, sizeof(cur_mem),
+-				     0) != sizeof(cur_mem)) {
+-			LPRINTK_VVV("Failed fallback read\n");
+-			preempt_enable();
+-			stats_inc(&both_failure);
+-
+-			/* Return 0 (allow this task to be scheduled). */
+-			return 0;
+-		}
+-		stats_inc(&slow_read_success);
+-		LPRINTK_VVV("Fallback ready succeeded\n");
+-	} else {
+-		LPRINTK_VVV("Fast read succeeded\n");
+-		stats_inc(&fast_read_success);
++	if (!__auto_lock_usr_page_is_mapped(ctx, usr_cur_virt_addr)) {
++		LPRINTK_VV("Dont have mapping so just let schedule\n");
++		return 0;
++	}
++
++	if (ctx->kern_virt_page == 0 || ctx->page == NULL) {
++		PRINTK("User virtual address and kernel virtual address not synced!\n");
++		BUG();
+ 	}
+-	stats_print(print_throttle, "fast(%u), slow(%u), fail(%u)\n",
+-		    atomic_read(&fast_read_success),
+-		    atomic_read(&slow_read_success),
+-		    atomic_read(&both_failure));
+ 
+-	preempt_enable();
++	kern_cur_mem = (u32 *)(ctx->kern_virt_page +
++			       (usr_cur_virt_addr & ctx->usr_virt_page_mask));
++
++    if((unsigned long)kern_cur_mem & 8) {
++	LPRINTK_HV(
++		"Testing kernel mem: %lx == (%lx + (%lx & %lx)) == (%lx + %lx)\n",
++		(unsigned long)kern_cur_mem, ctx->kern_virt_page, usr_cur_virt_addr,
++		ctx->usr_virt_page_mask, ctx->kern_virt_page,
++		usr_cur_virt_addr & ctx->usr_virt_page_mask);
++    }
++
++	cur_mem = *kern_cur_mem;
+ 
+ 	ret = READ_ONCE(auto_lock->watch_for) != cur_mem;
+ 	LPRINTK_VVV("Returning(%d == %d): (%d == %d) ? %d : %d -> %d\n",
+@@ -167,13 +298,12 @@ static int __auto_lock_check_mem(struct task_struct const *tsk,
+ }
+ 
+ /* Return 1 if we should skip this task (called by auto_lock_dont_sched()). */
+-static int __auto_lock_dont_sched(struct task_struct const *tsk,
+-				  struct auto_lock const *auto_lock)
++static int __auto_lock_dont_sched(struct auto_lock_ctx const *ctx)
+ {
+ 	LTRACE_VVV();
+-	LPRINTK_VVV("Is armed: %d\n", __auto_lock_is_armed(auto_lock));
+-	return __auto_lock_is_armed(auto_lock) &&
+-	       __auto_lock_check_mem(tsk, auto_lock);
++	LPRINTK_VVV("Is armed: %d\n", __auto_lock_is_armed(ctx->auto_lock));
++	return __auto_lock_is_armed(ctx->auto_lock) &&
++	       __auto_lock_check_mem(ctx);
+ }
+ 
+ /* Ensure mmap request by user meets basic sanity test. */
+@@ -254,6 +384,7 @@ static int __auto_lock_release(struct auto_lock_ctx *ctx)
+ 
+ 	LPRINTK_VV("Releasing memory\n");
+ 	if (ctx != NULL) {
++		__auto_lock_check_unpin_pages(ctx);
+ 		LPRINTK_VV("True Release\n");
+ 		if (ctx->auto_lock != NULL) {
+ 			LPRINTK_VV("Freeing kernel memory\n");
+@@ -391,10 +522,10 @@ static long __auto_lock_create(void)
+ 	int ret;
+ 
+ 	LTRACE_VV();
+-	LPRINTK_V("(%d): Creating new autolock\n", current->pid);
++	LPRINTK_HV("(%d): Creating new autolock\n", current->pid);
+ 	if (current->auto_lock) {
+ 		ret = -EEXIST;
+-		LPRINTK_V("(%d): Already exists -> %d\n", current->pid, ret);
++		LPRINTK_HV("(%d): Already exists -> %d\n", current->pid, ret);
+ 		goto done0;
+ 	}
+ 
+@@ -417,8 +548,9 @@ static long __auto_lock_create(void)
+ 	LPRINTK_VV("(%d): Getting file\n", current->pid);
+ 	file = auto_lock_get_file(ctx);
+ 	if (IS_ERR(file)) {
+-        ret = PTR_ERR(file);
+-		LPRINTK_VV("(%d): Error getting autolock file -> %d\n", current->pid, ret);
++		ret = PTR_ERR(file);
++		LPRINTK_VV("(%d): Error getting autolock file -> %d\n",
++			   current->pid, ret);
+ 
+ 		goto done2;
+ 	}
+@@ -429,18 +561,17 @@ static long __auto_lock_create(void)
+ 		LPRINTK_VV("(%d): Err installing -> %d\n", current->pid, ret);
+ 		goto done2;
+ 	}
+-	LPRINTK_VV("(%d): Done installing: %d\n", current->pid, current->auto_lock == NULL);
+-
++	LPRINTK_VV("(%d): Done installing: %d\n", current->pid,
++		   current->auto_lock == NULL);
+ 
+-    
+ done0:
+-    LPRINTK_VV("(%d): Returning -> %d\n", current->pid, ret);
++	LPRINTK_VV("(%d): Returning -> %d\n", current->pid, ret);
+ 	return ret;
+ done2:
+ 	auto_lock_free_mem(ctx->auto_lock);
+ done1:
+ 	kfree(ctx);
+-    LPRINTK_VV("(%d): Returning2 -> %d\n", current->pid, ret);
++	LPRINTK_VV("(%d): Returning2 -> %d\n", current->pid, ret);
+ 	return ret;
+ }
+ 
+@@ -463,14 +594,14 @@ static long auto_lock_release(void)
+ void auto_lock_free(struct task_struct *tsk)
+ {
+ 	LTRACE_VV();
+-    LPRINTK_V("(%d): Freeing Autolock\n", tsk ? tsk->pid : -1);
++	LPRINTK_HV("(%d): Freeing Autolock\n", tsk ? tsk->pid : -1);
+ 	__auto_lock_release_tsk(tsk);
+ }
+ 
+ /* The syscalls. */
+ SYSCALL_DEFINE0(auto_lock_create)
+ {
+-    LPRINTK_V("(%d): Creating Autolock\n", current->pid);
++	LPRINTK_HV("(%d): Creating Autolock\n", current->pid);
+ 	return __auto_lock_create();
+ }
+ 
+@@ -489,7 +620,7 @@ int auto_lock_dont_sched(struct task_struct const *tsk)
+ 		return 0;
+ 	}
+ 	LPRINTK_VVV("Testing the autolock\n");
+-	ret = __auto_lock_dont_sched(tsk, tsk->auto_lock->auto_lock);
++	ret = __auto_lock_dont_sched(tsk->auto_lock);
+ 	LPRINTK_VVV("Dont sched result: %d\n", ret);
+ 	return ret;
+ }
+@@ -502,7 +633,24 @@ void auto_lock_sched(struct task_struct const *tsk)
+ 		return;
+ 	}
+ 	LPRINTK_VVV("Dearmining autolock\n");
+-	return __auto_lock_dearm(tsk->auto_lock->auto_lock);
++	return __auto_lock_dearm(tsk->auto_lock);
++}
++
++int auto_lock_cache_phys_addr(struct task_struct const *tsk)
++{
++	/* Maybe disable autolock if we are unable to grab the page for
++     * less sched overhead. */
++	int ret;
++	LTRACE_VVV();
++	if (tsk == NULL || tsk->auto_lock == NULL) {
++		LPRINTK_VVVV("cache usr page: no autolock\n");
++		return 0;
++	}
++    //	LPRINTK_HV("Trying to cache user page\n");
++	ret = __auto_lock_cache_phys_addr(tsk, tsk->auto_lock);
++
++    //	LPRINTK_HV("done to cache user page: %d\n", ret);
++	return ret;
+ }
+ 
+ int auto_lock_exists(struct task_struct const *tsk)
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index cf4860702a64..9aba62ba1acd 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -6460,7 +6460,7 @@ static void sched_update_worker(struct task_struct *tsk)
+ asmlinkage __visible void __sched schedule(void)
+ {
+ 	struct task_struct *tsk = current;
+-
++    auto_lock_cache_phys_addr(tsk);
+ 	sched_submit_work(tsk);
+ 	do {
+ 		preempt_disable();
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 10894d892e70..b3b4f316b221 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -4621,7 +4621,7 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+ {
+ 	struct sched_entity *left = __pick_first_entity(cfs_rq);
+ 	struct sched_entity *se;
+-	stats_add(&total_calls, 1);
++	sched_stats_add(&total_calls, 1);
+ 	/*
+ 	 * If curr is set we have to see if its left of the leftmost entity
+ 	 * still in the tree, provided there was anything in the tree at all.
+@@ -4687,9 +4687,9 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+ 		 */
+ 		se = cfs_rq->last;
+ 	}
+-	stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
+ 
+-	stats_print(sched_print_throttle,
++	sched_stats_print(sched_print_throttle,
+ 		    "%-24s: %10u\n"
+ 		    "%-24s: %10u\n",
+ 		    STATS_V_OUT(total_calls), STATS_V_OUT(out_dont_sched));
+@@ -4702,21 +4702,21 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 	struct sched_entity *left = __pick_first_entity(cfs_rq);
+ 	struct sched_entity *se;
+ 
+-	stats_add(&total_calls, 1);
+-	stats_add(&curr_dont_sched,
++	sched_stats_add(&total_calls, 1);
++	sched_stats_add(&curr_dont_sched,
+ 		  curr && auto_lock_dont_sched(task_of(curr)));
+-	stats_add(&left_dont_sched,
++	sched_stats_add(&left_dont_sched,
+ 		  left && auto_lock_dont_sched(task_of(left)));
+ 	/*
+ 	 * If curr is set we have to see if its left of the leftmost entity
+ 	 * still in the tree, provided there was anything in the tree at all.
+ 	 */
+ 	if (!left || (curr && entity_before(curr, left))) {
+-		stats_add(&replace_left_curr_dont_sched,
++		sched_stats_add(&replace_left_curr_dont_sched,
+ 			  curr && auto_lock_dont_sched(task_of(curr)));
+-		stats_add(&replace_left_left_dont_sched,
++		sched_stats_add(&replace_left_left_dont_sched,
+ 			  left && auto_lock_dont_sched(task_of(left)));
+-		stats_add(&replace_left, 1);
++		sched_stats_add(&replace_left, 1);
+ 		left = curr;
+ 	}
+ 
+@@ -4728,28 +4728,28 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 	 */
+ 	if (cfs_rq->skip && cfs_rq->skip == se) {
+ 		struct sched_entity *second;
+-		stats_add(&se_skip, 1);
++		sched_stats_add(&se_skip, 1);
+ 		if (se == curr) {
+-			stats_add(&se_eq_curr, 1);
++			sched_stats_add(&se_eq_curr, 1);
+ 			second = __pick_first_entity(cfs_rq);
+-			stats_add(&sec_second_dont_sched,
++			sched_stats_add(&sec_second_dont_sched,
+ 				  second && auto_lock_dont_sched(
+ 						    task_of(second)));
+ 		} else {
+-			stats_add(&se_neq_curr, 1);
++			sched_stats_add(&se_neq_curr, 1);
+ 			second = __pick_next_entity(se);
+ 			if (!second || (curr && entity_before(curr, second))) {
+-				stats_add(&second_eq_curr, 1);
++				sched_stats_add(&second_eq_curr, 1);
+ 				second = curr;
+ 			}
+ 
+-			stats_add(&snc_second_dont_sched,
++			sched_stats_add(&snc_second_dont_sched,
+ 				  second && auto_lock_dont_sched(
+ 						    task_of(second)));
+ 		}
+ 
+ 		if (second && wakeup_preempt_entity(second, left) < 1) {
+-			stats_add(&replace_wakeup_second, 1);
++			sched_stats_add(&replace_wakeup_second, 1);
+ 			se = second;
+ 		}
+ 	}
+@@ -4758,31 +4758,31 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 		/*
+ 		 * Someone really wants this to run. If it's not unfair, run it.
+ 		 */
+-		stats_add(&replace_wakeup_next, 1);
+-		stats_add(&next_dont_sched,
++		sched_stats_add(&replace_wakeup_next, 1);
++		sched_stats_add(&next_dont_sched,
+ 			  auto_lock_dont_sched(task_of(cfs_rq->next)));
+ 		se = cfs_rq->next;
+ 	} else if (cfs_rq->last &&
+ 		   wakeup_preempt_entity(cfs_rq->last, left) < 1) {
+-		stats_add(&replace_wakeup_last, 1);
++		sched_stats_add(&replace_wakeup_last, 1);
+ 		/*
+ 		 * Prefer last buddy, try to return the CPU to a preempted task.
+ 		 */
+-		stats_add(&replace_wakeup_last, 1);
+-		stats_add(&next_dont_sched,
++		sched_stats_add(&replace_wakeup_last, 1);
++		sched_stats_add(&next_dont_sched,
+ 			  auto_lock_dont_sched(task_of(cfs_rq->last)));
+ 		se = cfs_rq->last;
+ 	}
+-	stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
+-	stats_add(&out_may_sched, se && !auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_may_sched, se && !auto_lock_dont_sched(task_of(se)));
+ 
+-	stats_add(&out_has_al_ctx, se && auto_lock_exists(task_of(se)));
+-	stats_add(&out_has_al, se && auto_lock_has_al(task_of(se)));
+-	stats_add(&out_is_armed, se && auto_lock_is_armed_s(task_of(se)));
++	sched_stats_add(&out_has_al_ctx, se && auto_lock_exists(task_of(se)));
++	sched_stats_add(&out_has_al, se && auto_lock_has_al(task_of(se)));
++	sched_stats_add(&out_is_armed, se && auto_lock_is_armed_s(task_of(se)));
+ 
+-	stats_add(&out_is_null, !se);
++	sched_stats_add(&out_is_null, !se);
+ 
+-	stats_print(sched_print_throttle,
++	sched_stats_print(sched_print_throttle,
+ 		    "%-24s: %10u\n"
+ 		    "%-24s: %10u\n"
+ 		    "%-24s: %10u\n"
+@@ -4833,21 +4833,21 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 	struct sched_entity *left = __pick_first_entity(cfs_rq);
+ 	struct sched_entity *se;
+ 
+-	stats_add(&total_calls, 1);
+-	stats_add(&curr_dont_sched,
++	sched_stats_add(&total_calls, 1);
++	sched_stats_add(&curr_dont_sched,
+ 		  curr && auto_lock_dont_sched(task_of(curr)));
+-	stats_add(&left_dont_sched,
++	sched_stats_add(&left_dont_sched,
+ 		  left && auto_lock_dont_sched(task_of(left)));
+ 	/*
+ 	 * If curr is set we have to see if its left of the leftmost entity
+ 	 * still in the tree, provided there was anything in the tree at all.
+ 	 */
+ 	if (!left || (curr && entity_before(curr, left))) {
+-		stats_add(&replace_left_curr_dont_sched,
++		sched_stats_add(&replace_left_curr_dont_sched,
+ 			  curr && auto_lock_dont_sched(task_of(curr)));
+-		stats_add(&replace_left_left_dont_sched,
++		sched_stats_add(&replace_left_left_dont_sched,
+ 			  left && auto_lock_dont_sched(task_of(left)));
+-		stats_add(&replace_left, 1);
++		sched_stats_add(&replace_left, 1);
+ 		left = curr;
+ 	}
+ 
+@@ -4889,30 +4889,30 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+              * Avoid running the skip buddy, if running something else can
+              * be done without getting too unfair.
+              */
+-			stats_add(&se_skip, 1);
++			sched_stats_add(&se_skip, 1);
+ 			if (se == curr) {
+-				stats_add(&se_eq_curr, 1);
++				sched_stats_add(&se_eq_curr, 1);
+ 				second = __pick_first_entity(cfs_rq);
+-				stats_add(&sec_second_dont_sched,
++				sched_stats_add(&sec_second_dont_sched,
+ 					  second && auto_lock_dont_sched(
+ 							    task_of(second)));
+ 			} else {
+-				stats_add(&se_neq_curr, 1);
++				sched_stats_add(&se_neq_curr, 1);
+ 				second = __pick_next_entity(se);
+ 				if (!second ||
+ 				    (curr && entity_before(curr, second))) {
+-					stats_add(&second_eq_curr, 1);
++					sched_stats_add(&second_eq_curr, 1);
+ 					second = curr;
+ 				}
+ 
+-				stats_add(&snc_second_dont_sched,
++				sched_stats_add(&snc_second_dont_sched,
+ 					  second && auto_lock_dont_sched(
+ 							    task_of(second)));
+ 			}
+ 
+ 			if (second && !auto_lock_dont_sched(task_of(second)) &&
+ 			    wakeup_preempt_entity(second, left) < 1) {
+-				stats_add(&replace_wakeup_second, 1);
++				sched_stats_add(&replace_wakeup_second, 1);
+ 				se = second;
+ 				goto return_good;
+ 			}
+@@ -4923,33 +4923,33 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 		/*
+ 		 * Someone really wants this to run. If it's not unfair, run it.
+ 		 */
+-		stats_add(&replace_wakeup_next, 1);
+-		stats_add(&next_dont_sched,
++		sched_stats_add(&replace_wakeup_next, 1);
++		sched_stats_add(&next_dont_sched,
+ 			  auto_lock_dont_sched(task_of(cfs_rq->next)));
+ 		se = cfs_rq->next;
+ 	} else if (cfs_rq->last &&
+ 		   wakeup_preempt_entity(cfs_rq->last, left) < 1) {
+-		stats_add(&replace_wakeup_last, 1);
++		sched_stats_add(&replace_wakeup_last, 1);
+ 		/*
+ 		 * Prefer last buddy, try to return the CPU to a preempted task.
+ 		 */
+-		stats_add(&replace_wakeup_last, 1);
+-		stats_add(&next_dont_sched,
++		sched_stats_add(&replace_wakeup_last, 1);
++		sched_stats_add(&next_dont_sched,
+ 			  auto_lock_dont_sched(task_of(cfs_rq->last)));
+ 		se = cfs_rq->last;
+ 	}
+ 
+ return_good:
+-	stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
+-	stats_add(&out_may_sched, se && !auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_may_sched, se && !auto_lock_dont_sched(task_of(se)));
+ 
+-	stats_add(&out_has_al_ctx, se && auto_lock_exists(task_of(se)));
+-	stats_add(&out_has_al, se && auto_lock_has_al(task_of(se)));
+-	stats_add(&out_is_armed, se && auto_lock_is_armed_s(task_of(se)));
++	sched_stats_add(&out_has_al_ctx, se && auto_lock_exists(task_of(se)));
++	sched_stats_add(&out_has_al, se && auto_lock_has_al(task_of(se)));
++	sched_stats_add(&out_is_armed, se && auto_lock_is_armed_s(task_of(se)));
+ 
+-	stats_add(&out_is_null, !se);
++	sched_stats_add(&out_is_null, !se);
+ 
+-	stats_print(sched_print_throttle,
++	sched_stats_print(sched_print_throttle,
+ 		    "%-24s: %10u\n"
+ 		    "%-24s: %10u\n"
+ 		    "%-24s: %10u\n"
+@@ -5092,7 +5092,7 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 	struct sched_entity *left = __pick_first_entity(cfs_rq);
+ 	struct sched_entity *se;
+ 	int dont_sched_se = 0;
+-	stats_add(&total_calls, 1);
++	sched_stats_add(&total_calls, 1);
+ 	/*
+ 	 * If curr is set we have to see if its left of the leftmost entity
+ 	 * still in the tree, provided there was anything in the tree at all.
+@@ -5161,9 +5161,9 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq,
+ 		 */
+ 		se = cfs_rq->last;
+ 	}
+-	stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
++	sched_stats_add(&out_dont_sched, se && auto_lock_dont_sched(task_of(se)));
+ 
+-	stats_print(sched_print_throttle,
++	sched_stats_print(sched_print_throttle,
+ 		    "%-24s: %10u\n"
+ 		    "%-24s: %10u\n",
+ 		    STATS_V_OUT(total_calls), STATS_V_OUT(out_dont_sched));
+-- 
+2.34.1
+

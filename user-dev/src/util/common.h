@@ -7,11 +7,14 @@
 
 #include "lib/commonlib.h"
 #include "util/attrs.h"
+#include "util/macro.h"
 #include "util/portability.h"
 #include "util/types.h"
 
-#define ALWAYS_INLINE inline __attribute__((always_inline))
-#define NEVER_INLINE  __attribute__((noinline))
+#ifdef __cplusplus
+#include <type_traits>
+#endif
+
 
 #define ALIGNED(x) __attribute__((aligned(x)))
 
@@ -34,6 +37,11 @@
 #define I_const_assert_MANY(x, ...) I_static_assert_base(x, __VA_ARGS__)
 
 #define choose_const_expr I_choose_const_expr
-
 #define check_has_include I_has_include
+
+#define ensure_const_eval(expr)                                        \
+    {                                                                  \
+        enum { CAT(CHECKING_CONSTANT_EVAL, __CURRENT__) = (expr) };    \
+    }
+
 #endif
