@@ -8,7 +8,7 @@
 
 typedef I_clh_lock_base clh_normlock_t;
 
-static typedef_func(clh_normlock_init, I_clh_lock_base_init);
+static typedef_func(clh_normlock_init, I_clh_lock_base_init0);
 static typedef_func(clh_normlock_destroy, I_clh_lock_base_destroy);
 static typedef_func(clh_normlock_trylock, I_clh_lock_base_trylock);
 static typedef_func(clh_normlock_lock, I_clh_lock_base_lock0);

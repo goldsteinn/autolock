@@ -1,5 +1,6 @@
-#ifndef _SRC__LOCKS__SIMPLE_AUTOLOCK_H_
-#define _SRC__LOCKS__SIMPLE_AUTOLOCK_H_
+#ifndef _SRC__AUTOLOCK_IMPLS__LOCKS__CUSTOM_SPIN_AUTOLOCK_H_
+#define _SRC__AUTOLOCK_IMPLS__LOCKS__CUSTOM_SPIN_AUTOLOCK_H_
+
 
 /* Where the common user-level autolock features are implemented. This
  * includes the lock type, and init/destroy/unlock/trylock functions. */
@@ -8,27 +9,30 @@
 /* The user-level lock type and functions {init|destroy|trylock|unlock}
  * are all essentially unchanging so just use alias them to common
  * defintions. */
-typedef I_user_autolock_t simple_autolock_t;
-static typedef_func(simple_autolock_init, I_user_autolock_init);
-static typedef_func(simple_autolock_destroy, I_user_autolock_destroy);
-static typedef_func(simple_autolock_trylock, I_user_autolock_trylock);
-static typedef_func(simple_autolock_unlock, I_user_autolock_unlock);
+typedef I_user_autolock_t custom_spin_autolock_t;
+static typedef_func(custom_spin_autolock_init, I_user_autolock_init);
+static typedef_func(custom_spin_autolock_destroy,
+                    I_user_autolock_destroy);
+static typedef_func(custom_spin_autolock_trylock,
+                    I_user_autolock_trylock);
+static typedef_func(custom_spin_autolock_unlock,
+                    I_user_autolock_unlock);
 
 /* Could do the above with a macro but its not that cumbersome and the
  * readability value of seeing the API defined explicitly here
  * outweights. */
 
 static NONNULL(1) int32_t
-    simple_autolock_lock(simple_autolock_t * lock) {
+    custom_spin_autolock_lock(custom_spin_autolock_t * lock) {
     struct kernel_autolock_abi * k_autolock_mem;
     /* Uncontended just grab the lock. No intialization is needed. */
-    if (simple_autolock_trylock(lock) == I_SUCCESS) {
+    if (custom_spin_autolock_trylock(lock) == I_SUCCESS) {
         return I_SUCCESS;
     }
     k_autolock_mem = autolock_init_kernel_state();
 
 
-    /* Initialize kernel for this simple_autolock. */
+    /* Initialize kernel for this custom_spin_autolock. */
 
     /* What for unlocked. */
     autolock_set_kernel_watch_for(I_UNLOCKED, k_autolock_mem);
@@ -36,8 +40,8 @@ static NONNULL(1) int32_t
     /* Schedule when equals. */
     autolock_set_kernel_watch_neq(0, k_autolock_mem);
     for (;;) {
-        /* I_simple_autolock_trylock_maybe_sched will manage enabling /
-         * disabling autolock in a safe manner. */
+        /* I_custom_spin_autolock_trylock_maybe_sched will manage
+         * enabling / disabling autolock in a safe manner. */
         if (I_internal_user_autolock_trylock_maybe_sched(
                 lock, k_autolock_mem) == 0) {
             /* watch_mem will be NULL. */

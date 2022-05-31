@@ -8,7 +8,7 @@
 
 typedef I_cptltkt_lock_base cptltkt_autolock_t;
 
-static typedef_func(cptltkt_autolock_init, I_cptltkt_lock_base_init);
+static typedef_func(cptltkt_autolock_init, I_cptltkt_lock_base_init1);
 static typedef_func(cptltkt_autolock_destroy, I_cptltkt_lock_base_destroy);
 static typedef_func(cptltkt_autolock_trylock, I_cptltkt_lock_base_trylock);
 static typedef_func(cptltkt_autolock_lock, I_cptltkt_lock_base_lock1);

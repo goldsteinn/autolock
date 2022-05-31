@@ -3,11 +3,21 @@
 
 #include "autolock-impls/internal/autolock-macro-helpers.h"
 
-#include "autolock-impls/locks/backoff-autolock.h"
+/* Custom autolocks. More so for reference than to use. */
+#include "autolock-impls/locks/custom-backoff-autolock.h"
+#include "autolock-impls/locks/custom-spin-autolock.h"
 #include "autolock-impls/locks/rseq-autolock.h"
-#include "autolock-impls/locks/simple-autolock.h"
-#include "autolock-impls/locks/ticket-autolock.h"
 
+
+/* Comparison spin locks. */
+#include "autolock-impls/locks/spin-comparisons.h"
+
+/* Simple ticket lock (bad). */
+#include "autolock-impls/locks/simple-ticket-autolock.h"
+#include "autolock-impls/locks/simple-ticket-normlock.h"
+
+
+/* Third party locks from papers. */
 #include "autolock-impls/locks/aepfl-autolock.h"
 #include "autolock-impls/locks/aepfl-normlock.h"
 #include "autolock-impls/locks/clh-autolock.h"
@@ -20,8 +30,9 @@
 /* Add any implementations here. The capitol ones are generally macros
  * that can optionally be empty or the name of a lock. */
 #define I_AUTOLOCK_IMPLS                                               \
-    simple_autolock, backoff_autolock, clh_normlock, clh_autolock,     \
-        RSEQ_AUTOLOCK, TICKET_AUTOLOCK, MCS_AUTOLOCK, MCS_NORMLOCK,    \
+    custom_spin_autolock, custom_backoff_autolock, clh_normlock,       \
+        clh_autolock, RSEQ_AUTOLOCK, SIMPLE_TICKET_AUTOLOCK,           \
+        SIMPLE_TICKET_NORMLOCK, MCS_AUTOLOCK, MCS_NORMLOCK,            \
         aepfl_autolock, aepfl_normlock, cptltkt_normlock,              \
         cptltkt_autolock,
 
@@ -58,8 +69,8 @@
     } __attribute__((may_alias));
 
 
-#define AUTOLOCK_IMPLS list_autolocks(I_AUTOLOCK_IMPLS)
+#define AUTOLOCK_IMPLS list_autolocks(I_AUTOLOCK_IMPLS), I_LOCK_COMPARISONS
 
-gen_autolocks(I_gen_autolock, I_AUTOLOCK_IMPLS);
+gen_autolocks(I_gen_autolock, AUTOLOCK_IMPLS);
 
 #endif

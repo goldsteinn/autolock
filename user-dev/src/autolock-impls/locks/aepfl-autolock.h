@@ -8,7 +8,7 @@
 
 typedef I_aepfl_lock_base aepfl_autolock_t;
 
-static typedef_func(aepfl_autolock_init, I_aepfl_lock_base_init);
+static typedef_func(aepfl_autolock_init, I_aepfl_lock_base_init1);
 static typedef_func(aepfl_autolock_destroy, I_aepfl_lock_base_destroy);
 static typedef_func(aepfl_autolock_trylock, I_aepfl_lock_base_trylock);
 static typedef_func(aepfl_autolock_lock, I_aepfl_lock_base_lock1);

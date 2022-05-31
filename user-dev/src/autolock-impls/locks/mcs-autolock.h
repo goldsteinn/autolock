@@ -8,7 +8,7 @@
 
 typedef I_mcs_lock_base mcs_autolock_t;
 
-static typedef_func(mcs_autolock_init, I_mcs_lock_base_init);
+static typedef_func(mcs_autolock_init, I_mcs_lock_base_init1);
 static typedef_func(mcs_autolock_destroy, I_mcs_lock_base_destroy);
 static typedef_func(mcs_autolock_trylock, I_mcs_lock_base_trylock);
 static typedef_func(mcs_autolock_lock, I_mcs_lock_base_lock1);
