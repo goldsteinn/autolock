@@ -161,7 +161,8 @@ main(int argc, char * argv[]) {
 
 
     if (do_list || (!run_all && lock_names.n == 0)) {
-        list_decls(&lock_list);
+        list_decls_filtered(
+            &lock_list, run_all ? NULL : lock_names.ptrs, lock_names.n);
         return 0;
     }
     else if (do_bench) {

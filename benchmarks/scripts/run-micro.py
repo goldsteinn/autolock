@@ -17,9 +17,29 @@ locks = [
 ]
 
 locks_todo = [
-    "pthread_mutex", "backoff_spinlock", "yield_backoff_spinlock",
-    "futex_backoff_spinlock", "simple_autolock", "backoff_autolock",
-    "clh_normlock", "clh_autolock"
+    "pthread_mutex",
+    "pthread_spinlock",
+    "clh_normlock",
+    "clh_autolock",
+    "aepfl_normlock",
+    "aepfl_autolock",
+    "cptltkt_normlock",
+    "cptltkt_autolock",
+    "spin_normlock",
+    "spin_autolock",
+    "yield_normlock",
+    "yield_autolock",
+    "backoff_normlock",
+    "backoff_autolock",
+    "backoff_yield_normlock",
+    "backoff_yield_autolock",
+    "backoff_yield_futex_normlock",
+    "backoff_yield_futex_autolock",
+    "backoff_futex_normlock",
+    "backoff_futex_autolock",
+    "futex_normlock",
+    "futex_autolock",
+    "yield_futex_normlock",
 ]
 
 RESULT_LEN = -1

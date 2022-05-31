@@ -53,7 +53,8 @@ build_re_wildcard_matcher(regex_t * restrict re,
 static int32_t
 is_match(regex_t const * restrict re, char const * restrict decl_name) {
     die_assert(re, "NULL re (should be impossible)!");
-    die_assert(decl_name, "NULL decl_name, issue with test struct generator!");
+    die_assert(decl_name,
+               "NULL decl_name, issue with test struct generator!");
 
     return !safe_re_exec(re, decl_name, 0, NULL, 0);
 }
@@ -81,8 +82,8 @@ should_run_decl(char const * restrict decl_name,
         }
         if (!(decl_state & decl_re_built)) {
             decl_state |=
-                (decl_re_built |
-                 build_re_wildcard_matcher(re_matchers + i, decls_to_run[i]));
+                (decl_re_built | build_re_wildcard_matcher(
+                                     re_matchers + i, decls_to_run[i]));
         }
         if (is_match(re_matchers + i, decl_name)) {
             dbg_assert(decl_states[i] != decl_do_nothing);
@@ -95,26 +96,26 @@ should_run_decl(char const * restrict decl_name,
     return has_hit;
 }
 
+static void
+print_decl(func_decl_t const * decl) {
+    fprintf(stdout, "%s\n", decl->name);
+}
+
+void
+list_decls_filtered(decl_list_t const * decl_list,
+                    char * restrict const * restrict decls_to_list,
+                    uint64_t ndecls_to_list) {
+
+    fprintf(stdout, "----------------- Listing %s ------------------\n",
+            decl_list->decl_desc);
+    run_decls(decl_list, decls_to_list, ndecls_to_list, &print_decl);
+    fprintf(stdout, "------------- Finished Listing %s -------------\n",
+            decl_list->decl_desc);
+}
 
 void
 list_decls(decl_list_t const * restrict decl_list) {
-    uint64_t            i, ndecls;
-    func_decl_t const * decls;
-    die_assert(decl_list != NULL, "Error, trying to list null decls");
-
-    ndecls = decl_list->ndecls;
-    fprintf(stdout, "----------------- Listing %s ------------------\n",
-            decl_list->decl_desc);
-
-    for (i = 0; i < ndecls; ++i) {
-        decls = decl_list->decls;
-
-        die_assert(decls[i].name && decls[i].data,
-                   "Error, unitialized decl struct!\n");
-        fprintf(stdout, "%-24s\n", decls[i].name);
-    }
-    fprintf(stdout, "------------- Finished Listing %s -------------\n",
-            decl_list->decl_desc);
+    list_decls_filtered(decl_list, NULL, 0);
 }
 
 
