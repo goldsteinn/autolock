@@ -29,7 +29,9 @@ $> sudo apt cmake install libdouble-conversion-dev libfmt-dev libgoogle-glog-dev
 
 ### Benchmark Dependencies
 ```
-$> sudo apt install patchelf libevent-dev
+$> sudo apt install patchelf libevent-dev python3-pip gcc-9 g++-9
+$> pip3 install psutil
+$> sudo pip3 install psutil # Need user and root
 ```
 **After this point NOTHING should require `sudo`.**
 

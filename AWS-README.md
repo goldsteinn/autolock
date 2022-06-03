@@ -3,7 +3,7 @@
 ```
 sudo apt update
 sudo apt install git
-sudo apt install gcc g++ flex bison
+sudo apt install gcc g++ g++-9 gcc-9 flex bison
 sudo apt install build-essential fakeroot libncurses5-dev libssl-dev ccache flex bison libelf-dev
 sudo apt install dwarves busybox qemu-system-x86
 sudo apt install patchelf
@@ -40,4 +40,4 @@ root$> modprobe kvm
 
 [With baremetal instance this is instuctions](https://github.com/aws-samples/aws-bare-metal-kvm-demo)
 
-
+**To fix this we need baremetal**
