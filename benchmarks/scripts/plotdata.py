@@ -293,7 +293,10 @@ def createGPbyProc(outpath):
     alliters = Run.alliters
     locks = Run.alldata
     everyproc = sorted([int(x) for x in allprocs.keys()])
+    colors = {'normlock': {"num": 1, "color": "red"}, 'autolock': {"num": 2, "color": "orange"}}
     everyiter = sorted(alliters.keys())
+    miny = 0.9
+    maxy = 3
     for nproc in everyproc:
         print(nproc)
         # plot per number of procs
@@ -323,9 +326,15 @@ def createGPbyProc(outpath):
         xgroup = (len(locks.keys())*2)+1
         xtotal = xgroup*len(everyiter)
         gp.write("set xrange [0:{}]\n".format(xtotal+1));
-        gp.write("set yrange [.1:20]\n");
+        gp.write("set yrange [{}:{}]\n".format(miny, maxy));
         gp.write("set style fill solid\n");
         gp.write("set boxwidth .9 relative\n");
+        colorkey = ""
+        for color in colors.keys():
+            gp.write("set linetype {} lc rgb \"{}\"\n".format(colors[color]["num"], colors[color]["color"]))
+            colorkey += "{}={}  ".format(colors[color]["color"], color)
+        gp.write("set label at first 0,{} front \"{}\"\n".format(maxy+(maxy-miny)*.1, colorkey))
+        gp.write("set key off\n")
         gp.write("set xtics rotate\n");
         gp.write("set xtics font \", 9\"\n");
         plotline = "plot 1"
@@ -333,21 +342,23 @@ def createGPbyProc(outpath):
         xoffset = 1
         for oneiter in everyiter:
             name = "out-{}-{}.gdata".format(nproc, oneiter)
-            plotline += ", '{}' using 1:2:xticlabel(3) with boxes title '{}'".format(name, oneiter)
+            plotline += ", '{}' using 1:2:4:xticlabel(3) with boxes linecolor variable title '{}'".format(name, oneiter)
             outf = open(os.path.join(outpath, name), "w")
             bestdata = denoms[oneiter].getRunData(nproc, oneiter)
+            bestlock = "{} {}".format(denoms[oneiter].base, denoms[oneiter].kind[0:4])
+            gp.write("set label at first {},{} front \"{} {}\"\n".format(xoffset, maxy-(maxy-miny)*.2, oneiter, bestlock))
             for lock in sorted(locks.keys()):
                 for kind in ['normlock', 'autolock']:
                     thisdata = locks[lock][kind].getRunData(nproc, oneiter)
                     if thisdata is None:
-                        outf.write("{}, {}, {}-{}\n".format(xoffset, '-', lock, kind))
+                        outf.write("{}, {}, {}-{}, {}\n".format(xoffset, '-', lock, kind, colors[kind]))
                     else:
-                        outf.write("{}, {}, {}-{}\n".format(xoffset, thisdata['geo']/bestdata['geo'], lock, kind))
+                        outf.write("{}, {}, {} {}\n".format(xoffset, thisdata['geo']/bestdata['geo'], lock, colors[kind]["num"]))
                     xoffset += 1
             outf.close()
             xoffset += 1
         gp.write("set terminal pdf\nset output '{}.pdf'\n".format(nproc))
-        gp.write(plotline+"\n")
+        gp.write(plotline+", 1\n")
         gp.close()
     
 
