@@ -6,14 +6,16 @@ import sys
 import re
 import json
 from pprint import pprint
-
+import os
 
 ################################################################
 # setup arguments
 parser = argparse.ArgumentParser(description='process output of micro benchmark')
 parser.add_argument("-v", "--verbosity", action="count", default=0, help="increase output verbosity")
+parser.add_argument("-o", "--targetdir", default = ".", help="where to put all gnuplot files")
 parser.add_argument("-w", "--warnIsError", action="store_true", help="don't die on warnings")
 parser.add_argument("-b", "--skipBadUsage", action="store_true", help="if start usage is too high, skip data")
+parser.add_argument("-a", "--againstBest", action="store_true", help="plot all against best")
 parser.add_argument("inputs", nargs="+", help="file containing csv data")
 flags = parser.parse_args()
 
@@ -21,6 +23,8 @@ verbose = flags.verbosity
 warnIsError = not flags.warnIsError
 inputs = flags.inputs
 skipBadUsage = flags.skipBadUsage
+againstBest = flags.againstBest
+targetdir = flags.targetdir
 
 ################################################################
 # known columns
@@ -89,6 +93,7 @@ class Run():
         key = "{}-{}".format(cs_iter, extra_iter)
         if key in self.runs[numProcs]:
             wprint(0, 0, "{} {} on {} procs with {} already exists".format(self.base, self.kind, numProcs, key))
+        # add cnt scaled to number of outer_iter's
         self.runs[numProcs][key] = {'cstart': cstart, 'cend': cend, 'min': mincnt/outer_iter, 'max': maxcnt/outer_iter, 'geo': geo/outer_iter}
 
     # generate a list of keys to find the runs, sorted
@@ -114,7 +119,6 @@ class Run():
 # process an input file
 
 def processFile(inname, infile):
-    outdata = []
     locks = {}
     reader = csv.DictReader(infile, dialect='excel')
     headers = reader.fieldnames
@@ -187,7 +191,6 @@ def processFile(inname, infile):
         norm = locks[lock]['normlock']
         auto = locks[lock]['autolock']
         runlist = norm.genRunList()
-        print(lock)
         byiters = {}
         # check thay we have auto for each normal
         for (nproc, iters) in runlist:
@@ -210,7 +213,18 @@ def processFile(inname, infile):
                                                                                                              autorun['cstart'], 
                                                                                                              norm.getCstart(nproc, oneiter)),
                                die=False)
+    Run.alldata = locks
+    Run.allprocs = allprocs
+    Run.alliters = alliters
                     
+
+# generate gnuplot files, one per lock comparing normal versus auto
+# gp files and data files in same directory
+def createGnuplotByLock(outpath):
+    allprocs = Run.allprocs
+    alliters = Run.alliters
+    locks = Run.alldata
+    outdata = []                # for potentially creating csv file
     pprint(allprocs)
     everyproc = sorted([int(x) for x in allprocs.keys()])
     line = [ 'lock', 'iters' ]
@@ -221,7 +235,7 @@ def processFile(inname, infile):
         norm = locks[lock]['normlock']
         auto = locks[lock]['autolock']
         # generate plot file
-        gp = open("out-{}.gp".format(lock), "w")
+        gp = open("{}/out-{}.gp".format(outpath, lock), "w")
         gp.write("set title \"{} (norm/auto)\"\n".format(lock))
         gp.write("set logscale x 2\n");
         gp.write("set logscale y\n");
@@ -235,7 +249,7 @@ def processFile(inname, infile):
             plotline += sepr
             plotline += "'{}' with errorlines title '{}'".format(name, oneiter)
             sepr = ", "
-            outf = open(name, "w")
+            outf = open(os.path.join(outpath, name), "w")
             line = [ lock, oneiter ]
             for nproc in everyproc:
                 normdata = norm.getRunData(nproc, oneiter)
@@ -262,7 +276,6 @@ def processFile(inname, infile):
             for line in outdata:
                 writer.writerow(line)
 
-    
     return
 
     for lock in sorted(locks.keys()):
@@ -271,6 +284,74 @@ def processFile(inname, infile):
             print(locks[lock][kind])
             
 
+################################################################
+# plot for each number of procs, the ratio of each lock against the
+# best one for that number of procs
+
+def createGPbyProc(outpath):
+    allprocs = Run.allprocs
+    alliters = Run.alliters
+    locks = Run.alldata
+    everyproc = sorted([int(x) for x in allprocs.keys()])
+    everyiter = sorted(alliters.keys())
+    for nproc in everyproc:
+        print(nproc)
+        # plot per number of procs
+        denoms = {}
+        for oneiter in everyiter:
+            # find best geo time for this iter
+            best = None
+            for lock in sorted(locks.keys()):
+                for kind in ['normlock', 'autolock']:
+                    run = locks[lock][kind]
+                    rundata = run.getRunData(nproc, oneiter)
+                    if rundata is None:
+                        continue
+                    gettime = rundata['geo']
+                    if best is None or gettime < best:
+                        best = gettime
+                        denoms[oneiter] = run
+        for x in denoms.keys():
+            print("best {} - {} {}".format(x, denoms[x].base, denoms[x].kind))
+
+        # now plot relative to best in each case
+
+        # generate plot file
+        gp = open("{}/out-{}.gp".format(outpath, nproc), "w")
+        gp.write("set title \"{} (all/best)\"\n".format(nproc))
+        gp.write("set logscale y\n");
+        xgroup = (len(locks.keys())*2)+1
+        xtotal = xgroup*len(everyiter)
+        gp.write("set xrange [0:{}]\n".format(xtotal+1));
+        gp.write("set yrange [.1:20]\n");
+        gp.write("set style fill solid\n");
+        gp.write("set boxwidth .9 relative\n");
+        gp.write("set xtics rotate\n");
+        gp.write("set xtics font \", 9\"\n");
+        plotline = "plot 1"
+        # generate the data files
+        xoffset = 1
+        for oneiter in everyiter:
+            name = "out-{}-{}.gdata".format(nproc, oneiter)
+            plotline += ", '{}' using 1:2:xticlabel(3) with boxes title '{}'".format(name, oneiter)
+            outf = open(os.path.join(outpath, name), "w")
+            bestdata = denoms[oneiter].getRunData(nproc, oneiter)
+            for lock in sorted(locks.keys()):
+                for kind in ['normlock', 'autolock']:
+                    thisdata = locks[lock][kind].getRunData(nproc, oneiter)
+                    if thisdata is None:
+                        outf.write("{}, {}, {}-{}\n".format(xoffset, '-', lock, kind))
+                    else:
+                        outf.write("{}, {}, {}-{}\n".format(xoffset, thisdata['geo']/bestdata['geo'], lock, kind))
+                    xoffset += 1
+            outf.close()
+            xoffset += 1
+        gp.write("set terminal pdf\nset output '{}.pdf'\n".format(nproc))
+        gp.write(plotline+"\n")
+        gp.close()
+    
+
+
 
 ################################################################
 # process input file names
@@ -278,3 +359,9 @@ def processFile(inname, infile):
 for name in inputs:
     with open(name, "r") as infile:
         processFile(name, infile)
+        if not os.path.isdir(targetdir):
+            os.mkdir(targetdir)
+        if againstBest:
+            createGPbyProc(targetdir)
+        else:
+            createGnuplotByLock(targetdir)
