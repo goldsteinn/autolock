@@ -45,7 +45,27 @@ locks_todo = [
     #    "yield_futex_autolock",
 ]
 
-#locks_todo = ["backoff_normlock", "backoff_autolock"]
+locks_todo = [
+    #    "pthread_spinlock",
+    "clh_normlock",
+    "clh_autolock",
+    "cptltkt_normlock",
+    "cptltkt_autolock",
+    #    "yield_normlock",
+    #    "yield_autolock",
+    "backoff_normlock",
+    "backoff_autolock",
+    "backoff_yield_normlock",
+    "backoff_yield_autolock",
+    "backoff_futex_normlock",
+    "backoff_futex_autolock",
+    #    "futex_normlock",
+    #    "futex_autolock",
+    #    "yield_futex_normlock",
+    #    "yield_futex_autolock",
+]
+
+
 RESULT_LEN = -1
 RESULT_HDR = None
 RUN_HDR = None
@@ -181,7 +201,7 @@ class Run():
         return max(len(self.cpus), 1)
 
     def custom_thread_iter(self):
-        return [len(self.cpus)]
+        return [len(self.cpus), 2 * len(self.cpus), 4 * len(self.cpus)]
 
     def thread_iter(self):
         global NUM_CPUS
@@ -287,23 +307,23 @@ while i <= min(48, NUM_CPUS):
                      [24 + x for x in range(0, int(i / 2))])
     i += i
 
-for i in [1, 2, 4]:
-    cpu_confs.append(
-        [x % min(48, NUM_CPUS) for x in range(0, min(48 * i, NUM_CPUS * i))])
-
 trials_conf = 5
 
 # total times you grab lock
 outer_iter_conf = 25 * 100 * 1000
 # critical section length
-cs_iter_confs = [1, 25]
+cs_iter_confs = [1, 10, 100]
 # other work besides lock
-extra_iter_confs = [1, 25]
+extra_iter_confs = [1, 10, 100]
 
 runs = []
 for cpu_conf in cpu_confs:
     for cs_iter_conf in cs_iter_confs:
         for extra_iter_conf in extra_iter_confs:
+            iters = cs_iter_conf + extra_iter_conf
+            if iters == 110:
+                continue
+            
             for lock in locks_todo:
                 runs.append(
                     Run(lock, cpu_conf, outer_iter_conf, cs_iter_conf,

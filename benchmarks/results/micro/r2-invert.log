@@ -1,0 +1,1121 @@
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 1 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,54255086.000000,57284120.000000,55096645.088332,1256503.532927,54615696.000000,55055858.000000,56392815.200000,56838467.600000,57194989.520000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,54298246.000000,184807798.000000,99228441.520271,40357998.061430,93916780.000000,127817893.000000,151679838.400000,168243818.200000,181495002.040000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,144684276.000000,508467154.000000,299946679.707483,105306536.984057,316294056.000000,382424132.500000,469380878.600000,493012234.800000,505376170.160000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 1 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,54357008.000000,57748970.000000,55368796.164062,1427114.728865,54587444.000000,55709716.000000,56933268.400000,57341119.200000,57667399.840000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,54292340.000000,183766858.000000,94815922.544734,37439077.227412,93841318.000000,106870827.500000,138640300.000000,161203579.000000,179254202.200000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,189271506.000000,571109864.000000,326717254.785663,132674373.703523,320505490.000000,470786171.500000,503243322.400000,559315614.000000,568751014.000000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 1 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,60108340.000000,64640984.000000,61023788.081419,2008108.192210,60174442.000000,60204278.000000,62866301.600000,63753642.800000,64463515.760000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,99317526.000000,164964248.000000,108646175.263175,20632319.783861,102353063.000000,104800619.000000,127884852.800000,146424550.400000,161256308.480000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,177254446.000000,612066858.000000,376954290.687426,121063781.196430,407892857.000000,449372483.000000,563032776.200000,594788392.900000,608611164.980000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 1 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,60089178.000000,64832508.000000,61480313.140985,2025446.988784,60382546.000000,62054126.000000,63721155.200000,64276831.600000,64721372.720000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,98891474.000000,159200526.000000,111262473.943887,23706502.967154,102448788.000000,106734301.000000,156718358.400000,157959442.200000,158952309.240000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,179841966.000000,523443578.000000,342338117.692587,120353988.008821,360340399.000000,491711421.500000,507325421.800000,512342100.300000,521223282.460000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 1 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,264697594.000000,270606084.000000,266380586.988287,2395645.425538,265675836.000000,265767608.000000,268670693.600000,269638388.800000,270412544.960000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,497988210.000000,592919330.000000,542820555.669373,37953093.503400,561119721.000000,572231546.500000,576692943.800000,584806136.900000,591296691.380000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1171669108.000000,1631788884.000000,1453698561.077817,114255297.956392,1459780490.000000,1544202628.500000,1601679603.000000,1625455482.900000,1630522203.780000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 1 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,265008992.000000,269893066.000000,266964558.043702,1939209.819516,266615060.000000,267749138.000000,269035494.800000,269464280.400000,269807308.880000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,501481772.000000,655621626.000000,570828952.185896,54988113.496718,571584505.000000,618702028.500000,634794868.200000,645208247.100000,653538950.220000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,947009318.000000,1834756540.000000,1438184856.496985,283262670.326763,1530211755.000000,1648793075.500000,1801155028.600000,1813167510.700000,1830438734.140000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 1 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,103278128.000000,108630402.000000,104452761.521987,2331292.456242,103432362.000000,103735960.000000,106672625.200000,107651513.600000,108434624.320000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,181403754.000000,323279438.000000,229530550.170693,43762996.614089,230560810.000000,256857302.500000,266474006.600000,294876722.300000,317598894.860000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,347239730.000000,955092602.000000,649948071.663842,199285108.905571,727083520.000000,841636971.500000,864576794.600000,945295504.700000,953133182.540000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 1 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,103361692.000000,107349564.000000,104271358.010568,1717684.089081,103590338.000000,103628966.000000,105861324.800000,106605444.400000,107200740.080000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,181542918.000000,325171568.000000,221617140.908696,46020560.067252,227883914.000000,244717972.000000,267248327.600000,296209947.800000,319379243.960000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,362097694.000000,1013556714.000000,688376642.093906,221210665.854995,702618987.000000,913112199.500000,1004747841.200000,1009841837.800000,1012813738.760000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 1 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,98537404.000000,102134846.000000,99719421.639393,1482227.339105,98924372.000000,100172838.000000,101350042.800000,101742444.400000,102056365.680000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,175123184.000000,309152554.000000,200411202.716169,41407102.374590,187499219.000000,216387738.000000,226220216.200000,267686385.100000,300859320.220000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,323523524.000000,969369884.000000,667710901.908667,164469567.169139,725200882.000000,792375834.000000,854078507.600000,879281446.700000,951352196.540000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 1 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,96873404.000000,102516234.000000,98547847.469308,2378999.218199,97230768.000000,99111354.000000,101154282.000000,101835258.000000,102380038.800000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,174910610.000000,310268406.000000,211240822.999324,45554747.044330,215878976.000000,217389721.500000,276783466.800000,293525936.400000,306919912.080000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,313168018.000000,958965930.000000,642001681.837730,196758326.884500,692634086.000000,829694242.000000,892702232.400000,898788579.000000,946930459.800000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 1 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1051834528.000000,1057471106.000000,1053641105.753701,2267677.787548,1053141606.000000,1053671730.000000,1055951355.600000,1056711230.800000,1057319130.960000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,2060905118.000000,3490706632.000000,2821069293.238449,512715507.756243,2922806538.000000,3305255840.500000,3402057789.400000,3446382210.700000,3481841747.740000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,4164830426.000000,11932494080.000000,8104322056.175915,2856188810.818556,9726982901.000000,10772423105.500000,11534610255.400000,11857015650.900000,11917398394.179998
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 1 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1051374184.000000,1058170710.000000,1054335440.709281,2464693.067979,1054213484.000000,1054480664.000000,1056694691.600000,1057432700.800000,1058023108.160000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2063743560.000000,3129771510.000000,2527963129.024848,528073258.219160,2583685145.000000,3066693345.000000,3073776649.200000,3101774079.600000,3124172023.920000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,4202742934.000000,12275745166.000000,7931757641.684072,2797876694.036374,9361063515.000000,10533552118.000000,11344415290.600000,12018674670.100000,12224331066.820000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 1 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1232050890.000000,1245209760.000000,1238595784.080569,6425629.472461,1238596834.000000,1244862044.000000,1245070673.600000,1245140216.800000,1245195851.360000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,2724404200.000000,4400476182.000000,3600452682.912152,588754679.374481,3737346382.000000,4011998711.500000,4387904449.200000,4394190315.599999,4399219008.720000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,9793096098.000000,16342670808.000000,14061304385.426302,1771192584.531126,14521698833.000000,15284043039.000000,15818564778.200001,16081377668.500000,16290412180.099998
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 1 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1227469952.000000,1242145658.000000,1235802142.388136,6161922.834653,1236326290.000000,1241080310.000000,1241719518.800000,1241932588.400000,1242103044.080000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2480191808.000000,4150114628.000000,3616345962.737636,521823845.461643,3805311962.000000,3996081888.500000,4149584861.000000,4149849744.500000,4150061651.300000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,8955122434.000000,17079058506.000000,14255064674.352821,2102158024.431607,14980574203.000000,15578010855.500000,16733945350.200001,17011777837.799999,17065602372.359999
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,136479780.000000,145208158.000000,140628373.948365,3007065.552963,141415609.000000,142747842.000000,143694113.200000,144451135.600000,145056753.520000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,201319840.000000,470184150.000000,330581235.441378,76180549.137944,328368005.000000,409596434.000000,431757117.800000,449106737.500000,465968667.500000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,443338656.000000,1683719656.000000,1176702921.499047,307709271.827405,1293150753.000000,1419452385.500000,1544661912.200000,1606197860.500000,1662276242.320000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,108387940.000000,139776152.000000,123856309.116865,13291343.550808,125769601.000000,135242252.500000,139330310.000000,139553231.000000,139731567.800000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,254046912.000000,463790574.000000,335454471.652856,71297631.650870,337229203.000000,416857169.500000,442626069.800000,457514414.200000,462535342.040000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,427546404.000000,1869030922.000000,1175869618.504950,355419159.412028,1249611975.000000,1479795901.000000,1652734575.400000,1707066231.300001,1861847859.880000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,138901384.000000,159034982.000000,149075046.864958,8847794.611857,149791081.000000,157286487.500000,157731591.200000,158383286.600000,158904642.920000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,267871284.000000,508564686.000000,370452321.835981,70452416.556501,378472459.000000,419397922.500000,470698074.800000,484419140.200000,503735576.840000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1061513306.000000,1864626940.000000,1501109832.017909,200716865.821274,1550249382.000000,1645677724.000000,1727275056.800000,1805815620.900000,1858316838.280000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,144396688.000000,165523112.000000,154750227.382474,10502224.330134,155675966.000000,165008430.000000,165441773.600000,165482442.800000,165514978.160000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,271579936.000000,499608562.000000,361953055.840276,77549436.295591,369283393.000000,409357210.000000,484560900.800000,486896870.400000,497066223.680000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,625115828.000000,1887324856.000000,1471608078.836783,288936769.135128,1572377915.000000,1703582922.000000,1789454981.400000,1815849518.300000,1863338333.440000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,808430656.000000,865149080.000000,836389873.410698,27532532.941173,837331751.000000,862407836.000000,863466413.000000,864307746.500000,864980813.300000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,2045880748.000000,2935760366.000000,2506246909.374432,216393834.392414,2529265924.000000,2604734970.000000,2827310094.800000,2882871456.800000,2925182584.160000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,7100985352.000000,9214126754.000000,8184999386.538908,557759807.929419,8275826854.000000,8487780804.000000,8788877936.400000,9122292775.000000,9206722531.460001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,776961222.000000,842876488.000000,810049332.007686,32663407.011811,811557417.000000,841316024.500000,842709710.800000,842793099.400000,842859810.280000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2063497376.000000,2813067196.000000,2519203792.004071,229393041.979812,2625467762.000000,2697518509.000000,2768287029.200000,2783554110.300000,2807164578.860000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,6863953016.000000,9546850652.000000,8392341109.258833,612668785.556872,8462563652.000000,8657073009.000000,9183261315.600000,9428047280.000000,9532457223.080000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,192209348.000000,232571282.000000,212294236.016278,19245348.835986,214393986.000000,230957415.500000,231577719.800000,232074500.900000,232471925.780000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,413515510.000000,814812268.000000,554793903.966978,124172310.525168,590348345.000000,617122387.000000,741335243.800000,781880113.300000,808225837.060000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,779574982.000000,3321950432.000000,2349584259.021211,650672166.688235,2652332318.000000,2844474585.000000,3143374955.200000,3220878679.700000,3293221445.480000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,206081408.000000,234502934.000000,219774311.529433,12272024.987000,221332726.000000,230522638.000000,232639836.800000,233571385.400000,234316624.280000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,356531690.000000,801125666.000000,597411402.265232,138717059.242079,652963930.000000,716815508.500000,774882382.600000,788238133.200000,798548159.440000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,824121922.000000,3205619454.000000,2340433516.161529,581034488.554765,2554393491.000000,2817212601.000000,2964906455.200000,3119799032.200000,3184666640.820000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,207698274.000000,231738938.000000,219599420.517436,10779516.870354,220440669.000000,229708538.000000,230804756.000000,231271847.000000,231645519.800000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,360797900.000000,726816802.000000,599535912.627620,90743815.294379,630544133.000000,666188747.000000,707585078.400000,720924143.900000,725638270.380000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1293988372.000000,2832680048.000000,2319367156.963227,355875231.279389,2486126525.000000,2578318227.000000,2709558616.200000,2767649970.100000,2825313636.740000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,205841828.000000,227960992.000000,217675490.048817,9635548.719468,219105132.000000,226342961.000000,227745775.000000,227853383.500000,227939470.300000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,412379580.000000,724868636.000000,550493419.850283,100670698.797442,555786514.000000,615120532.500000,710906516.800000,715976313.000000,723090171.400000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1066139778.000000,2773557532.000000,2098687943.420599,411248827.697325,2229686654.000000,2440431063.500000,2580279743.400000,2695904022.300000,2748727403.560000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1207700196.000000,2150140890.000000,1620895718.983847,479813675.190566,1690972932.000000,2136304156.500000,2138122313.400000,2144131601.700000,2148939032.340000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,3453524264.000000,8081899802.000000,5686031779.831200,1304194406.302151,5961583270.000000,6667243790.500000,7059088295.800001,7769692541.100000,8019458349.820000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,140102390.000000,846025100.000000,451959845.360619,230127314.593516,527089588.000000,707529584.500000,802315698.400000,812381080.300000,833386755.320000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1221215656.000000,2145411850.000000,1639076201.635215,466816279.628260,1717802281.000000,2137508981.000000,2144962987.600000,2145187418.800000,2145366963.760000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2234330848.000000,7042760632.000000,4602324106.421126,1601333054.161500,4838978331.000000,6201996180.000000,6877734105.800000,7028668035.600000,7039942112.719999
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,117311734.000000,789744356.000000,379776568.354312,217279982.735915,396814741.000000,617015065.000000,745691507.400000,774322403.000000,785326923.500000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 2 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1901056116.000000,2561080680.000000,2274335887.245704,280176843.833518,2428185946.000000,2523389950.500000,2531870789.400000,2546475734.700000,2558159690.940000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,5236212098.000000,9416235098.000000,7489864214.510796,1198615733.344768,7648540585.000000,8444873818.500000,8949477488.600000,9164406749.600000,9365869428.320000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,345956628.000000,1231899228.000000,900926479.152543,225695281.245477,978095903.000000,1098913025.500000,1163611472.200000,1207811320.200000,1227337095.360000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 2 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2027857150.000000,2524337790.000000,2309577379.538472,213467847.124168,2336598655.000000,2516798858.500000,2521395585.600000,2522866687.800000,2524043569.560000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,6990369968.000000,9151203064.000000,8083623032.177168,652473166.793901,8229141416.000000,8509871604.500000,8842002919.400000,9121656758.700001,9145293802.940001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,303606634.000000,1217171386.000000,761966435.520891,244373211.352482,813860960.000000,993310278.000000,1112695012.000000,1123659245.000000,1189394966.680000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,405706808.000000,444726636.000000,430243750.116815,12741276.829494,433915038.000000,436881109.500000,444341957.200000,444547916.300000,444690892.060000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,734279198.000000,1532472084.000000,1196915735.055012,182760555.629574,1222771294.000000,1339575043.000000,1379525551.200000,1487724571.500000,1521278265.780000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,2668399358.000000,6029854816.000000,4892179870.459917,739716146.271749,5209767705.000000,5433930980.000000,5611716547.400002,5890938777.000000,6010112368.400001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,352450010.000000,418744528.000000,390402691.516520,25069147.699913,395796726.000000,412732806.500000,418216791.400000,418742852.200000,418744192.840000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,759156110.000000,1780356846.000000,1355440491.272025,284824561.914886,1433428022.000000,1586738717.500000,1697996461.400000,1708028095.500000,1773963699.240000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2667932074.000000,6745010656.000000,5356893225.651022,795999504.087692,5500138644.000000,5775115640.000000,6568562841.400001,6698404834.800000,6736537547.340000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,499886892.000000,517999224.000000,510748389.728232,5221842.893030,510895266.000000,515011079.000000,517155126.800000,517718803.000000,517943139.800000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1065385570.000000,1838077756.000000,1474730956.140421,185436723.958653,1500027436.000000,1635214223.000000,1716173588.400000,1729796219.000000,1817160769.000000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,3233719142.000000,6957261930.000000,5834661346.227703,638099562.513309,6002568681.000000,6222464318.000000,6706958831.200001,6874126802.000000,6933714387.360001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,426300922.000000,500667128.000000,473400025.490467,26466239.650853,482435672.000000,492924506.500000,500464371.200000,500544047.900000,500642511.980000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1036180404.000000,1952868942.000000,1587760131.604535,216074356.784005,1658666350.000000,1751793552.000000,1824289395.000000,1882336441.000000,1949084907.720000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,3372613684.000000,7467536510.000000,6113374443.790423,890862767.449061,6254930036.000000,6893470566.000000,7295300988.000000,7387391275.100000,7452925659.080000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,2350095896.000000,2465281394.000000,2432030796.606719,47086482.866483,2457598519.000000,2462605982.000000,2463811777.200000,2464244847.100000,2465074084.620000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,5307693342.000000,7690303076.000000,6878977395.874782,528996090.133890,7044471159.000000,7183048945.000000,7444323504.200000,7647545236.700000,7675427901.920000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,370965280.000000,1047969574.000000,793421271.142602,155830736.691962,827484268.000000,924269129.500000,969385227.600000,1037650598.700000,1044381207.560000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2012903224.000000,2332645540.000000,2237855591.463352,129954048.168694,2305788382.000000,2324576323.000000,2329767661.800000,2331453461.000000,2332407124.200000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,5860931970.000000,7766673072.000000,7175812850.834732,474750313.628800,7176728440.000000,7578688549.500000,7710161545.200000,7722708493.100000,7756967423.580000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,346697458.000000,1033074096.000000,771243505.846533,144167689.249186,805127875.000000,863445186.500000,980328231.200000,1008048252.400000,1026235296.680000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,354334604.000000,589930096.000000,507374430.183183,96422107.638549,562907468.000000,585954138.000000,587413158.800000,587567997.000000,589457676.200000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,973405012.000000,2432713088.000000,1823248975.997861,351697062.386462,1861290586.000000,2129846950.500000,2286563757.000000,2385566437.500000,2419719125.720000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,3764042168.000000,9421544574.000000,7944064174.313170,1234424161.977083,8170105055.000000,9018749125.000000,9257285074.600000,9375849706.000000,9400223232.400000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,431223584.000000,581642810.000000,519831455.513884,53709187.142583,536982807.000000,560188810.000000,578157129.000000,578395204.600000,580993288.920000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1499789142.000000,2488745316.000000,1989668015.560982,273639792.399449,1990944849.000000,2239293626.500000,2381289114.000000,2415245427.200000,2485491940.680000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,3047835606.000000,9041923488.000000,7308320737.570693,1144316564.215740,7631448696.000000,8228007559.000000,8474118935.800000,8881655529.700001,9022124724.460001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,565484604.000000,644521002.000000,616316511.825185,19603866.386038,614967417.000000,631381008.500000,640621338.200000,642255578.800000,644067917.360000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1357775874.000000,2242963288.000000,1918356489.578624,188449068.255629,1953526199.000000,2040642960.000000,2118116235.400000,2174927223.200000,2233844213.620000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,2938887484.000000,8014658622.000000,6969592660.701935,914363314.491987,7222810346.000000,7668462020.000000,7904702419.800000,7994914488.900000,8004685368.120000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,469090492.000000,607556558.000000,557981612.338434,49170330.587311,588105057.000000,595898754.500000,601919298.200000,607024833.500000,607450213.100000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,889450426.000000,2206053642.000000,1737876764.604059,326222291.203514,1812596556.000000,2030584652.000000,2151725841.800000,2183074446.400000,2203901296.740000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,4729844682.000000,8698707706.000000,7460391890.193130,779159871.697518,7667537951.000000,8060591432.000000,8314965010.200000,8499325532.400000,8633502453.740000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,2883761138.000000,4495616190.000000,3742044121.839630,562969829.126049,3895504878.000000,4145152654.500000,4471828169.200000,4473430186.400000,4491178989.280000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,186997286.000000,710124072.000000,482286565.292238,115350308.931503,514259249.000000,570585101.500000,627226409.800000,637348839.900000,693803476.800000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,400862280.000000,2401398566.000000,1571851237.911028,513618862.366112,1817006201.000000,2057370204.000000,2251297666.800000,2291702333.300000,2372009123.460000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,3590567094.000000,4547967626.000000,4311895182.296494,276658137.496178,4398210895.000000,4515129894.500000,4541704604.400000,4545317135.500000,4547437527.900000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,161646288.000000,634045916.000000,396178994.154222,128156832.491713,464547147.000000,506491938.000000,555247688.800000,566887033.100000,617855711.060000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,420502822.000000,2485671122.000000,1787693202.160211,464777866.105552,1965363664.000000,2237075762.500000,2321704735.400000,2401643313.600000,2453562783.860000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 4 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,3758319718.000000,5296775306.000000,4838352707.417828,504201155.053495,5050048059.000000,5256235826.000000,5280191040.800000,5284623265.100000,5294344897.820001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,294321018.000000,657847698.000000,491776170.540705,102882556.540388,514704573.000000,589379301.000000,632727220.600000,645417543.700000,653395036.800000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,984375852.000000,2584283962.000000,2030334762.458315,354621710.505944,2164587514.000000,2320413837.000000,2423505872.600000,2484538673.900000,2549471657.680000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 4 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,4199101392.000000,5262796024.000000,4950921522.122166,303349113.111540,5045323720.000000,5231007840.000000,5250535978.000000,5256953387.200000,5261627496.640000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,343462142.000000,775144446.000000,557879991.846117,112093932.504538,575547666.000000,643892725.000000,723781597.800000,736507512.000000,774046322.220000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,745692210.000000,2592245202.000000,2034170794.970943,425265533.096096,2179085711.000000,2390930307.000000,2486741692.600000,2536227612.100000,2584836452.440000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1191486030.000000,2249077086.000000,1948302065.701296,295263670.785922,2150321449.000000,2220535351.500000,2239505264.400000,2244949252.400000,2248361220.720000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,3214193920.000000,6835650682.000000,5965000276.195176,822658406.173632,6286318963.000000,6603544275.000000,6763092644.000000,6790832370.800000,6830509798.080000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,153649754.000000,1421925002.000000,687195657.721598,319399612.677773,756401887.000000,850105644.500000,1299274663.000000,1400564909.100000,1415992575.560000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1371693002.000000,1638356562.000000,1561313269.337414,82744932.884139,1595463678.000000,1627712458.000000,1633905290.200000,1634898432.000000,1638222004.980000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,5412642456.000000,11931806562.000000,10270525802.553272,1316618337.592844,11034941144.000000,11300904969.000000,11689207296.000002,11869151033.100000,11908682599.980000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,114958296.000000,953449212.000000,661671214.022316,192086018.657969,743672711.000000,864773694.000000,908861577.400000,926917801.600000,942832512.480000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1650474026.000000,1852567966.000000,1782069876.737914,69714419.284628,1814271160.000000,1840809542.500000,1849744291.400000,1849840701.900000,1852090655.920000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,5420223648.000000,7343145864.000000,6824639635.906087,393913863.696957,6904711561.000000,7164978553.000000,7289118648.000000,7323895034.400000,7338304107.260000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,359025048.000000,1148253244.000000,806811633.319030,225322711.718793,888354125.000000,1043606319.500000,1095809398.200000,1112320488.800000,1137785705.700000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1691482456.000000,2090582914.000000,2010747393.419257,117995320.436325,2062432925.000000,2080220104.000000,2087225171.600000,2088794496.900000,2089988422.180000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,3736897434.000000,9203087998.000000,7912174761.987351,1350440072.228106,8532741727.000000,8854794785.500000,9023434313.400000,9142237130.900000,9185993063.180000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,246940072.000000,1383071066.000000,843802329.008860,274140477.161217,906886259.000000,1063275002.000000,1260744403.600000,1348452213.200000,1370905954.740000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,6570719684.000000,10569947922.000000,9459290090.494658,1268871017.886119,10446177755.000000,10552457372.500000,10566703884.799999,10569034946.299999,10569749000.160000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,469251328.000000,999025872.000000,707165753.568106,158130956.910760,690937293.000000,847945050.500000,957550644.600000,988239277.500000,997572651.200000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1250858736.000000,6173821040.000000,3813854084.222104,1253246895.229642,4130194751.000000,4865999241.000000,6030535591.200000,6103608110.100000,6167803731.080000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,7186190656.000000,10642574596.000000,9789335358.441004,869505595.509619,10323572268.000000,10497704513.500000,10621335589.200001,10633468648.400000,10642329754.780001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,294591254.000000,834382222.000000,644593047.665943,114361610.087229,654532695.000000,756237874.000000,793619890.400000,807476687.100000,833984788.800000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1293267288.000000,3444543102.000000,2865470046.895496,470634466.967088,3082580878.000000,3290597239.500000,3366856902.000000,3389183388.700000,3439928751.380000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1053115138.000000,1915886436.000000,1656220757.416672,268307116.658146,1786103159.000000,1891884146.500000,1900845144.800000,1905041407.100000,1915150905.360000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,5513668542.000000,8405240140.000000,7630963541.827439,646434289.087142,7840264859.000000,8146283720.000000,8302522523.400001,8364056681.800000,8381829098.300000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,327279764.000000,1270277380.000000,845997125.709122,225365474.818006,922265793.000000,1043105219.500000,1128754966.000000,1235972584.100000,1264656569.760000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1578112770.000000,1982275768.000000,1837024575.015985,133827029.817679,1885509750.000000,1962500885.000000,1967989048.400000,1975477323.200000,1980629475.820000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,3530488084.000000,7184012190.000000,5741861243.931375,977072943.470595,6146963349.000000,6634410039.000000,6797386795.800000,7050463488.500000,7177876757.700000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,149882694.000000,1734086630.000000,981721042.582117,465496956.125181,1114202242.000000,1588091228.500000,1678579097.400000,1710780935.800000,1726514490.720000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1520528958.000000,2194269162.000000,1969530605.987666,200978019.067106,2045915527.000000,2150045945.000000,2182613316.400000,2184142486.000000,2192807339.820000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,4060798112.000000,10390115428.000000,8037776271.802296,1608229312.034156,8095900219.000000,9837869786.000000,10277480029.000000,10317599841.400000,10361263880.660000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,273918600.000000,2511833544.000000,1363940345.330674,557063758.940524,1494831460.000000,1867280447.500000,2354255578.000000,2457149675.900000,2509994246.720000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1378303274.000000,3813029518.000000,2961928004.235348,687538296.147749,3162432757.000000,3716410224.500000,3757635914.000000,3792083508.700000,3806494914.340000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,5076103638.000000,10997217190.000000,8735979840.478342,1264399461.368485,9010784020.000000,9314547239.000000,10766968492.799999,10912557778.900000,10988922131.539999
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,243453132.000000,1467869660.000000,887409358.080952,268743792.372422,940412440.000000,1100996654.500000,1315918985.200000,1430845362.300000,1452118480.720000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,4263346606.000000,10600280840.000000,8454921051.389121,1463506419.781581,9121214971.000000,9385261700.500000,10129244577.000000,10475846291.900000,10595749381.639999
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,487685456.000000,1345212166.000000,1030277646.159036,177454221.032916,1075118648.000000,1169749501.500000,1225965654.000000,1267638226.500000,1324108873.880000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,246658592.000000,6525152196.000000,4928602675.391398,1119395208.916218,5434434770.000000,5903811001.500000,6293750480.800000,6374262703.700000,6513789192.460000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,6132253960.000000,9221352538.000000,8411005109.302333,798970596.238107,8763209300.000000,9099860085.000000,9196201020.600000,9217123061.799999,9221106124.299999
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,392839768.000000,1483976970.000000,1156953041.498873,205474775.154606,1222951396.000000,1304329407.000000,1390221924.600000,1430226381.500000,1454444242.000000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2110807088.000000,6125893898.000000,4551959687.999398,837628929.346007,4781635926.000000,5221731516.000000,5536899987.800000,5792720149.400001,6106202941.080000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 8 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,8222708854.000000,12608366744.000000,10902211269.789597,1131616917.520314,10970535148.000000,11567776344.500000,12520695306.000000,12564683387.799999,12602463210.260000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,662785308.000000,1548771934.000000,1265991237.039178,173368978.145130,1315669085.000000,1374111683.500000,1437832347.600000,1473087872.500000,1518278716.100000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1629027980.000000,5585166340.000000,4037012464.213215,851259330.760900,4158781640.000000,4904364015.500000,5194502289.000000,5359955639.600000,5506489081.960000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 8 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,7739433166.000000,10749195212.000000,9700615495.258984,914207965.614871,10063540834.000000,10441278738.500000,10704766183.200001,10723002337.600000,10739747575.100000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,545203340.000000,1435891362.000000,1090906022.460541,197962021.741352,1106871124.000000,1263881089.000000,1354729069.600000,1404240472.900000,1434028235.480000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1917953950.000000,6184030734.000000,4528671053.476772,877013285.652011,4723274804.000000,5180874088.500000,5657197882.800000,5956464444.300000,6163779459.660000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1625031738.000000,8360718264.000000,7359317729.167625,1510337351.272290,8210080779.000000,8285244279.000000,8319925840.200000,8336063611.900000,8359477268.800000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,114413798.000000,1355932748.000000,1009183254.639901,289629973.639437,1197874631.000000,1272258158.000000,1317605563.000000,1345687302.600000,1354389047.740000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,494496586.000000,4946312374.000000,3575826901.950031,1141305079.690779,4381049309.000000,4606127911.000000,4801697368.000000,4905212649.600000,4932241967.960000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1747048550.000000,8514210726.000000,7597310374.018001,1561977088.961768,8420512742.000000,8471249076.500000,8487889006.000000,8504799423.300000,8512303027.680000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,115883958.000000,1192116582.000000,911482389.382408,185349641.729062,973156994.000000,1033133292.000000,1125976532.800000,1185712974.900000,1191948290.800000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 1 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,419814410.000000,5120761292.000000,3943606408.620890,982700273.914887,4467361311.000000,4705760761.000000,5067951617.400000,5099520196.600000,5119734728.280000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,2526745464.000000,10906008172.000000,9128588558.349827,1697276672.492333,9808737299.000000,10476365971.000000,10721080382.000000,10889200306.000000,10904808256.799999
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,497571240.000000,1389800022.000000,1122381242.738630,208025421.710510,1179567719.000000,1307810740.500000,1357350097.200000,1376122501.200000,1388647811.140000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,651206678.000000,7900881302.000000,6010250111.519583,1430150202.890677,6800908775.000000,7372020124.000000,7759643558.000000,7861031326.100000,7894872009.400001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2012935826.000000,10612062006.000000,8962854411.775963,1834302383.815047,9778187040.000000,10443553507.000000,10517164038.400000,10592972452.500000,10611910070.040001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,678454330.000000,1638411030.000000,1228617847.207915,176548438.819105,1223294657.000000,1309312918.500000,1548590407.800000,1581557880.200000,1637043430.820000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 10 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2629989292.000000,6253161130.000000,5536733332.800563,647149244.580866,5757713819.000000,6025075109.500000,6185770537.400000,6218567055.100000,6249433557.820001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,538935638.000000,717705054.000000,651546129.636564,58846613.406134,675102165.000000,710609403.500000,716942170.800000,717185833.600000,717591984.460000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,639142278.000000,3028171980.000000,2434815688.508253,419075386.683178,2467366131.000000,2720990206.000000,2966591970.000000,3015128250.100000,3027932743.740000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,5008746902.000000,13922705304.000000,12237538857.007446,1533005047.899930,12931496732.000000,13300860061.500000,13584080895.000000,13769514639.900000,13906299816.540001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,497654508.000000,687909814.000000,609972899.410076,44298621.654832,612360641.000000,642895884.000000,669560269.000000,681810834.500000,687708182.300000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,862293300.000000,3995226672.000000,2664060356.202465,877083233.552242,3334383014.000000,3534659647.500000,3939443298.000000,3974367344.700000,3994624825.180000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 1 --extra-iter 100 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,1895784558.000000,12389483028.000000,10446763560.527662,2027561903.622689,11580775493.000000,12062215005.000000,12200750279.799999,12343715216.500000,12374394499.480000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,89458928.000000,308033326.000000,251450314.559795,48604532.611105,283495838.000000,293147987.000000,298669396.600000,305926217.100000,307806144.120000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,345836600.000000,1841529380.000000,1316721490.831055,332693971.752840,1444062968.000000,1600210818.000000,1786947917.200000,1818463537.500000,1833970841.120000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,333465580.000000,5839108122.000000,4403957262.923435,1238673666.165596,5256141211.000000,5531221541.500000,5723805257.000000,5763543271.900000,5832613872.179999
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2277515648.000000,10532074400.000000,8993154978.096388,1934849018.200995,10060249404.000000,10476187262.000000,10514308196.600000,10524728935.200001,10530294487.340000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,166507834.000000,1472319890.000000,1024106746.433005,307726600.594977,1187179156.000000,1336388903.000000,1388351825.200000,1411572251.200000,1471588290.200000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 1 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,644005534.000000,6476820302.000000,5114247398.031517,1255607182.302567,5705610343.000000,6213782267.000000,6343105485.400000,6431764374.900000,6462954332.740000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1970726082.000000,11946427120.000000,10511743239.532831,2134297715.164517,11670318983.000000,11853029674.500000,11914829183.000000,11934539279.500000,11945583104.540001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,131964676.000000,1670287142.000000,1348157406.867469,308735357.918151,1522959162.000000,1586757990.500000,1619262032.400000,1656268082.000000,1669288580.080000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1755472678.000000,7992812536.000000,6197274665.162882,1396138087.838695,6827572086.000000,7193603258.000000,7826281756.000000,7942056763.600000,7984434903.340000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,3335274690.000000,14316786106.000000,11898619862.174683,2729143724.185901,13923857175.000000,14227296366.000000,14290773540.000000,14308264396.400000,14316205503.400000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,241480140.000000,1361014842.000000,1009626375.485012,221521582.555150,1093782774.000000,1214013377.000000,1263946422.000000,1304793003.200000,1360008340.040000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 10 --extra-iter 10 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,440160242.000000,7314378974.000000,5366966317.515864,1494136085.810238,5954364683.000000,6835320184.500000,7090141740.200000,7225585254.700001,7294220913.000000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,358078834.000000,875413282.000000,684938693.237095,120892322.939273,713578616.000000,798995295.500000,839437419.600000,848309535.700000,869790099.920000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1099320622.000000,4263559102.000000,3114305227.816910,825020556.855911,3452311248.000000,3910730907.000000,4119048120.400000,4176911464.800000,4253085306.040000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,5411639284.000000,16400433336.000000,12731096506.319206,2822784995.479268,14068818753.000000,15403456867.000000,16042514095.200001,16210942913.800001,16384591056.200001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,422332766.000000,747618370.000000,630569127.125678,88040515.485029,647327320.000000,715206076.500000,731913385.000000,738758775.000000,745409767.000000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,448533016.000000,3167488892.000000,2283993338.726415,674495551.736242,2691024938.000000,2930266836.000000,3011374778.200000,3059600786.400000,3141648040.100000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 1 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,4304417738.000000,17167713718.000000,13479425892.740234,2518332361.589647,14101536537.000000,15635012770.500000,16612734451.000000,16769222741.000000,17130679368.700001
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,383213234.000000,1025030344.000000,738177902.779176,147550435.706203,768799543.000000,866245579.500000,931152286.200000,977641844.000000,1006594453.700000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 32 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,1487918032.000000,4026287486.000000,3149321418.078614,449774386.003284,3230917547.000000,3476060265.000000,3679913942.200000,3839584725.500000,3996936733.820000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 4000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 64 backoff_normlock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,8059596.000000,420572378.000000,134301835.098635,105389288.779850,172021526.000000,263789635.500000,312149760.600000,375464825.500000,413667597.540000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 16 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,327191786.000000,1014515838.000000,831936949.377634,132669734.795508,875335851.000000,938415819.500000,972286657.400000,983675070.200000,1014297440.920000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 32 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,2018437096.000000,3679409674.000000,3041741153.456121,372624330.075061,3122948966.000000,3332639559.000000,3499625038.200000,3536696961.500000,3639522427.340000
+
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 2500000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+sudo ./qemu-script.sh r "./user-bin/driver --cpus 0,1,2,3,4,5,6,7,24,25,26,27,28,29,30,31 --csv --outer-iter 100000 --cs-iter 100 --extra-iter 100 -t 5 --bench  -T 64 backoff_autolock > .tmp-result-out"
+lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_autolock,4953482336.000000,19537274354.000000,13022245205.163212,3481905374.767182,13479312663.000000,15763784646.000000,18939077544.400002,19199590253.299999,19500915318.220001
+
+lock,cpu_mask,is_pinned,cs_iter,extra_iter,trials,outer_iter,nthreads,ns_start,ns_end,cpu_usage_start,cpu_usage_end,lock,min,max,geomean,stdev,median,p75,p90,p95,p99
+backoff_normlock,0x1,1,1,1,5,2500000,1,1654480528383165792,1654480531036366521,0.0,1.5,backoff_normlock,54255086.000000,57284120.000000,55096645.088332,1256503.532927,54615696.000000,55055858.000000,56392815.200000,56838467.600000,57194989.520000
+backoff_normlock,0x1,1,1,1,5,2500000,2,1654480532039205148,1654480534656752243,0.0,1.8,backoff_normlock,54298246.000000,184807798.000000,99228441.520271,40357998.061430,93916780.000000,127817893.000000,151679838.400000,168243818.200000,181495002.040000
+backoff_normlock,0x1,1,1,1,5,2500000,4,1654480535659757989,1654480538820207949,0.0,1.4,backoff_normlock,144684276.000000,508467154.000000,299946679.707483,105306536.984057,316294056.000000,382424132.500000,469380878.600000,493012234.800000,505376170.160000
+backoff_autolock,0x1,1,1,1,5,2500000,1,1654480539823256977,1654480542255997830,0.0,1.8,backoff_autolock,54357008.000000,57748970.000000,55368796.164062,1427114.728865,54587444.000000,55709716.000000,56933268.400000,57341119.200000,57667399.840000
+backoff_autolock,0x1,1,1,1,5,2500000,2,1654480543259305370,1654480545840025170,0.0,1.7,backoff_autolock,54292340.000000,183766858.000000,94815922.544734,37439077.227412,93841318.000000,106870827.500000,138640300.000000,161203579.000000,179254202.200000
+backoff_autolock,0x1,1,1,1,5,2500000,4,1654480546843013124,1654480550071990601,0.0,1.4,backoff_autolock,189271506.000000,571109864.000000,326717254.785663,132674373.703523,320505490.000000,470786171.500000,503243322.400000,559315614.000000,568751014.000000
+backoff_normlock,0x1,1,1,10,5,2500000,1,1654480551075072988,1654480553527836531,0.0,1.8,backoff_normlock,60108340.000000,64640984.000000,61023788.081419,2008108.192210,60174442.000000,60204278.000000,62866301.600000,63753642.800000,64463515.760000
+backoff_normlock,0x1,1,1,10,5,2500000,2,1654480554530778080,1654480557175896831,0.0,1.7,backoff_normlock,99317526.000000,164964248.000000,108646175.263175,20632319.783861,102353063.000000,104800619.000000,127884852.800000,146424550.400000,161256308.480000
+backoff_normlock,0x1,1,1,10,5,2500000,4,1654480558178972800,1654480561348055083,0.0,1.5,backoff_normlock,177254446.000000,612066858.000000,376954290.687426,121063781.196430,407892857.000000,449372483.000000,563032776.200000,594788392.900000,608611164.980000
+backoff_autolock,0x1,1,1,10,5,2500000,1,1654480562351136212,1654480564796162905,0.0,1.7,backoff_autolock,60089178.000000,64832508.000000,61480313.140985,2025446.988784,60382546.000000,62054126.000000,63721155.200000,64276831.600000,64721372.720000
+backoff_autolock,0x1,1,1,10,5,2500000,2,1654480565799151480,1654480568431945080,0.0,1.6,backoff_autolock,98891474.000000,159200526.000000,111262473.943887,23706502.967154,102448788.000000,106734301.000000,156718358.400000,157959442.200000,158952309.240000
+backoff_autolock,0x1,1,1,10,5,2500000,4,1654480569434940136,1654480572659781506,0.0,1.5,backoff_autolock,179841966.000000,523443578.000000,342338117.692587,120353988.008821,360340399.000000,491711421.500000,507325421.800000,512342100.300000,521223282.460000
+backoff_normlock,0x1,1,1,100,5,2500000,1,1654480573662730038,1654480576460085750,0.0,1.5,backoff_normlock,264697594.000000,270606084.000000,266380586.988287,2395645.425538,265675836.000000,265767608.000000,268670693.600000,269638388.800000,270412544.960000
+backoff_normlock,0x1,1,1,100,5,2500000,2,1654480577463076509,1654480580819957177,0.0,1.5,backoff_normlock,497988210.000000,592919330.000000,542820555.669373,37953093.503400,561119721.000000,572231546.500000,576692943.800000,584806136.900000,591296691.380000
+backoff_normlock,0x1,1,1,100,5,2500000,4,1654480581822805880,1654480586747919309,0.0,1.3,backoff_normlock,1171669108.000000,1631788884.000000,1453698561.077817,114255297.956392,1459780490.000000,1544202628.500000,1601679603.000000,1625455482.900000,1630522203.780000
+backoff_autolock,0x1,1,1,100,5,2500000,1,1654480587751028237,1654480590559985827,0.0,1.6,backoff_autolock,265008992.000000,269893066.000000,266964558.043702,1939209.819516,266615060.000000,267749138.000000,269035494.800000,269464280.400000,269807308.880000
+backoff_autolock,0x1,1,1,100,5,2500000,2,1654480591563055585,1654480594956166491,0.0,1.5,backoff_autolock,501481772.000000,655621626.000000,570828952.185896,54988113.496718,571584505.000000,618702028.500000,634794868.200000,645208247.100000,653538950.220000
+backoff_autolock,0x1,1,1,100,5,2500000,4,1654480595959254396,1654480601184024465,0.0,1.3,backoff_autolock,947009318.000000,1834756540.000000,1438184856.496985,283262670.326763,1530211755.000000,1648793075.500000,1801155028.600000,1813167510.700000,1830438734.140000
+backoff_normlock,0x1,1,10,1,5,2500000,1,1654480602186952472,1654480604704132027,0.0,1.6,backoff_normlock,103278128.000000,108630402.000000,104452761.521987,2331292.456242,103432362.000000,103735960.000000,106672625.200000,107651513.600000,108434624.320000
+backoff_normlock,0x1,1,10,1,5,2500000,2,1654480605707162166,1654480608592088046,0.0,1.6,backoff_normlock,181403754.000000,323279438.000000,229530550.170693,43762996.614089,230560810.000000,256857302.500000,266474006.600000,294876722.300000,317598894.860000
+backoff_normlock,0x1,1,10,1,5,2500000,4,1654480609595025716,1654480613556355248,0.0,1.4,backoff_normlock,347239730.000000,955092602.000000,649948071.663842,199285108.905571,727083520.000000,841636971.500000,864576794.600000,945295504.700000,953133182.540000
+backoff_autolock,0x1,1,10,1,5,2500000,1,1654480614559378703,1654480617068010255,0.0,1.6,backoff_autolock,103361692.000000,107349564.000000,104271358.010568,1717684.089081,103590338.000000,103628966.000000,105861324.800000,106605444.400000,107200740.080000
+backoff_autolock,0x1,1,10,1,5,2500000,2,1654480618070868948,1654480620923951962,0.0,1.5,backoff_autolock,181542918.000000,325171568.000000,221617140.908696,46020560.067252,227883914.000000,244717972.000000,267248327.600000,296209947.800000,319379243.960000
+backoff_autolock,0x1,1,10,1,5,2500000,4,1654480621926788858,1654480625971774584,0.0,1.3,backoff_autolock,362097694.000000,1013556714.000000,688376642.093906,221210665.854995,702618987.000000,913112199.500000,1004747841.200000,1009841837.800000,1012813738.760000
+backoff_normlock,0x1,1,10,10,5,2500000,1,1654480626974757327,1654480629508187023,0.0,1.7,backoff_normlock,98537404.000000,102134846.000000,99719421.639393,1482227.339105,98924372.000000,100172838.000000,101350042.800000,101742444.400000,102056365.680000
+backoff_normlock,0x1,1,10,10,5,2500000,2,1654480630511153498,1654480633308125776,0.0,1.6,backoff_normlock,175123184.000000,309152554.000000,200411202.716169,41407102.374590,187499219.000000,216387738.000000,226220216.200000,267686385.100000,300859320.220000
+backoff_normlock,0x1,1,10,10,5,2500000,4,1654480634311049503,1654480638124249828,0.0,1.4,backoff_normlock,323523524.000000,969369884.000000,667710901.908667,164469567.169139,725200882.000000,792375834.000000,854078507.600000,879281446.700000,951352196.540000
+backoff_autolock,0x1,1,10,10,5,2500000,1,1654480639127323974,1654480641636213302,0.0,1.6,backoff_autolock,96873404.000000,102516234.000000,98547847.469308,2378999.218199,97230768.000000,99111354.000000,101154282.000000,101835258.000000,102380038.800000
+backoff_autolock,0x1,1,10,10,5,2500000,2,1654480642639209642,1654480645459845150,0.0,1.6,backoff_autolock,174910610.000000,310268406.000000,211240822.999324,45554747.044330,215878976.000000,217389721.500000,276783466.800000,293525936.400000,306919912.080000
+backoff_autolock,0x1,1,10,10,5,2500000,4,1654480646462769500,1654480650323847098,0.0,1.4,backoff_autolock,313168018.000000,958965930.000000,642001681.837730,196758326.884500,692634086.000000,829694242.000000,892702232.400000,898788579.000000,946930459.800000
+backoff_normlock,0x1,1,100,1,5,2500000,1,1654480651326758657,1654480655448191463,0.0,1.4,backoff_normlock,1051834528.000000,1057471106.000000,1053641105.753701,2267677.787548,1053141606.000000,1053671730.000000,1055951355.600000,1056711230.800000,1057319130.960000
+backoff_normlock,0x1,1,100,1,5,2500000,2,1654480656451134511,1654480664348116764,0.0,1.2,backoff_normlock,2060905118.000000,3490706632.000000,2821069293.238449,512715507.756243,2922806538.000000,3305255840.500000,3402057789.400000,3446382210.700000,3481841747.740000
+backoff_normlock,0x1,1,100,1,5,2500000,4,1654480665351010924,1654480686587686406,0.0,1.1,backoff_normlock,4164830426.000000,11932494080.000000,8104322056.175915,2856188810.818556,9726982901.000000,10772423105.500000,11534610255.400000,11857015650.900000,11917398394.179998
+backoff_autolock,0x1,1,100,1,5,2500000,1,1654480687590615887,1654480691708232789,0.0,1.4,backoff_autolock,1051374184.000000,1058170710.000000,1054335440.709281,2464693.067979,1054213484.000000,1054480664.000000,1056694691.600000,1057432700.800000,1058023108.160000
+backoff_autolock,0x1,1,100,1,5,2500000,2,1654480692711272265,1654480700287652729,0.0,1.3,backoff_autolock,2063743560.000000,3129771510.000000,2527963129.024848,528073258.219160,2583685145.000000,3066693345.000000,3073776649.200000,3101774079.600000,3124172023.920000
+backoff_autolock,0x1,1,100,1,5,2500000,4,1654480701290569899,1654480722107800602,0.0,1.1,backoff_autolock,4202742934.000000,12275745166.000000,7931757641.684072,2797876694.036374,9361063515.000000,10533552118.000000,11344415290.600000,12018674670.100000,12224331066.820000
+backoff_normlock,0x1,1,100,100,5,2500000,1,1654480723110677129,1654480727528396506,0.0,1.4,backoff_normlock,1232050890.000000,1245209760.000000,1238595784.080569,6425629.472461,1238596834.000000,1244862044.000000,1245070673.600000,1245140216.800000,1245195851.360000
+backoff_normlock,0x1,1,100,100,5,2500000,2,1654480728531436923,1654480737615716377,0.0,1.3,backoff_normlock,2724404200.000000,4400476182.000000,3600452682.912152,588754679.374481,3737346382.000000,4011998711.500000,4387904449.200000,4394190315.599999,4399219008.720000
+backoff_normlock,0x1,1,100,100,5,2500000,4,1654480738618565036,1654480766563934374,0.0,1.1,backoff_normlock,9793096098.000000,16342670808.000000,14061304385.426302,1771192584.531126,14521698833.000000,15284043039.000000,15818564778.200001,16081377668.500000,16290412180.099998
+backoff_autolock,0x1,1,100,100,5,2500000,1,1654480767566940052,1654480771991923877,0.0,2.0,backoff_autolock,1227469952.000000,1242145658.000000,1235802142.388136,6161922.834653,1236326290.000000,1241080310.000000,1241719518.800000,1241932588.400000,1242103044.080000
+backoff_autolock,0x1,1,100,100,5,2500000,2,1654480772995028547,1654480781980116247,0.0,1.2,backoff_autolock,2480191808.000000,4150114628.000000,3616345962.737636,521823845.461643,3805311962.000000,3996081888.500000,4149584861.000000,4149849744.500000,4150061651.300000
+backoff_autolock,0x1,1,100,100,5,2500000,4,1654480782983097555,1654480811304177199,0.0,1.1,backoff_autolock,8955122434.000000,17079058506.000000,14255064674.352821,2102158024.431607,14980574203.000000,15578010855.500000,16733945350.200001,17011777837.799999,17065602372.359999
+backoff_normlock,0x3,1,1,1,5,2500000,2,1654480812307177110,1654480814911921617,0.0,1.7,backoff_normlock,136479780.000000,145208158.000000,140628373.948365,3007065.552963,141415609.000000,142747842.000000,143694113.200000,144451135.600000,145056753.520000
+backoff_normlock,0x3,1,1,1,5,2500000,4,1654480815915314788,1654480818955814105,0.0,1.8,backoff_normlock,201319840.000000,470184150.000000,330581235.441378,76180549.137944,328368005.000000,409596434.000000,431757117.800000,449106737.500000,465968667.500000
+backoff_normlock,0x3,1,1,1,5,2500000,8,1654480819958736134,1654480824843864328,0.0,1.9,backoff_normlock,443338656.000000,1683719656.000000,1176702921.499047,307709271.827405,1293150753.000000,1419452385.500000,1544661912.200000,1606197860.500000,1662276242.320000
+backoff_autolock,0x3,1,1,1,5,2500000,2,1654480825846970694,1654480828415998393,0.0,1.7,backoff_autolock,108387940.000000,139776152.000000,123856309.116865,13291343.550808,125769601.000000,135242252.500000,139330310.000000,139553231.000000,139731567.800000
+backoff_autolock,0x3,1,1,1,5,2500000,4,1654480829419522340,1654480832495962053,0.0,1.8,backoff_autolock,254046912.000000,463790574.000000,335454471.652856,71297631.650870,337229203.000000,416857169.500000,442626069.800000,457514414.200000,462535342.040000
+backoff_autolock,0x3,1,1,1,5,2500000,8,1654480833498977308,1654480838420028179,0.0,1.9,backoff_autolock,427546404.000000,1869030922.000000,1175869618.504950,355419159.412028,1249611975.000000,1479795901.000000,1652734575.400000,1707066231.300001,1861847859.880000
+backoff_normlock,0x3,1,1,10,5,2500000,2,1654480839422858479,1654480842015927551,0.0,1.8,backoff_normlock,138901384.000000,159034982.000000,149075046.864958,8847794.611857,149791081.000000,157286487.500000,157731591.200000,158383286.600000,158904642.920000
+backoff_normlock,0x3,1,1,10,5,2500000,4,1654480843018955775,1654480846155835416,0.0,1.7,backoff_normlock,267871284.000000,508564686.000000,370452321.835981,70452416.556501,378472459.000000,419397922.500000,470698074.800000,484419140.200000,503735576.840000
+backoff_normlock,0x3,1,1,10,5,2500000,8,1654480847158714944,1654480852376230051,0.0,1.9,backoff_normlock,1061513306.000000,1864626940.000000,1501109832.017909,200716865.821274,1550249382.000000,1645677724.000000,1727275056.800000,1805815620.900000,1858316838.280000
+backoff_autolock,0x3,1,1,10,5,2500000,2,1654480853379339320,1654480856039994577,0.0,1.8,backoff_autolock,144396688.000000,165523112.000000,154750227.382474,10502224.330134,155675966.000000,165008430.000000,165441773.600000,165482442.800000,165514978.160000
+backoff_autolock,0x3,1,1,10,5,2500000,4,1654480857042980331,1654480860163870900,0.0,1.7,backoff_autolock,271579936.000000,499608562.000000,361953055.840276,77549436.295591,369283393.000000,409357210.000000,484560900.800000,486896870.400000,497066223.680000
+backoff_autolock,0x3,1,1,10,5,2500000,8,1654480861166960931,1654480866480003361,0.0,1.9,backoff_autolock,625115828.000000,1887324856.000000,1471608078.836783,288936769.135128,1572377915.000000,1703582922.000000,1789454981.400000,1815849518.300000,1863338333.440000
+backoff_normlock,0x3,1,1,100,5,2500000,2,1654480867483015218,1654480871268116658,0.0,1.7,backoff_normlock,808430656.000000,865149080.000000,836389873.410698,27532532.941173,837331751.000000,862407836.000000,863466413.000000,864307746.500000,864980813.300000
+backoff_normlock,0x3,1,1,100,5,2500000,4,1654480872271123968,1654480879091992024,0.0,1.9,backoff_normlock,2045880748.000000,2935760366.000000,2506246909.374432,216393834.392414,2529265924.000000,2604734970.000000,2827310094.800000,2882871456.800000,2925182584.160000
+backoff_normlock,0x3,1,1,100,5,2500000,8,1654480880095445945,1654480896912078544,0.0,2.2,backoff_normlock,7100985352.000000,9214126754.000000,8184999386.538908,557759807.929419,8275826854.000000,8487780804.000000,8788877936.400000,9122292775.000000,9206722531.460001
+backoff_autolock,0x3,1,1,100,5,2500000,2,1654480897915035486,1654480901683894361,0.0,1.9,backoff_autolock,776961222.000000,842876488.000000,810049332.007686,32663407.011811,811557417.000000,841316024.500000,842709710.800000,842793099.400000,842859810.280000
+backoff_autolock,0x3,1,1,100,5,2500000,4,1654480902686765264,1654480909451966444,0.0,1.9,backoff_autolock,2063497376.000000,2813067196.000000,2519203792.004071,229393041.979812,2625467762.000000,2697518509.000000,2768287029.200000,2783554110.300000,2807164578.860000
+backoff_autolock,0x3,1,1,100,5,2500000,8,1654480910454968182,1654480927611714018,0.0,2.0,backoff_autolock,6863953016.000000,9546850652.000000,8392341109.258833,612668785.556872,8462563652.000000,8657073009.000000,9183261315.600000,9428047280.000000,9532457223.080000
+backoff_normlock,0x3,1,10,1,5,2500000,2,1654480928614689652,1654480931372247542,0.0,1.8,backoff_normlock,192209348.000000,232571282.000000,212294236.016278,19245348.835986,214393986.000000,230957415.500000,231577719.800000,232074500.900000,232471925.780000
+backoff_normlock,0x3,1,10,1,5,2500000,4,1654480932375329269,1654480935928089571,0.0,1.8,backoff_normlock,413515510.000000,814812268.000000,554793903.966978,124172310.525168,590348345.000000,617122387.000000,741335243.800000,781880113.300000,808225837.060000
+backoff_normlock,0x3,1,10,1,5,2500000,8,1654480936930988927,1654480944236065434,0.0,1.9,backoff_normlock,779574982.000000,3321950432.000000,2349584259.021211,650672166.688235,2652332318.000000,2844474585.000000,3143374955.200000,3220878679.700000,3293221445.480000
+backoff_autolock,0x3,1,10,1,5,2500000,2,1654480945239050689,1654480947956115082,0.0,1.8,backoff_autolock,206081408.000000,234502934.000000,219774311.529433,12272024.987000,221332726.000000,230522638.000000,232639836.800000,233571385.400000,234316624.280000
+backoff_autolock,0x3,1,10,1,5,2500000,4,1654480948959101116,1654480952547631058,0.0,1.8,backoff_autolock,356531690.000000,801125666.000000,597411402.265232,138717059.242079,652963930.000000,716815508.500000,774882382.600000,788238133.200000,798548159.440000
+backoff_autolock,0x3,1,10,1,5,2500000,8,1654480953550586450,1654480960716144275,0.0,1.9,backoff_autolock,824121922.000000,3205619454.000000,2340433516.161529,581034488.554765,2554393491.000000,2817212601.000000,2964906455.200000,3119799032.200000,3184666640.820000
+backoff_normlock,0x3,1,10,10,5,2500000,2,1654480961719079631,1654480964456141681,0.0,1.8,backoff_normlock,207698274.000000,231738938.000000,219599420.517436,10779516.870354,220440669.000000,229708538.000000,230804756.000000,231271847.000000,231645519.800000
+backoff_normlock,0x3,1,10,10,5,2500000,4,1654480965459197614,1654480968964054447,0.0,1.8,backoff_normlock,360797900.000000,726816802.000000,599535912.627620,90743815.294379,630544133.000000,666188747.000000,707585078.400000,720924143.900000,725638270.380000
+backoff_normlock,0x3,1,10,10,5,2500000,8,1654480969967018505,1654480976808146166,0.0,1.9,backoff_normlock,1293988372.000000,2832680048.000000,2319367156.963227,355875231.279389,2486126525.000000,2578318227.000000,2709558616.200000,2767649970.100000,2825313636.740000
+backoff_autolock,0x3,1,10,10,5,2500000,2,1654480977811137437,1654480980532163937,0.0,1.7,backoff_autolock,205841828.000000,227960992.000000,217675490.048817,9635548.719468,219105132.000000,226342961.000000,227745775.000000,227853383.500000,227939470.300000
+backoff_autolock,0x3,1,10,10,5,2500000,4,1654480981535069317,1654480984972141130,0.0,1.9,backoff_autolock,412379580.000000,724868636.000000,550493419.850283,100670698.797442,555786514.000000,615120532.500000,710906516.800000,715976313.000000,723090171.400000
+backoff_autolock,0x3,1,10,10,5,2500000,8,1654480985975147457,1654480992524138550,0.0,1.9,backoff_autolock,1066139778.000000,2773557532.000000,2098687943.420599,411248827.697325,2229686654.000000,2440431063.500000,2580279743.400000,2695904022.300000,2748727403.560000
+backoff_normlock,0x3,1,100,1,5,2500000,2,1654480993527183745,1654480999460174010,0.0,1.7,backoff_normlock,1207700196.000000,2150140890.000000,1620895718.983847,479813675.190566,1690972932.000000,2136304156.500000,2138122313.400000,2144131601.700000,2148939032.340000
+backoff_normlock,0x3,1,100,1,5,2500000,4,1654481000463196002,1654481014471637929,0.0,1.9,backoff_normlock,3453524264.000000,8081899802.000000,5686031779.831200,1304194406.302151,5961583270.000000,6667243790.500000,7059088295.800001,7769692541.100000,8019458349.820000
+backoff_normlock,0x3,1,100,1,5,100000,8,1654481046523658012,1654481050255605508,1.8,1.8,backoff_normlock,140102390.000000,846025100.000000,451959845.360619,230127314.593516,527089588.000000,707529584.500000,802315698.400000,812381080.300000,833386755.320000
+backoff_autolock,0x3,1,100,1,5,2500000,2,1654481051258551098,1654481057179801239,0.0,1.7,backoff_autolock,1221215656.000000,2145411850.000000,1639076201.635215,466816279.628260,1717802281.000000,2137508981.000000,2144962987.600000,2145187418.800000,2145366963.760000
+backoff_autolock,0x3,1,100,1,5,2500000,4,1654481058182760788,1654481071963686926,0.0,1.7,backoff_autolock,2234330848.000000,7042760632.000000,4602324106.421126,1601333054.161500,4838978331.000000,6201996180.000000,6877734105.800000,7028668035.600000,7039942112.719999
+backoff_autolock,0x3,1,100,1,5,100000,8,1654481104014134787,1654481107628006910,1.8,1.6,backoff_autolock,117311734.000000,789744356.000000,379776568.354312,217279982.735915,396814741.000000,617015065.000000,745691507.400000,774322403.000000,785326923.500000
+backoff_normlock,0x3,1,100,100,5,2500000,2,1654481108631081645,1654481115219783187,0.0,1.8,backoff_normlock,1901056116.000000,2561080680.000000,2274335887.245704,280176843.833518,2428185946.000000,2523389950.500000,2531870789.400000,2546475734.700000,2558159690.940000
+backoff_normlock,0x3,1,100,100,5,2500000,4,1654481116222746581,1654481133059970365,0.0,1.9,backoff_normlock,5236212098.000000,9416235098.000000,7489864214.510796,1198615733.344768,7648540585.000000,8444873818.500000,8949477488.600000,9164406749.600000,9365869428.320000
+backoff_normlock,0x3,1,100,100,5,100000,8,1654481165110828098,1654481169380045618,1.9,1.8,backoff_normlock,345956628.000000,1231899228.000000,900926479.152543,225695281.245477,978095903.000000,1098913025.500000,1163611472.200000,1207811320.200000,1227337095.360000
+backoff_autolock,0x3,1,100,100,5,2500000,2,1654481170383086721,1654481176940061259,0.0,1.8,backoff_autolock,2027857150.000000,2524337790.000000,2309577379.538472,213467847.124168,2336598655.000000,2516798858.500000,2521395585.600000,2522866687.800000,2524043569.560000
+backoff_autolock,0x3,1,100,100,5,2500000,4,1654481177942950481,1654481194928020920,0.0,2.0,backoff_autolock,6990369968.000000,9151203064.000000,8083623032.177168,652473166.793901,8229141416.000000,8509871604.500000,8842002919.400000,9121656758.700001,9145293802.940001
+backoff_autolock,0x3,1,100,100,5,100000,8,1654481226978791601,1654481231056009091,1.9,1.8,backoff_autolock,303606634.000000,1217171386.000000,761966435.520891,244373211.352482,813860960.000000,993310278.000000,1112695012.000000,1123659245.000000,1189394966.680000
+backoff_normlock,0xf,1,1,1,5,2500000,4,1654481232059002420,1654481235140072653,0.0,2.2,backoff_normlock,405706808.000000,444726636.000000,430243750.116815,12741276.829494,433915038.000000,436881109.500000,444341957.200000,444547916.300000,444690892.060000
+backoff_normlock,0xf,1,1,1,5,2500000,8,1654481236143119588,1654481240812120083,0.0,2.8,backoff_normlock,734279198.000000,1532472084.000000,1196915735.055012,182760555.629574,1222771294.000000,1339575043.000000,1379525551.200000,1487724571.500000,1521278265.780000
+backoff_normlock,0xf,1,1,1,5,2500000,16,1654481241815056592,1654481253303674346,0.0,3.6,backoff_normlock,2668399358.000000,6029854816.000000,4892179870.459917,739716146.271749,5209767705.000000,5433930980.000000,5611716547.400002,5890938777.000000,6010112368.400001
+backoff_autolock,0xf,1,1,1,5,2500000,4,1654481254306592142,1654481257344226826,0.0,2.1,backoff_autolock,352450010.000000,418744528.000000,390402691.516520,25069147.699913,395796726.000000,412732806.500000,418216791.400000,418742852.200000,418744192.840000
+backoff_autolock,0xf,1,1,1,5,2500000,8,1654481258347259656,1654481263236133527,0.0,2.9,backoff_autolock,759156110.000000,1780356846.000000,1355440491.272025,284824561.914886,1433428022.000000,1586738717.500000,1697996461.400000,1708028095.500000,1773963699.240000
+backoff_autolock,0xf,1,1,1,5,2500000,16,1654481264239086756,1654481276436214982,0.0,3.6,backoff_autolock,2667932074.000000,6745010656.000000,5356893225.651022,795999504.087692,5500138644.000000,5775115640.000000,6568562841.400001,6698404834.800000,6736537547.340000
+backoff_normlock,0xf,1,1,10,5,2500000,4,1654481277439702189,1654481280651921367,0.0,2.4,backoff_normlock,499886892.000000,517999224.000000,510748389.728232,5221842.893030,510895266.000000,515011079.000000,517155126.800000,517718803.000000,517943139.800000
+backoff_normlock,0xf,1,1,10,5,2500000,8,1654481281654803061,1654481286788079690,0.0,2.9,backoff_normlock,1065385570.000000,1838077756.000000,1474730956.140421,185436723.958653,1500027436.000000,1635214223.000000,1716173588.400000,1729796219.000000,1817160769.000000
+backoff_normlock,0xf,1,1,10,5,2500000,16,1654481287791121809,1654481300671920361,0.0,3.7,backoff_normlock,3233719142.000000,6957261930.000000,5834661346.227703,638099562.513309,6002568681.000000,6222464318.000000,6706958831.200001,6874126802.000000,6933714387.360001
+backoff_autolock,0xf,1,1,10,5,2500000,4,1654481301675031789,1654481304852147952,0.0,2.3,backoff_autolock,426300922.000000,500667128.000000,473400025.490467,26466239.650853,482435672.000000,492924506.500000,500464371.200000,500544047.900000,500642511.980000
+backoff_autolock,0xf,1,1,10,5,2500000,8,1654481305855147353,1654481311188164187,0.0,3.0,backoff_autolock,1036180404.000000,1952868942.000000,1587760131.604535,216074356.784005,1658666350.000000,1751793552.000000,1824289395.000000,1882336441.000000,1949084907.720000
+backoff_autolock,0xf,1,1,10,5,2500000,16,1654481312191134462,1654481325572144099,0.0,3.7,backoff_autolock,3372613684.000000,7467536510.000000,6113374443.790423,890862767.449061,6254930036.000000,6893470566.000000,7295300988.000000,7387391275.100000,7452925659.080000
+backoff_normlock,0xf,1,1,100,5,2500000,4,1654481326575197350,1654481333039640385,0.0,3.2,backoff_normlock,2350095896.000000,2465281394.000000,2432030796.606719,47086482.866483,2457598519.000000,2462605982.000000,2463811777.200000,2464244847.100000,2465074084.620000
+backoff_normlock,0xf,1,1,100,5,2500000,8,1654481334042602597,1654481348595582937,0.0,3.7,backoff_normlock,5307693342.000000,7690303076.000000,6878977395.874782,528996090.133890,7044471159.000000,7183048945.000000,7444323504.200000,7647545236.700000,7675427901.920000
+backoff_normlock,0xf,1,1,100,5,100000,16,1654481380646098258,1654481384667704341,3.8,2.7,backoff_normlock,370965280.000000,1047969574.000000,793421271.142602,155830736.691962,827484268.000000,924269129.500000,969385227.600000,1037650598.700000,1044381207.560000
+backoff_autolock,0xf,1,1,100,5,2500000,4,1654481385670689400,1654481391919830711,0.0,3.2,backoff_autolock,2012903224.000000,2332645540.000000,2237855591.463352,129954048.168694,2305788382.000000,2324576323.000000,2329767661.800000,2331453461.000000,2332407124.200000
+backoff_autolock,0xf,1,1,100,5,2500000,8,1654481392923480175,1654481407919800554,0.0,3.7,backoff_autolock,5860931970.000000,7766673072.000000,7175812850.834732,474750313.628800,7176728440.000000,7578688549.500000,7710161545.200000,7722708493.100000,7756967423.580000
+backoff_autolock,0xf,1,1,100,5,100000,16,1654481439969299624,1654481443847892501,3.8,2.6,backoff_autolock,346697458.000000,1033074096.000000,771243505.846533,144167689.249186,805127875.000000,863445186.500000,980328231.200000,1008048252.400000,1026235296.680000
+backoff_normlock,0xf,1,10,1,5,2500000,4,1654481444850948310,1654481448207918782,0.0,2.3,backoff_normlock,354334604.000000,589930096.000000,507374430.183183,96422107.638549,562907468.000000,585954138.000000,587413158.800000,587567997.000000,589457676.200000
+backoff_normlock,0xf,1,10,1,5,2500000,8,1654481449211264357,1654481455087920375,0.0,3.0,backoff_normlock,973405012.000000,2432713088.000000,1823248975.997861,351697062.386462,1861290586.000000,2129846950.500000,2286563757.000000,2385566437.500000,2419719125.720000
+backoff_normlock,0xf,1,10,1,5,2500000,16,1654481456090955678,1654481473171885646,0.0,3.8,backoff_normlock,3764042168.000000,9421544574.000000,7944064174.313170,1234424161.977083,8170105055.000000,9018749125.000000,9257285074.600000,9375849706.000000,9400223232.400000
+backoff_autolock,0xf,1,10,1,5,2500000,4,1654481474174892275,1654481477499988436,0.0,2.2,backoff_autolock,431223584.000000,581642810.000000,519831455.513884,53709187.142583,536982807.000000,560188810.000000,578157129.000000,578395204.600000,580993288.920000
+backoff_autolock,0xf,1,10,1,5,2500000,8,1654481478502904820,1654481484552045206,0.0,3.0,backoff_autolock,1499789142.000000,2488745316.000000,1989668015.560982,273639792.399449,1990944849.000000,2239293626.500000,2381289114.000000,2415245427.200000,2485491940.680000
+backoff_autolock,0xf,1,10,1,5,2500000,16,1654481485555080426,1654481501875843838,0.0,3.7,backoff_autolock,3047835606.000000,9041923488.000000,7308320737.570693,1144316564.215740,7631448696.000000,8228007559.000000,8474118935.800000,8881655529.700001,9022124724.460001
+backoff_normlock,0xf,1,10,10,5,2500000,4,1654481502878708760,1654481506356194330,0.0,2.4,backoff_normlock,565484604.000000,644521002.000000,616316511.825185,19603866.386038,614967417.000000,631381008.500000,640621338.200000,642255578.800000,644067917.360000
+backoff_normlock,0xf,1,10,10,5,2500000,8,1654481507359280186,1654481513231920181,0.0,3.2,backoff_normlock,1357775874.000000,2242963288.000000,1918356489.578624,188449068.255629,1953526199.000000,2040642960.000000,2118116235.400000,2174927223.200000,2233844213.620000
+backoff_normlock,0xf,1,10,10,5,2500000,16,1654481514234917877,1654481529567920259,0.0,3.7,backoff_normlock,2938887484.000000,8014658622.000000,6969592660.701935,914363314.491987,7222810346.000000,7668462020.000000,7904702419.800000,7994914488.900000,8004685368.120000
+backoff_autolock,0xf,1,10,10,5,2500000,4,1654481530570944131,1654481533904085914,0.0,2.4,backoff_autolock,469090492.000000,607556558.000000,557981612.338434,49170330.587311,588105057.000000,595898754.500000,601919298.200000,607024833.500000,607450213.100000
+backoff_autolock,0xf,1,10,10,5,2500000,8,1654481534907205147,1654481540607997110,0.0,3.0,backoff_autolock,889450426.000000,2206053642.000000,1737876764.604059,326222291.203514,1812596556.000000,2030584652.000000,2151725841.800000,2183074446.400000,2203901296.740000
+backoff_autolock,0xf,1,10,10,5,2500000,16,1654481541610977652,1654481557792115028,0.0,3.7,backoff_autolock,4729844682.000000,8698707706.000000,7460391890.193130,779159871.697518,7667537951.000000,8060591432.000000,8314965010.200000,8499325532.400000,8633502453.740000
+backoff_normlock,0xf,1,100,1,5,2500000,4,1654481558795071928,1654481568600100477,0.0,3.1,backoff_normlock,2883761138.000000,4495616190.000000,3742044121.839630,562969829.126049,3895504878.000000,4145152654.500000,4471828169.200000,4473430186.400000,4491178989.280000
+backoff_normlock,0xf,1,100,1,5,100000,8,1654481600650351572,1654481604108169564,3.6,2.3,backoff_normlock,186997286.000000,710124072.000000,482286565.292238,115350308.931503,514259249.000000,570585101.500000,627226409.800000,637348839.900000,693803476.800000
+backoff_normlock,0xf,1,100,1,5,100000,16,1654481636158444544,1654481642159964660,3.5,2.9,backoff_normlock,400862280.000000,2401398566.000000,1571851237.911028,513618862.366112,1817006201.000000,2057370204.000000,2251297666.800000,2291702333.300000,2372009123.460000
+backoff_autolock,0xf,1,100,1,5,2500000,4,1654481643162974433,1654481653088173524,0.0,3.4,backoff_autolock,3590567094.000000,4547967626.000000,4311895182.296494,276658137.496178,4398210895.000000,4515129894.500000,4541704604.400000,4545317135.500000,4547437527.900000
+backoff_autolock,0xf,1,100,1,5,100000,8,1654481685110652131,1654481688503798717,3.4,2.2,backoff_autolock,161646288.000000,634045916.000000,396178994.154222,128156832.491713,464547147.000000,506491938.000000,555247688.800000,566887033.100000,617855711.060000
+backoff_autolock,0xf,1,100,1,5,100000,16,1654481720554575574,1654481726796009074,3.5,3.1,backoff_autolock,420502822.000000,2485671122.000000,1787693202.160211,464777866.105552,1965363664.000000,2237075762.500000,2321704735.400000,2401643313.600000,2453562783.860000
+backoff_normlock,0xf,1,100,100,5,2500000,4,1654481727799054438,1654481738948160218,0.0,3.4,backoff_normlock,3758319718.000000,5296775306.000000,4838352707.417828,504201155.053495,5050048059.000000,5256235826.000000,5280191040.800000,5284623265.100000,5294344897.820001
+backoff_normlock,0xf,1,100,100,5,100000,8,1654481770995398733,1654481774447843660,3.7,2.3,backoff_normlock,294321018.000000,657847698.000000,491776170.540705,102882556.540388,514704573.000000,589379301.000000,632727220.600000,645417543.700000,653395036.800000
+backoff_normlock,0xf,1,100,100,5,100000,16,1654481806497121878,1654481813048117384,3.8,3.0,backoff_normlock,984375852.000000,2584283962.000000,2030334762.458315,354621710.505944,2164587514.000000,2320413837.000000,2423505872.600000,2484538673.900000,2549471657.680000
+backoff_autolock,0xf,1,100,100,5,2500000,4,1654481814051117380,1654481825152043944,0.0,3.5,backoff_autolock,4199101392.000000,5262796024.000000,4950921522.122166,303349113.111540,5045323720.000000,5231007840.000000,5250535978.000000,5256953387.200000,5261627496.640000
+backoff_autolock,0xf,1,100,100,5,100000,8,1654481857201942206,1654481860732029021,3.6,2.4,backoff_autolock,343462142.000000,775144446.000000,557879991.846117,112093932.504538,575547666.000000,643892725.000000,723781597.800000,736507512.000000,774046322.220000
+backoff_autolock,0xf,1,100,100,5,100000,16,1654481892782210025,1654481899204302725,3.8,3.2,backoff_autolock,745692210.000000,2592245202.000000,2034170794.970943,425265533.096096,2179085711.000000,2390930307.000000,2486741692.600000,2536227612.100000,2584836452.440000
+backoff_normlock,0xff,1,1,1,5,2500000,8,1654481900207352800,1654481906040147332,0.0,5.3,backoff_normlock,1191486030.000000,2249077086.000000,1948302065.701296,295263670.785922,2150321449.000000,2220535351.500000,2239505264.400000,2244949252.400000,2248361220.720000
+backoff_normlock,0xff,1,1,1,5,2500000,16,1654481907043168366,1654481920103744663,0.0,7.0,backoff_normlock,3214193920.000000,6835650682.000000,5965000276.195176,822658406.173632,6286318963.000000,6603544275.000000,6763092644.000000,6790832370.800000,6830509798.080000
+backoff_normlock,0xff,1,1,1,5,100000,32,1654481952154134763,1654481956056212343,7.2,4.3,backoff_normlock,153649754.000000,1421925002.000000,687195657.721598,319399612.677773,756401887.000000,850105644.500000,1299274663.000000,1400564909.100000,1415992575.560000
+backoff_autolock,0xff,1,1,1,5,2500000,8,1654481957059184978,1654481962135901661,0.0,5.0,backoff_autolock,1371693002.000000,1638356562.000000,1561313269.337414,82744932.884139,1595463678.000000,1627712458.000000,1633905290.200000,1634898432.000000,1638222004.980000
+backoff_autolock,0xff,1,1,1,5,2500000,16,1654481963138993152,1654481983919730113,0.0,7.2,backoff_autolock,5412642456.000000,11931806562.000000,10270525802.553272,1316618337.592844,11034941144.000000,11300904969.000000,11689207296.000002,11869151033.100000,11908682599.980000
+backoff_autolock,0xff,1,1,1,5,100000,32,1654482015970195543,1654482019759710319,7.3,4.1,backoff_autolock,114958296.000000,953449212.000000,661671214.022316,192086018.657969,743672711.000000,864773694.000000,908861577.400000,926917801.600000,942832512.480000
+backoff_normlock,0xff,1,1,10,5,2500000,8,1654482020762683333,1654482026207776355,0.0,5.2,backoff_normlock,1650474026.000000,1852567966.000000,1782069876.737914,69714419.284628,1814271160.000000,1840809542.500000,1849744291.400000,1849840701.900000,1852090655.920000
+backoff_normlock,0xff,1,1,10,5,2500000,16,1654482027210715178,1654482041399928835,0.0,7.1,backoff_normlock,5420223648.000000,7343145864.000000,6824639635.906087,393913863.696957,6904711561.000000,7164978553.000000,7289118648.000000,7323895034.400000,7338304107.260000
+backoff_normlock,0xff,1,1,10,5,100000,32,1654482073449965218,1654482077456180969,7.3,4.3,backoff_normlock,359025048.000000,1148253244.000000,806811633.319030,225322711.718793,888354125.000000,1043606319.500000,1095809398.200000,1112320488.800000,1137785705.700000
+backoff_autolock,0xff,1,1,10,5,2500000,8,1654482078459214119,1654482084283940350,0.0,5.6,backoff_autolock,1691482456.000000,2090582914.000000,2010747393.419257,117995320.436325,2062432925.000000,2080220104.000000,2087225171.600000,2088794496.900000,2089988422.180000
+backoff_autolock,0xff,1,1,10,5,2500000,16,1654482085286986760,1654482102339883050,0.0,6.9,backoff_autolock,3736897434.000000,9203087998.000000,7912174761.987351,1350440072.228106,8532741727.000000,8854794785.500000,9023434313.400000,9142237130.900000,9185993063.180000
+backoff_autolock,0xff,1,1,10,5,100000,32,1654482134390146137,1654482138524114564,7.3,4.4,backoff_autolock,246940072.000000,1383071066.000000,843802329.008860,274140477.161217,906886259.000000,1063275002.000000,1260744403.600000,1348452213.200000,1370905954.740000
+backoff_normlock,0xff,1,1,100,5,2500000,8,1654482139527092780,1654482158568153633,0.0,7.2,backoff_normlock,6570719684.000000,10569947922.000000,9459290090.494658,1268871017.886119,10446177755.000000,10552457372.500000,10566703884.799999,10569034946.299999,10569749000.160000
+backoff_normlock,0xff,1,1,100,5,100000,16,1654482190618678966,1654482194328138982,7.1,4.1,backoff_normlock,469251328.000000,999025872.000000,707165753.568106,158130956.910760,690937293.000000,847945050.500000,957550644.600000,988239277.500000,997572651.200000
+backoff_normlock,0xff,1,1,100,5,100000,32,1654482226376673926,1654482236251850749,7.6,6.4,backoff_normlock,1250858736.000000,6173821040.000000,3813854084.222104,1253246895.229642,4130194751.000000,4865999241.000000,6030535591.200000,6103608110.100000,6167803731.080000
+backoff_autolock,0xff,1,1,100,5,2500000,8,1654482237254770859,1654482256820332097,0.0,7.2,backoff_autolock,7186190656.000000,10642574596.000000,9789335358.441004,869505595.509619,10323572268.000000,10497704513.500000,10621335589.200001,10633468648.400000,10642329754.780001
+backoff_autolock,0xff,1,1,100,5,100000,16,1654482288870449996,1654482292447856618,7.3,3.8,backoff_autolock,294591254.000000,834382222.000000,644593047.665943,114361610.087229,654532695.000000,756237874.000000,793619890.400000,807476687.100000,833984788.800000
+backoff_autolock,0xff,1,1,100,5,100000,32,1654482324498259150,1654482332131988548,7.6,6.2,backoff_autolock,1293267288.000000,3444543102.000000,2865470046.895496,470634466.967088,3082580878.000000,3290597239.500000,3366856902.000000,3389183388.700000,3439928751.380000
+backoff_normlock,0xff,1,10,1,5,2500000,8,1654482333135040777,1654482338636188860,0.0,4.9,backoff_normlock,1053115138.000000,1915886436.000000,1656220757.416672,268307116.658146,1786103159.000000,1891884146.500000,1900845144.800000,1905041407.100000,1915150905.360000
+backoff_normlock,0xff,1,10,1,5,2500000,16,1654482339639090230,1654482355540112178,0.0,7.1,backoff_normlock,5513668542.000000,8405240140.000000,7630963541.827439,646434289.087142,7840264859.000000,8146283720.000000,8302522523.400001,8364056681.800000,8381829098.300000
+backoff_normlock,0xff,1,10,1,5,100000,32,1654482387590290961,1654482391744071419,6.8,4.4,backoff_normlock,327279764.000000,1270277380.000000,845997125.709122,225365474.818006,922265793.000000,1043105219.500000,1128754966.000000,1235972584.100000,1264656569.760000
+backoff_autolock,0xff,1,10,1,5,2500000,8,1654482392747093877,1654482398387943355,0.0,5.3,backoff_autolock,1578112770.000000,1982275768.000000,1837024575.015985,133827029.817679,1885509750.000000,1962500885.000000,1967989048.400000,1975477323.200000,1980629475.820000
+backoff_autolock,0xff,1,10,1,5,2500000,16,1654482399390909981,1654482412944162658,0.0,6.4,backoff_autolock,3530488084.000000,7184012190.000000,5741861243.931375,977072943.470595,6146963349.000000,6634410039.000000,6797386795.800000,7050463488.500000,7177876757.700000
+backoff_autolock,0xff,1,10,1,5,100000,32,1654482444994566214,1654482449488181744,7.1,4.6,backoff_autolock,149882694.000000,1734086630.000000,981721042.582117,465496956.125181,1114202242.000000,1588091228.500000,1678579097.400000,1710780935.800000,1726514490.720000
+backoff_normlock,0xff,1,10,10,5,2500000,8,1654482450491215687,1654482456496408760,0.0,5.2,backoff_normlock,1520528958.000000,2194269162.000000,1969530605.987666,200978019.067106,2045915527.000000,2150045945.000000,2182613316.400000,2184142486.000000,2192807339.820000
+backoff_normlock,0xff,1,10,10,5,2500000,16,1654482457499466362,1654482475148426115,0.0,6.8,backoff_normlock,4060798112.000000,10390115428.000000,8037776271.802296,1608229312.034156,8095900219.000000,9837869786.000000,10277480029.000000,10317599841.400000,10361263880.660000
+backoff_normlock,0xff,1,10,10,5,100000,32,1654482507198365592,1654482512516105684,6.9,5.0,backoff_normlock,273918600.000000,2511833544.000000,1363940345.330674,557063758.940524,1494831460.000000,1867280447.500000,2354255578.000000,2457149675.900000,2509994246.720000
+backoff_autolock,0xff,1,10,10,5,2500000,8,1654482513519129649,1654482521371883421,0.0,5.9,backoff_autolock,1378303274.000000,3813029518.000000,2961928004.235348,687538296.147749,3162432757.000000,3716410224.500000,3757635914.000000,3792083508.700000,3806494914.340000
+backoff_autolock,0xff,1,10,10,5,2500000,16,1654482522375004253,1654482540671980881,0.0,7.1,backoff_autolock,5076103638.000000,10997217190.000000,8735979840.478342,1264399461.368485,9010784020.000000,9314547239.000000,10766968492.799999,10912557778.900000,10988922131.539999
+backoff_autolock,0xff,1,10,10,5,100000,32,1654482572719258119,1654482576931801851,7.4,4.5,backoff_autolock,243453132.000000,1467869660.000000,887409358.080952,268743792.372422,940412440.000000,1100996654.500000,1315918985.200000,1430845362.300000,1452118480.720000
+backoff_normlock,0xff,1,100,1,5,2500000,8,1654482577934748443,1654482596891876221,0.0,6.5,backoff_normlock,4263346606.000000,10600280840.000000,8454921051.389121,1463506419.781581,9121214971.000000,9385261700.500000,10129244577.000000,10475846291.900000,10595749381.639999
+backoff_normlock,0xff,1,100,1,5,100000,16,1654482628942134118,1654482633351651498,7.0,4.5,backoff_normlock,487685456.000000,1345212166.000000,1030277646.159036,177454221.032916,1075118648.000000,1169749501.500000,1225965654.000000,1267638226.500000,1324108873.880000
+backoff_normlock,0xff,1,100,1,5,100000,32,1654482665401612157,1654482677720016867,7.6,6.5,backoff_normlock,246658592.000000,6525152196.000000,4928602675.391398,1119395208.916218,5434434770.000000,5903811001.500000,6293750480.800000,6374262703.700000,6513789192.460000
+backoff_autolock,0xff,1,100,1,5,2500000,8,1654482678723071132,1654482696403945198,0.0,6.9,backoff_autolock,6132253960.000000,9221352538.000000,8411005109.302333,798970596.238107,8763209300.000000,9099860085.000000,9196201020.600000,9217123061.799999,9221106124.299999
+backoff_autolock,0xff,1,100,1,5,100000,16,1654482728454215080,1654482733108153489,6.6,4.6,backoff_autolock,392839768.000000,1483976970.000000,1156953041.498873,205474775.154606,1222951396.000000,1304329407.000000,1390221924.600000,1430226381.500000,1454444242.000000
+backoff_autolock,0xff,1,100,1,5,100000,32,1654482765158635944,1654482776404346231,7.6,6.5,backoff_autolock,2110807088.000000,6125893898.000000,4551959687.999398,837628929.346007,4781635926.000000,5221731516.000000,5536899987.800000,5792720149.400001,6106202941.080000
+backoff_normlock,0xff,1,100,100,5,2500000,8,1654482777407389210,1654482800543715968,0.0,6.7,backoff_normlock,8222708854.000000,12608366744.000000,10902211269.789597,1131616917.520314,10970535148.000000,11567776344.500000,12520695306.000000,12564683387.799999,12602463210.260000
+backoff_normlock,0xff,1,100,100,5,100000,16,1654482832593344468,1654482837395665404,6.7,4.7,backoff_normlock,662785308.000000,1548771934.000000,1265991237.039178,173368978.145130,1315669085.000000,1374111683.500000,1437832347.600000,1473087872.500000,1518278716.100000
+backoff_normlock,0xff,1,100,100,5,100000,32,1654482869445979683,1654482879919752340,7.6,6.3,backoff_normlock,1629027980.000000,5585166340.000000,4037012464.213215,851259330.760900,4158781640.000000,4904364015.500000,5194502289.000000,5359955639.600000,5506489081.960000
+backoff_autolock,0xff,1,100,100,5,2500000,8,1654482880923364074,1654482901167826772,0.0,6.9,backoff_autolock,7739433166.000000,10749195212.000000,9700615495.258984,914207965.614871,10063540834.000000,10441278738.500000,10704766183.200001,10723002337.600000,10739747575.100000
+backoff_autolock,0xff,1,100,100,5,100000,16,1654482933217873252,1654482937831851287,7.1,4.5,backoff_autolock,545203340.000000,1435891362.000000,1090906022.460541,197962021.741352,1106871124.000000,1263881089.000000,1354729069.600000,1404240472.900000,1434028235.480000
+backoff_autolock,0xff,1,100,100,5,100000,32,1654482969881252546,1654482981279713081,7.6,6.4,backoff_autolock,1917953950.000000,6184030734.000000,4528671053.476772,877013285.652011,4723274804.000000,5180874088.500000,5657197882.800000,5956464444.300000,6163779459.660000
+backoff_normlock,0xff0000ff,1,1,1,5,2500000,16,1654482982282718714,1654482998255780193,0.0,13.6,backoff_normlock,1625031738.000000,8360718264.000000,7359317729.167625,1510337351.272290,8210080779.000000,8285244279.000000,8319925840.200000,8336063611.900000,8359477268.800000
+backoff_normlock,0xff0000ff,1,1,1,5,100000,32,1654483030306087662,1654483034668146654,13.7,8.1,backoff_normlock,114413798.000000,1355932748.000000,1009183254.639901,289629973.639437,1197874631.000000,1272258158.000000,1317605563.000000,1345687302.600000,1354389047.740000
+backoff_normlock,0xff0000ff,1,1,1,5,100000,64,1654483066718707639,1654483076524127582,14.4,12.0,backoff_normlock,494496586.000000,4946312374.000000,3575826901.950031,1141305079.690779,4381049309.000000,4606127911.000000,4801697368.000000,4905212649.600000,4932241967.960000
+backoff_autolock,0xff0000ff,1,1,1,5,2500000,16,1654483077527169507,1654483094011756282,0.0,13.6,backoff_autolock,1747048550.000000,8514210726.000000,7597310374.018001,1561977088.961768,8420512742.000000,8471249076.500000,8487889006.000000,8504799423.300000,8512303027.680000
+backoff_autolock,0xff0000ff,1,1,1,5,100000,32,1654483126059303411,1654483130236165061,14.2,7.6,backoff_autolock,115883958.000000,1192116582.000000,911482389.382408,185349641.729062,973156994.000000,1033133292.000000,1125976532.800000,1185712974.900000,1191948290.800000
+backoff_autolock,0xff0000ff,1,1,1,5,100000,64,1654483162282910569,1654483172527644426,14.8,12.5,backoff_autolock,419814410.000000,5120761292.000000,3943606408.620890,982700273.914887,4467361311.000000,4705760761.000000,5067951617.400000,5099520196.600000,5119734728.280000
+backoff_normlock,0xff0000ff,1,1,10,5,2500000,16,1654483173530607440,1654483192667914344,0.0,13.8,backoff_normlock,2526745464.000000,10906008172.000000,9128588558.349827,1697276672.492333,9808737299.000000,10476365971.000000,10721080382.000000,10889200306.000000,10904808256.799999
+backoff_normlock,0xff0000ff,1,1,10,5,100000,32,1654483224715012367,1654483229119707934,14.2,8.6,backoff_normlock,497571240.000000,1389800022.000000,1122381242.738630,208025421.710510,1179567719.000000,1307810740.500000,1357350097.200000,1376122501.200000,1388647811.140000
+backoff_normlock,0xff0000ff,1,1,10,5,100000,64,1654483261169093980,1654483275163874068,14.6,13.2,backoff_normlock,651206678.000000,7900881302.000000,6010250111.519583,1430150202.890677,6800908775.000000,7372020124.000000,7759643558.000000,7861031326.100000,7894872009.400001
+backoff_autolock,0xff0000ff,1,1,10,5,2500000,16,1654483276167053424,1654483295559919067,0.0,13.5,backoff_autolock,2012935826.000000,10612062006.000000,8962854411.775963,1834302383.815047,9778187040.000000,10443553507.000000,10517164038.400000,10592972452.500000,10611910070.040001
+backoff_autolock,0xff0000ff,1,1,10,5,100000,32,1654483327609100836,1654483332296046487,14.2,8.5,backoff_autolock,678454330.000000,1638411030.000000,1228617847.207915,176548438.819105,1223294657.000000,1309312918.500000,1548590407.800000,1581557880.200000,1637043430.820000
+backoff_autolock,0xff0000ff,1,1,10,5,100000,64,1654483364345574256,1654483376768247924,15.1,13.6,backoff_autolock,2629989292.000000,6253161130.000000,5536733332.800563,647149244.580866,5757713819.000000,6025075109.500000,6185770537.400000,6218567055.100000,6249433557.820001
+backoff_normlock,0xff0000ff,1,1,100,5,100000,16,1654483408817425713,1654483412316104037,14.3,6.4,backoff_normlock,538935638.000000,717705054.000000,651546129.636564,58846613.406134,675102165.000000,710609403.500000,716942170.800000,717185833.600000,717591984.460000
+backoff_normlock,0xff0000ff,1,1,100,5,100000,32,1654483444365809591,1654483451215742369,14.5,11.1,backoff_normlock,639142278.000000,3028171980.000000,2434815688.508253,419075386.683178,2467366131.000000,2720990206.000000,2966591970.000000,3015128250.100000,3027932743.740000
+backoff_normlock,0xff0000ff,1,1,100,5,100000,64,1654483483262913164,1654483508035830498,15.1,14.4,backoff_normlock,5008746902.000000,13922705304.000000,12237538857.007446,1533005047.899930,12931496732.000000,13300860061.500000,13584080895.000000,13769514639.900000,13906299816.540001
+backoff_autolock,0xff0000ff,1,1,100,5,100000,16,1654483540086448467,1654483543500173230,14.4,6.2,backoff_autolock,497654508.000000,687909814.000000,609972899.410076,44298621.654832,612360641.000000,642895884.000000,669560269.000000,681810834.500000,687708182.300000
+backoff_autolock,0xff0000ff,1,1,100,5,100000,32,1654483575549562087,1654483583016040559,14.5,11.3,backoff_autolock,862293300.000000,3995226672.000000,2664060356.202465,877083233.552242,3334383014.000000,3534659647.500000,3939443298.000000,3974367344.700000,3994624825.180000
+backoff_autolock,0xff0000ff,1,1,100,5,100000,64,1654483615063134084,1654483636872073039,15.1,14.3,backoff_autolock,1895784558.000000,12389483028.000000,10446763560.527662,2027561903.622689,11580775493.000000,12062215005.000000,12200750279.799999,12343715216.500000,12374394499.480000
+backoff_normlock,0xff0000ff,1,10,1,5,100000,16,1654483668919143233,1654483671800170574,14.2,4.0,backoff_normlock,89458928.000000,308033326.000000,251450314.559795,48604532.611105,283495838.000000,293147987.000000,298669396.600000,305926217.100000,307806144.120000
+backoff_normlock,0xff0000ff,1,10,1,5,100000,32,1654483703849496783,1654483708812180985,14.1,9.0,backoff_normlock,345836600.000000,1841529380.000000,1316721490.831055,332693971.752840,1444062968.000000,1600210818.000000,1786947917.200000,1818463537.500000,1833970841.120000
+backoff_normlock,0xff0000ff,1,10,1,5,100000,64,1654483740862600008,1654483752616116803,14.7,12.0,backoff_normlock,333465580.000000,5839108122.000000,4403957262.923435,1238673666.165596,5256141211.000000,5531221541.500000,5723805257.000000,5763543271.900000,5832613872.179999
+backoff_autolock,0xff0000ff,1,10,1,5,2500000,16,1654483753619146814,1654483773003680352,0.0,13.6,backoff_autolock,2277515648.000000,10532074400.000000,8993154978.096388,1934849018.200995,10060249404.000000,10476187262.000000,10514308196.600000,10524728935.200001,10530294487.340000
+backoff_autolock,0xff0000ff,1,10,1,5,100000,32,1654483805053710065,1654483809619961747,14.4,7.9,backoff_autolock,166507834.000000,1472319890.000000,1024106746.433005,307726600.594977,1187179156.000000,1336388903.000000,1388351825.200000,1411572251.200000,1471588290.200000
+backoff_autolock,0xff0000ff,1,10,1,5,100000,64,1654483841668021640,1654483854312273112,14.6,12.8,backoff_autolock,644005534.000000,6476820302.000000,5114247398.031517,1255607182.302567,5705610343.000000,6213782267.000000,6343105485.400000,6431764374.900000,6462954332.740000
+backoff_normlock,0xff0000ff,1,10,10,5,2500000,16,1654483855315459238,1654483877348372583,0.0,14.0,backoff_normlock,1970726082.000000,11946427120.000000,10511743239.532831,2134297715.164517,11670318983.000000,11853029674.500000,11914829183.000000,11934539279.500000,11945583104.540001
+backoff_normlock,0xff0000ff,1,10,10,5,100000,32,1654483909399948669,1654483914512099405,13.3,8.9,backoff_normlock,131964676.000000,1670287142.000000,1348157406.867469,308735357.918151,1522959162.000000,1586757990.500000,1619262032.400000,1656268082.000000,1669288580.080000
+backoff_normlock,0xff0000ff,1,10,10,5,100000,64,1654483946561480132,1654483960999620698,15.1,13.2,backoff_normlock,1755472678.000000,7992812536.000000,6197274665.162882,1396138087.838695,6827572086.000000,7193603258.000000,7826281756.000000,7942056763.600000,7984434903.340000
+backoff_autolock,0xff0000ff,1,10,10,5,2500000,16,1654483962002575216,1654483987312165183,0.0,13.7,backoff_autolock,3335274690.000000,14316786106.000000,11898619862.174683,2729143724.185901,13923857175.000000,14227296366.000000,14290773540.000000,14308264396.400000,14316205503.400000
+backoff_autolock,0xff0000ff,1,10,10,5,100000,32,1654484019358816144,1654484023776170663,14.0,7.7,backoff_autolock,241480140.000000,1361014842.000000,1009626375.485012,221521582.555150,1093782774.000000,1214013377.000000,1263946422.000000,1304793003.200000,1360008340.040000
+backoff_autolock,0xff0000ff,1,10,10,5,100000,64,1654484055822712942,1654484069056029588,15.1,13.0,backoff_autolock,440160242.000000,7314378974.000000,5366966317.515864,1494136085.810238,5954364683.000000,6835320184.500000,7090141740.200000,7225585254.700001,7294220913.000000
+backoff_normlock,0xff0000ff,1,100,1,5,100000,16,1654484101105731678,1654484104831894750,12.6,6.3,backoff_normlock,358078834.000000,875413282.000000,684938693.237095,120892322.939273,713578616.000000,798995295.500000,839437419.600000,848309535.700000,869790099.920000
+backoff_normlock,0xff0000ff,1,100,1,5,100000,32,1654484136881057136,1654484145476006872,15.1,11.6,backoff_normlock,1099320622.000000,4263559102.000000,3114305227.816910,825020556.855911,3452311248.000000,3910730907.000000,4119048120.400000,4176911464.800000,4253085306.040000
+backoff_normlock,0xff0000ff,1,100,1,5,100000,64,1654484177526514099,1654484204919748952,15.1,14.3,backoff_normlock,5411639284.000000,16400433336.000000,12731096506.319206,2822784995.479268,14068818753.000000,15403456867.000000,16042514095.200001,16210942913.800001,16384591056.200001
+backoff_autolock,0xff0000ff,1,100,1,5,100000,16,1654484236969826866,1654484240552083217,14.5,6.0,backoff_autolock,422332766.000000,747618370.000000,630569127.125678,88040515.485029,647327320.000000,715206076.500000,731913385.000000,738758775.000000,745409767.000000
+backoff_autolock,0xff0000ff,1,100,1,5,100000,32,1654484272601766483,1654484279988030943,13.9,10.3,backoff_autolock,448533016.000000,3167488892.000000,2283993338.726415,674495551.736242,2691024938.000000,2930266836.000000,3011374778.200000,3059600786.400000,3141648040.100000
+backoff_autolock,0xff0000ff,1,100,1,5,100000,64,1654484312034788318,1654484340336460666,15.1,14.3,backoff_autolock,4304417738.000000,17167713718.000000,13479425892.740234,2518332361.589647,14101536537.000000,15635012770.500000,16612734451.000000,16769222741.000000,17130679368.700001
+backoff_normlock,0xff0000ff,1,100,100,5,100000,16,1654484372385292880,1654484376260102173,13.8,6.5,backoff_normlock,383213234.000000,1025030344.000000,738177902.779176,147550435.706203,768799543.000000,866245579.500000,931152286.200000,977641844.000000,1006594453.700000
+backoff_normlock,0xff0000ff,1,100,100,5,100000,32,1654484408310737680,1654484416639667160,14.9,11.5,backoff_normlock,1487918032.000000,4026287486.000000,3149321418.078614,449774386.003284,3230917547.000000,3476060265.000000,3679913942.200000,3839584725.500000,3996936733.820000
+backoff_normlock,0xff0000ff,1,100,100,5,4000,64,1654484479735132788,1654484482651946659,14.3,3.9,backoff_normlock,8059596.000000,420572378.000000,134301835.098635,105389288.779850,172021526.000000,263789635.500000,312149760.600000,375464825.500000,413667597.540000
+backoff_autolock,0xff0000ff,1,100,100,5,100000,16,1654484514701565263,1654484518680305557,13.0,7.3,backoff_autolock,327191786.000000,1014515838.000000,831936949.377634,132669734.795508,875335851.000000,938415819.500000,972286657.400000,983675070.200000,1014297440.920000
+backoff_autolock,0xff0000ff,1,100,100,5,100000,32,1654484550729664197,1654484558883879519,14.8,11.2,backoff_autolock,2018437096.000000,3679409674.000000,3041741153.456121,372624330.075061,3122948966.000000,3332639559.000000,3499625038.200000,3536696961.500000,3639522427.340000
+backoff_autolock,0xff0000ff,1,100,100,5,100000,64,1654484590933397782,1654484618860622858,15.1,14.1,backoff_autolock,4953482336.000000,19537274354.000000,13022245205.163212,3481905374.767182,13479312663.000000,15763784646.000000,18939077544.400002,19199590253.299999,19500915318.220001
