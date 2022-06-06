@@ -409,6 +409,11 @@ def createGnuplotByLock(outpath):
                 normdata = norm.getRunData(nproc, oneiter)
                 autodata = auto.getRunData(nproc, oneiter)
 
+                # Sanity test that we are comparing the same lock
+                assert normdata['lock'].replace(
+                    "normlock",
+                    "") == autodata['lock'].replace("autolock", "")
+
                 if normdata is None or autodata is None:
                     line.append('-')
                     line.append('-')
