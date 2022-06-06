@@ -20,7 +20,7 @@ static uint32_t outer_iter = 1000 * 1000;
 static uint32_t cs_iter    = 1;
 static uint32_t extra_iter = 0;
 
-static int32_t      num_trials           = 1;
+static uint32_t     num_trials           = 1;
 static int32_t      num_threads          = 1;
 static char const * cpu_list             = NULL;
 static int32_t      num_cpus             = -1;
@@ -133,16 +133,16 @@ static ArgOption args[] = {
 static ArgDefs argp = { args, "Bench Driver", NULL, NULL };
 
 
-static run_params_t     common_params;
-static stats_result_t * stats;
-static uint32_t         stats_idx;
+static run_params_t      common_params;
+static stats_result_t ** stats;
+static uint32_t          stats_idx;
 
 
 static void
 run_lock_test(func_decl_t const * lock) {
     die_assert(run(lock, &common_params, stats + stats_idx) == 0);
     if (stats) {
-        stats_set_desc(stats + (stats_idx++), lock->name);
+        stats_set_desc(stats[stats_idx++], lock->name);
     }
 }
 int
@@ -166,8 +166,8 @@ main(int argc, char * argv[]) {
         return 0;
     }
     else if (do_bench) {
-        stats = (stats_result_t *)safe_calloc(lock_list.ndecls,
-                                              sizeof(stats_result_t));
+        stats = (stats_result_t **)safe_calloc(
+            lock_list.ndecls, sizeof(stats_result_t *));
     }
     run_params_init(&common_params, with_sched_stats, outer_iter,
                     cs_iter, extra_iter, num_trials, num_threads,
@@ -178,37 +178,83 @@ main(int argc, char * argv[]) {
               lock_names.n, &run_lock_test);
 
     if (stats) {
-        uint32_t i;
+        uint32_t i, j;
 
         if (stats_csv) {
-            printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "lock", "min",
-                   "max", "geomean", "stdev", "median", "p75", "p90",
-                   "p95", "p99");
+            enum { CSV_LINE_SIZE = 4096 };
+            int64_t offset = 0, ret;
+            char    csv_line[CSV_LINE_SIZE];
+            die_assert((ret = snprintf(csv_line + offset,
+                                       CSV_LINE_SIZE - offset, "%s",
+                                       "lock")) >= 0);
+            offset += ret;
+            die_assert(offset < CSV_LINE_SIZE);
+            for (i = 0; i <= num_trials; ++i) {
+                die_assert(
+                    (ret = snprintf(
+                         csv_line + offset, CSV_LINE_SIZE - offset,
+                         ",%s_%d,%s_%d,%s_%d,%s_%d,%s_%d,%s_%d,%s_%d",
+                         "min", i, "max", i, "geomean", i, "stdev", i,
+                         "median", i, "p5", i, "p95", i)) >= 0);
+                offset += ret;
+                die_assert(offset < CSV_LINE_SIZE);
+            }
+
+            printf("%s\n", csv_line);
+
             for (i = 0; i < stats_idx; ++i) {
-                printf("%s,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
-                       stats_get_desc(stats + i),
-                       stats_get_min(stats + i),
-                       stats_get_max(stats + i),
-                       stats_get_geomean(stats + i),
-                       stats_get_stdev(stats + i),
-                       stats_get_median(stats + i),
-                       stats_get_percentile(stats + i, 75),
-                       stats_get_percentile(stats + i, 90),
-                       stats_get_percentile(stats + i, 95),
-                       stats_get_percentile(stats + i, 99));
+                if (stats[i] == NULL) {
+                    continue;
+                }
+                offset = 0;
+                die_assert((ret = snprintf(csv_line + offset,
+                                           CSV_LINE_SIZE - offset, "%s",
+                                           stats_get_desc(stats[i]))) >=
+                           0);
+                offset += ret;
+                die_assert(offset < CSV_LINE_SIZE);
+                for (j = 0; j <= num_trials; ++j) {
+                    die_assert(
+                        (ret = snprintf(
+                             csv_line + offset, CSV_LINE_SIZE - offset,
+                             ",%lf,%lf,%lf,%lf,%lf,%lf,%lf",
+                             stats_get_min(stats[i] + j),
+                             stats_get_max(stats[i] + j),
+                             stats_get_geomean(stats[i] + j),
+                             stats_get_stdev(stats[i] + j),
+                             stats_get_median(stats[i] + j),
+                             stats_get_percentile(stats[i] + j, 5),
+                             stats_get_percentile(stats[i] + j, 95))) >=
+                        0);
+                    offset += ret;
+                    die_assert(offset < CSV_LINE_SIZE);
+                }
+                printf("%s\n", csv_line);
+                safe_sfree(stats[i],
+                           (num_trials + 1) * sizeof(stats_result_t));
             }
         }
         else {
             printf(
                 "Stats for lock benchmarks with (Trials = %u, Threads = %u)\n",
                 num_trials, num_threads);
+
+
             for (i = 0; i < stats_idx; ++i) {
-                stats_printf_arr(stdout, stats + i,
+                if (num_trials > 1) {
+                    stats_set_desc(stats[i] + (num_trials - 1),
+                                   stats_get_desc(stats[i]));
+                }
+
+                stats_printf_arr(stdout, stats[i] + (num_trials - 1),
                                  STATS_P_desc | STATS_P_min |
                                      STATS_P_max | STATS_P_geomean |
                                      STATS_P_stdev,
                                  NULL, 0);
                 printf("\n");
+
+                safe_sfree(stats[i],
+                           (num_trials + 1) * sizeof(stats_result_t));
             }
         }
 

@@ -9,5 +9,5 @@
  * (params) and optional result (result_out). */
 int32_t run(func_decl_t const * to_run,
             run_params_t *      params,
-            stats_result_t *    result_out);
+            stats_result_t **   result_out);
 #endif

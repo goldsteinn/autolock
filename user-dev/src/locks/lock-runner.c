@@ -205,7 +205,7 @@ get_expected_count(uint32_t num_threads,
 static int32_t
 I_run(func_decl_t const * to_run,
       run_params_t *      params,
-      stats_result_t *    result_out) {
+      stats_result_t **   result_out) {
 
     uint32_t         i, j;
     global_counter_t expec;
@@ -303,10 +303,17 @@ I_run(func_decl_t const * to_run,
     /* Free thread attr memory. */
     safe_thread_attr_destroy(&attr);
 
-
+    /* If benchmark then writeout results and free times. */
     if (result_out) {
-        /* If benchmark then writeout results and free times. */
-        gen_stats(result_out, times_start, times - times_start);
+        stats_result_t * stats = (stats_result_t *)safe_calloc(
+            num_trials + 1, sizeof(stats_result_t));
+        gen_stats(stats + num_trials, times_start, times - times_start);
+        times = times_start;
+        for (i = 0; i < num_trials; ++i) {
+            gen_stats(stats + i, times, num_threads);
+            times += num_threads;
+        }
+        *result_out = stats;
         safe_sfree(times_start, PTRDIF(times, times_start));
     }
 
@@ -317,7 +324,7 @@ I_run(func_decl_t const * to_run,
 int32_t
 run(func_decl_t const * to_run,
     run_params_t *      params,
-    stats_result_t *    result_out) {
+    stats_result_t **   result_out) {
     /* A few assents then call the real implementation. */
     die_assert(to_run);
     die_assert(params);
