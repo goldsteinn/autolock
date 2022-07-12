@@ -85,7 +85,7 @@ APPLY(I_make_ptr, ;, ALL_TYPE_NAMES);
 #define CAST_TO_FUNC(func, x) ((FUNC_T(func))(x))
 #define FUNC_T(func)          __typeof__(&(func))
 
-#define CAST(x, y) ((x)(y))
+#define CAST(x, ...) ((x)(__VA_ARGS__))
 #define AGU(base, offset)                                              \
     (CAST(ptr_int_t, base) + CAST(ptr_int_t, offset))
 #define AGU_T(base, offset) CAST(get_type(base), AGU(base, offset))

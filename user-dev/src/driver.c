@@ -16,16 +16,19 @@ static int32_t do_bench = 0;
 static int32_t stats_csv        = 0;
 static int32_t with_sched_stats = 0;
 
+static uint32_t contention = 0;
 static uint32_t outer_iter = 1000 * 1000;
 static uint32_t cs_iter    = 1;
 static uint32_t extra_iter = 0;
 
-static uint32_t     num_trials           = 1;
-static int32_t      num_threads          = 1;
-static char const * cpu_list             = NULL;
-static int32_t      num_cpus             = -1;
-static int32_t      pin_cpus             = 0;
-static int32_t      prefer_hyper_threads = 0;
+static uint32_t     bench_per_thread_work = 0;
+static uint32_t     bench_total_work      = 0;
+static uint32_t     num_trials            = 1;
+static int32_t      num_threads           = 1;
+static char const * cpu_list              = NULL;
+static int32_t      num_cpus              = -1;
+static int32_t      pin_cpus              = 0;
+static int32_t      prefer_hyper_threads  = 0;
 
 static int32_t    run_all    = 0;
 static arg_rest_t lock_names = INIT_ARG_REST_T;
@@ -60,6 +63,24 @@ static ArgOption args[] = {
             0,
             &with_sched_stats,
             "With kernel scheduling info."),
+    ADD_ARG(KindOption,
+            Set,
+            ("--bench-per-thread-work"),
+            0,
+            &bench_per_thread_work,
+            "Run per thread work benchmark."),
+    ADD_ARG(KindOption,
+            Set,
+            ("--bench-total-work"),
+            0,
+            &bench_total_work,
+            "Run total work benchmark."),
+    ADD_ARG(KindOption,
+            Integer,
+            ("--bench-contention", "--contention"),
+            0,
+            &contention,
+            "Contention in total work mode. Must be power of 2."),
     ADD_ARG(
         KindOption,
         String,
@@ -159,6 +180,19 @@ main(int argc, char * argv[]) {
     die_assert(num_trials > 0, "Must have positive number of trials\n");
     die_assert(outer_iter > 0, "Must have non-zero outer-iter count\n");
 
+    die_assert(bench_total_work);
+    if (bench_per_thread_work == 0 && bench_total_work == 0) {
+        bench_per_thread_work = 1;
+    }
+    die_assert(
+        bench_per_thread_work + bench_total_work == 1,
+        "Can only run per thread work or total work benchmarks. Not both.\n");
+
+    die_assert(!(bench_per_thread_work && contention),
+               "Contention set with per thread benchmarking!\n");
+
+    die_assert(!(contention & (contention - 1)),
+               "Contention is not a power of 2!\n");
 
     if (do_list || (!run_all && lock_names.n == 0)) {
         list_decls_filtered(
@@ -169,9 +203,12 @@ main(int argc, char * argv[]) {
         stats = (stats_result_t **)safe_calloc(
             lock_list.ndecls, sizeof(stats_result_t *));
     }
-    run_params_init(&common_params, with_sched_stats, outer_iter,
-                    cs_iter, extra_iter, num_trials, num_threads,
-                    cpu_list, num_cpus, pin_cpus, prefer_hyper_threads);
+    run_params_init(
+        &common_params, with_sched_stats, outer_iter, cs_iter,
+        extra_iter, contention,
+        bench_total_work ? BENCH_TOTAL_WORK : BENCH_PER_THREAD_WORK,
+        num_trials, num_threads, cpu_list, num_cpus, pin_cpus,
+        prefer_hyper_threads);
 
 
     run_decls(&lock_list, run_all ? NULL : lock_names.ptrs,

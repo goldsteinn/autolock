@@ -135,7 +135,7 @@ foreach(attr ${attrs})
 endforeach()
 
 ProcessorCount(SYS_NUM_CPUS)
-set(default_compiler_flags "-D_GNU_SOURCE" "-O2" "-Wwrite-strings" "-Wcast-qual" "-Wdangling-else" "-Woverlength-strings" "-Wdisabled-optimization" "-Wstrict-aliasing" "-Wstrict-overflow" "-Werror" "-Wall" "-Wextra" "-Wno-unused-function" "-Wno-variadic-macros" "-march=native" "-mtune=native" "-std=${STD}" "${LANG_FLAGS}" "${file_name_flag}" "-DI_SYS_NUM_CPUS=${SYS_NUM_CPUS}")
+set(default_compiler_flags "-D_GNU_SOURCE" "-O2" "-Wwrite-strings" "-Wcast-qual" "-Wdangling-else" "-Woverlength-strings" "-Wdisabled-optimization" "-Wstrict-aliasing" "-Wstrict-overflow" "-Werror" "-Wall" "-Wextra" "-Wno-unused-function" "-Wno-dangling-pointer" "-Wno-variadic-macros" "-march=native" "-mtune=native" "-std=${STD}" "${LANG_FLAGS}" "${file_name_flag}" "-DI_SYS_NUM_CPUS=${SYS_NUM_CPUS}")
 
 
 set(driver_compiler_flags ${default_compiler_flags})

@@ -7,6 +7,8 @@
 #include "thread/barrier.h"
 
 
+enum { BENCH_TOTAL_WORK, BENCH_PER_THREAD_WORK };
+
 /* All parameters we can set for the benchmarks. */
 typedef uint64_t global_counter_t;
 typedef struct run_params {
@@ -18,6 +20,11 @@ typedef struct run_params {
     uint32_t outer_iter;       /* iterations of cs + extra loops. */
     uint32_t cs_iter;          /* critical section iterations. */
     uint32_t extra_iter;       /* non-critical section iterations. */
+    uint32_t contention_mask;  /* For TOTAL_WORK bench only. The amount
+                             of  locks.  More locks -> less contention.
+                             Must be power of 2 minus 1. */
+    uint32_t bench_type;       /* TOTAL_WORK or THREAD_WORK.  */
+
     thread_barrier_t barrier; /* barrier for synchronizing benchmark. */
 
     /* Bookkeeping. */
@@ -59,6 +66,8 @@ run_params_init(run_params_t * params,
                 uint32_t       outer_iter,
                 uint32_t       cs_iter,
                 uint32_t       extra_iter,
+                uint32_t       contention,
+                uint32_t       bench_type,
                 /* Bookkeeping. */
                 uint32_t     num_trials,
                 uint32_t     num_threads,
@@ -68,20 +77,23 @@ run_params_init(run_params_t * params,
                 uint32_t     prefer_hyper_threads) {
     void * p;
     die_assert(params);
-
+    die_assert(!(contention & (contention - 1)),
+               "Contention must be a power of 2!");
     __builtin_memset(params, 0, sizeof(*params));
 
     /* Just grab a page. */
-    p = safe_aligned_alloc(PAGE_SIZE, PAGE_SIZE);
+    p = safe_aligned_alloc(PAGE_SIZE, PAGE_SIZE * 16);
 
     params->shared_memory    = p;
     params->with_sched_stats = with_sched_stats;
     params->outer_iter       = outer_iter;
     params->cs_iter          = cs_iter;
     params->extra_iter       = extra_iter;
+    params->contention_mask  = contention ? (contention - 1) : 0;
 
     safe_thread_barrier_init(&(params->barrier), NULL, num_threads);
 
+    params->bench_type           = bench_type;
     params->num_trials           = num_trials;
     params->num_threads          = num_threads;
     params->cpu_list             = cpu_list;
@@ -95,7 +107,7 @@ static void
 run_params_destroy(run_params_t * params) {
     die_assert(params);
 
-    safe_sfree(params->shared_memory, PAGE_SIZE);
+    safe_sfree(params->shared_memory, PAGE_SIZE * 16);
     safe_thread_barrier_destroy(&(params->barrier));
 }
 

@@ -195,10 +195,16 @@ add_time(uint64_t * times, void * time) {
 static global_counter_t
 get_expected_count(uint32_t num_threads,
                    uint32_t outer_iter,
-                   uint32_t cs_iter) {
-    return CAST(global_counter_t, num_threads) *
-           CAST(global_counter_t, outer_iter) *
-           CAST(global_counter_t, cs_iter);
+                   uint32_t cs_iter,
+                   uint32_t bench_type) {
+    if (bench_type == BENCH_TOTAL_WORK) {
+        return CAST(global_counter_t, outer_iter);
+    }
+    else {
+        return CAST(global_counter_t, num_threads) *
+               CAST(global_counter_t, outer_iter) *
+               CAST(global_counter_t, cs_iter);
+    }
 }
 
 /* Run the test/benchmark. */
@@ -237,7 +243,7 @@ I_run(func_decl_t const * to_run,
 
 
     expec = get_expected_count(num_threads, params->outer_iter,
-                               params->cs_iter);
+                               params->cs_iter, params->bench_type);
 
     PRINTFFL;
     /* Get set of cpus we want to use. */
